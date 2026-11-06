@@ -403,7 +403,7 @@ async function compareSources() {
     if (values['update-readme']) {
       record.publication = publishComparison(root, dir, record)
       console.log(
-        `Updated README and selected reports: ${join(root, 'README.md')}`,
+        `Updated README and selected reports: ${join(root, record.publication.readmePath)}`,
       )
     }
     console.log(`Comparison: ${join(dir, 'README.md')}`)

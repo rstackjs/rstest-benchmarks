@@ -1,149 +1,146 @@
-# Rstest benchmarks
+# Jest / Vitest / Rstest benchmarks
 
-Reproducible workloads for comparing Rstest releases and configurations: Node.js, React, Vue, browser mode, worker pools, module graphs, barrels, and coverage.
+Compare Jest + SWC, Vitest, and Rstest on shared Node and React workloads. The optional `rstest-vmForks` runner adds Rstest's VM forks pool to the comparison. Each run reports whole-process elapsed time and RSS for cold and warm framework caches.
 
-## Compare versions
+For comparisons between Rstest releases or a local checkout, see [Rstest version benchmarks](versions/README.md).
 
-Use Node.js 24 and the pnpm version pinned in `package.json`. Run from this directory:
+## Quick start
 
-```sh
-# Two npm releases
-pnpm compare --baseline 0.12.5 --candidate 0.12.6
-
-# npm release vs local source (replace the checkout path)
-pnpm compare --baseline 0.12.6 --candidate local:../rstest
-```
-
-Both sides accept an exact npm version or `local:<path>`. The command installs dependencies, builds local sources, and installs Chromium when needed. No manual version switching or separate build is required.
-
-By default, it runs the **main suite**, with **1 warmup + 5 timed runs per case**, alternating versions each round. Node compile cache is disabled. Open the printed `results/<comparison>/README.md` for the report; samples and logs are retained alongside it.
-
-| Add to either command | Purpose |
-| --- | --- |
-| `--apps node-backend` | Compare one workload |
-| `--suites all` | Include scaling, barrels, worker pools, and coverage/RSS |
-| `--runs 10` | Collect more samples |
-
-`compare` leaves README data unchanged by default. Add `--update-readme` to publish the selected suites, including their samples, reports, and measurement notes. Failed comparisons do not publish.
+Use Node.js 24, the pnpm version pinned in this repository, and macOS or Linux for RSS collection. Run from the repository root:
 
 ```sh
-# Compare multiple candidates against one baseline
-pnpm compare --baseline 0.12.4 --candidate 0.12.5,0.12.6 --runs 6
-
-# Run all suites and update README/report data
-pnpm compare --baseline 0.12.5 --candidate 0.12.6 --suites all --runs 6 --update-readme
+pnpm --dir frameworks install --frozen-lockfile
+pnpm --dir frameworks exec playwright install chromium
+pnpm compare:frameworks --runs 6
 ```
 
-Repeat `--candidate` to mix npm and local sources. With N total sources, use a multiple of N timed runs to balance order positions. See [all options and publication behavior](docs/running.md#compare-versions).
+Dependencies are pinned in [package.json](frameworks/package.json) and [pnpm-lock.yaml](frameworks/pnpm-lock.yaml): Jest **30.5.2** + `@swc/jest` **0.2.39**, Vitest **5.1.0**, and Rstest **0.12.6**. The runner installs missing dependencies automatically; Chromium must be installed before browser measurements.
 
-## Compare frameworks
+The default run includes main, coverage and browser suites: **456 timed invocations and 38 warmups**. It writes reports, samples, logs and source snapshots to `results/frameworks-*/`. It does not update the repository README or Rstest release reports.
 
 ```sh
-pnpm compare:frameworks --install --runs 6
+# One workload, all three frameworks
+pnpm compare:frameworks --suites main --cases many-files --runs 6
+
+# Warm framework caches only
+pnpm compare:frameworks --suites main --conditions warm --runs 6
 ```
 
-Compare pinned Jest + SWC, Vitest, and Rstest releases on shared Node and React workloads, plus coverage and browser mode. Cold and warm framework caches are measured separately; the generated report includes elapsed time and RSS. This command does not change the release comparisons below. See [options and measurement details](frameworks/README.md).
+## Workloads
 
-## Suites
+| Case | Test files / tests | Workload |
+| --- | ---: | --- |
+| `startup` | 5 / 18 | Small Node utility package with 8 source modules |
+| `minimal-node` | 1 / 1 | Tiny Node project: one source module and one test |
+| `minimal-react` | 1 / 1 | Tiny React project: one component test using jsdom and Testing Library |
+| `many-files` | 400 / 800 | Many isolated test files sharing 127 source modules |
+| `module-graph` | 40 / 80 | Eager loading of a 1,000-module graph |
+| `backend` | 16 / 45 | Dependency loading and in-memory service operations |
+| `barrel` | 20 / 40 | Sparse imports from a barrel exporting 3,200 leaf modules |
+| `react` | 30 / 54 | React component tests using jsdom and Testing Library |
 
-| Command | Measures | Results |
+Coverage compares none/V8/Istanbul on selected workloads, including no-coverage controls. Browser mode runs the React workload in Chromium with Vitest and the default Rstest runner. The two tiny-project workloads are opt-in and measure startup overhead; they are excluded from the default matrix. Run them with:
+
+```sh
+pnpm compare:frameworks --suites main --cases minimal-node,minimal-react --frameworks jest,vitest,rstest,rstest-vmForks --runs 8
+```
+
+Each has one source file, one test file and one test. [Node](frameworks/fixtures/minimal-node/tests/add.test.ts) exercises an addition function; [React](frameworks/fixtures/minimal-react/tests/Counter.test.tsx) renders a counter in jsdom and clicks it once. They measure tiny-project startup overhead, not throughput on larger projects.
+
+## Results
+
+Reproduce the complete matrix, including both tiny projects, coverage and browser mode:
+
+```sh
+pnpm compare:frameworks --suites main,coverage,browser --cases minimal-node,minimal-react,startup,many-files,module-graph,backend,barrel,react --frameworks jest,vitest,rstest,rstest-vmForks --runs 8
+```
+
+Measured 2026-11-06 on Apple M4 Max with Node 24.11.1. Jest **30.5.2** + SWC **0.2.39**, Vitest **5.1.0**, Rstest **0.12.6**. Default concurrency; `rstest-vmForks` changes only the Rstest pool. Eight timed runs per supported case and cache condition; all **928 timed samples and 58 warmups passed**. Node compile cache is disabled. Cold and warm framework caches are reported separately; OS page cache and background load are uncontrolled. Browser mode compares Vitest against default Rstest only.
+
+🥇 and 🥈 mark the lowest and second-lowest distinct unrounded medians in each row; exact ties share the marker. They do not indicate statistical significance.
+
+<!-- framework-results:start -->
+**Main suite · cold cache · elapsed time**
+
+| Case | Jest + SWC | Vitest | Rstest | Rstest vmForks |
+| --- | ---: | ---: | ---: | ---: |
+| Node · single-file | 0.44s | 0.30s | 🥇 0.24s | 🥈 0.26s |
+| React · single-file | 0.76s | 0.64s | 🥇 0.51s | 🥈 0.54s |
+| Node startup | 0.65s | 0.34s | 🥇 0.27s | 🥈 0.30s |
+| Many files | 🥈 3.20s | 7.06s | 4.62s | 🥇 1.11s |
+| Module graph | 7.17s | 4.69s | 🥈 1.01s | 🥇 0.78s |
+| Backend | 1.15s | 0.88s | 🥇 0.63s | 🥈 0.73s |
+| Barrel | 21.99s | 9.94s | 🥈 0.56s | 🥇 0.47s |
+| React + jsdom | 2.39s | 3.94s | 🥈 1.74s | 🥇 1.18s |
+
+**Main suite · cold cache · RSS (MiB)**
+
+| Case | Jest + SWC | Vitest | Rstest | Rstest vmForks |
+| --- | ---: | ---: | ---: | ---: |
+| Node · single-file | 🥇 101.73 | 🥈 116.45 | 129.59 | 128.85 |
+| React · single-file | 🥈 182.49 | 🥇 157.73 | 262.34 | 262.43 |
+| Node startup | 🥇 93.20 | 🥈 122.80 | 140.07 | 139.54 |
+| Many files | 🥇 202.16 | 🥈 217.23 | 385.74 | 286.70 |
+| Module graph | 🥇 207.59 | 311.98 | 372.55 | 🥈 287.53 |
+| Backend | 🥈 151.85 | 🥇 137.45 | 154.85 | 155.45 |
+| Barrel | 363.26 | 429.61 | 🥇 163.47 | 🥈 163.73 |
+| React + jsdom | 🥈 182.54 | 🥇 176.92 | 444.17 | 357.92 |
+
+**Main suite · warm cache · elapsed time**
+
+| Case | Jest + SWC | Vitest | Rstest | Rstest vmForks |
+| --- | ---: | ---: | ---: | ---: |
+| Node · single-file | 🥇 0.21s | 0.27s | 🥈 0.23s | 0.27s |
+| React · single-file | 🥈 0.52s | 0.58s | 🥇 0.50s | 0.53s |
+| Node startup | 🥇 0.26s | 0.28s | 🥈 0.27s | 0.29s |
+| Many files | 🥈 2.20s | 6.21s | 4.47s | 🥇 1.10s |
+| Module graph | 2.38s | 3.10s | 🥈 0.97s | 🥇 0.75s |
+| Backend | 0.80s | 0.76s | 🥇 0.70s | 🥈 0.73s |
+| Barrel | 5.20s | 5.43s | 🥈 0.48s | 🥇 0.45s |
+| React + jsdom | 2.26s | 4.04s | 🥈 1.67s | 🥇 1.13s |
+
+**Main suite · warm cache · RSS (MiB)**
+
+| Case | Jest + SWC | Vitest | Rstest | Rstest vmForks |
+| --- | ---: | ---: | ---: | ---: |
+| Node · single-file | 🥇 94.88 | 🥈 114.16 | 129.01 | 129.13 |
+| React · single-file | 🥈 170.76 | 🥇 159.03 | 268.55 | 267.31 |
+| Node startup | 🥇 107.67 | 🥈 116.68 | 139.25 | 138.64 |
+| Many files | 🥇 195.02 | 🥈 200.84 | 387.97 | 288.22 |
+| Module graph | 🥇 192.76 | 🥈 239.39 | 390.24 | 286.01 |
+| Backend | 284.42 | 🥇 126.57 | 🥈 154.72 | 155.31 |
+| Barrel | 277.62 | 398.31 | 🥇 163.08 | 🥈 164.14 |
+| React + jsdom | 🥇 174.19 | 🥈 178.22 | 436.37 | 364.05 |
+<!-- framework-results:end -->
+
+RSS is OS maxrss, not total concurrent worker memory. Full coverage/browser comparisons are in the [complete report](frameworks/reports/report.md), with [variability](frameworks/reports/variability.md) and [all samples and provenance](frameworks/reports/result.json). The tiny-project rows above are part of the same run and result set. Published framework reports use fixed paths in `frameworks/reports/`; each update replaces the current report and samples. Previous results remain available in Git history. Run `pnpm report:frameworks` to regenerate the reports and README tables from the published samples.
+
+See [workload design](docs/framework-comparison.md) for performance questions and fixture details. The proposed scaling extensions are not part of the implemented default matrix.
+
+## Options
+
+| Option | Default | Meaning |
 | --- | --- | --- |
-| `pnpm bench` | Node workloads; React and Vue in jsdom, happy-dom, and browser mode (Chromium); a medium barrel graph | [Main](reports/versions.md) |
-| `pnpm bench:scaling` | File count and module graph size, varied independently | [Scaling](reports/scaling.md) |
-| `pnpm bench:pools` | Node worker pool modes across three suite sizes | [Pools](reports/pools.md) |
-| `pnpm bench:barrel` | Lazy-barrel eligibility across three graph sizes | [Barrels](reports/barrel.md) |
-| `pnpm bench:coverage` | No coverage, V8, and Istanbul overhead, including RSS | [Coverage](reports/coverage.md) |
+| `--runs` | `6` | Timed repetitions per framework/case/cache condition |
+| `--conditions` | `cold,warm` | Cache conditions, reported separately |
+| `--suites` | `main,coverage,browser` | Comma-separated suites |
+| `--cases` | six main cases | Comma-separated case IDs from the table; also accepts `minimal-node,minimal-react` |
+| `--frameworks` | `jest,vitest,rstest` | Select frameworks; optional entries: `rstest-vmForks`, `jest-babel` |
+| `--install` | off | Reinstall pinned dependencies before measuring |
+| `--label` | `frameworks` | Result directory prefix |
 
-All commands accept `--list` and `--runs`. See [workload design](docs/workloads.md) for fixture sizes and controlled variables.
+With three frameworks, use a multiple of six runs to balance order. For four-framework comparisons including `rstest-vmForks`, use a multiple of eight. Browser mode compares Vitest and the default Rstest runner.
 
-## Measurement
+## Measurement and limitations
 
-- Whole-process elapsed time, including CLI, build, workers/browser, tests, and reporting. By default, one warmup precedes five timed runs; the median is reported.
-- Node compile cache is disabled. Rstest caches are retained between timed runs, so these results do not represent a fresh CI job with no history.
-- Default worker concurrency and `forks + isolate:true` for Node/DOM, except in the pool suite. Coverage RSS is OS maxrss, not a simultaneous sum of all worker memory.
-- All samples are retained. Reports include variability and unsupported cases; small differences and results from different machines or workloads need separate verification.
+- **Elapsed time:** process start through exit, including configuration, transformation, workers, tests, reporting and shutdown. Installations, fixture generation and cache cleanup happen outside the timed interval.
+- **Cold / warm:** cold clears framework caches before every invocation; warm retains them after one warmup. Every invocation starts a new process. Node compile cache is disabled; OS page caches and background load are uncontrolled.
+- **Concurrency:** each framework retains its default scheduling and isolation. Jest may choose in-band execution for small suites using cached test timings, so warm results include scheduling decisions as well as transform-cache reuse.
+- **RSS:** median OS maxrss from `/usr/bin/time`, not the simultaneous total of worker or browser memory. Thread and fork pools have different process layouts; their maxrss ratios are not total-memory ratios.
+- **Statistics:** medians and rankings use unrounded samples; tables display two decimal places. Detailed variability includes absolute standard deviation, range and CV. Evaluate both absolute and relative variation before rerunning a case. Rerun all compared runners for that case under the same cache conditions and balanced order, retaining the original batch; do not select only favorable samples.
 
-See [measurement details and result format](docs/results.md) for cache policy, comparison checks, and statistics.
+Test bodies and application sources are shared. Jest uses SWC with CommonJS output; Vitest and Rstest use their built-in pipelines. Vitest's filesystem module cache remains enabled and is scoped to each generated case. React uses the same jsdom 26.1.0 and one cleanup per test. Jest maps CSS to a minimal object because assertions do not inspect styling; browser/bundler configurations process CSS normally.
 
-## Selected results
+Coverage verifies matching executable source-file sets. Type declarations and React barrels containing only re-exports are excluded. Matching files do not prove identical statement or branch instrumentation. These are comparisons of runnable test stacks, including their module-loading strategies.
 
-<!-- benchmark:versions:start -->
-
-Sources: baseline: **0.11.0** (npm); candidate: **0.12.6** (npm). Measured 2026-11-06 (UTC); Apple M4 Max × 14, darwin arm64, Node v24.11.1.
-
-1 warmup(s) and **6 timed runs per supported case**; medians are reported. 10 selected cases. Every candidate percentage is relative to the baseline; negative means less elapsed time.
-
-Sources run sequentially in rotating case/round order. For cases supported by all sources, each source occupies every order position equally often. Node compile cache is disabled. Rstest build and sequencing caches are cleared before each fixture's warmups and retained during measurement. Workload dependency graphs match. Background load and OS page cache are not controlled.
-
-| Case | baseline: 0.11.0 | candidate: 0.12.6 | Δ | Notes |
-| --- | --- | --- | --- | --- |
-| Node startup and utilities | 0.25s | 0.27s | +8.42% | — |
-| Node module graph | 0.61s | 0.69s | +14.18% | — |
-| Node dependencies and service logic | 0.53s | 0.56s | +5.55% | — |
-| React + jsdom | 3.62s | 1.72s | -52.62% | — |
-| React + happy-dom | 1.96s | 1.02s | -47.84% | — |
-| React + browser mode | 1.38s | 1.42s | +2.92% | — |
-| Vue + jsdom | 2.63s | 1.48s | -43.73% | — |
-| Vue + happy-dom | 1.48s | 0.89s | -40.08% | — |
-| Vue + browser mode | SKIPPED | 1.31s | — | skipped / passed |
-| barrel graph · medium | 0.44s | 0.47s | +8.04% | — |
-
-[Full report, variability and inputs](reports/versions.md). Generated from published samples and compatibility fingerprints; full logs and snapshots are stored separately.
-
-<!-- benchmark:versions:end -->
-
-The [report index](reports/README.md) links all five comparisons. [Recorded samples](reports/data/README.md) are included for report verification; full execution artifacts are stored separately.
-
-## Coverage results
-
-<!-- benchmark:coverage:start -->
-
-Sources: baseline: **0.11.0** (npm); candidate: **0.12.6** (npm). Measured 2026-11-06 (UTC); Apple M4 Max × 14, darwin arm64, Node v24.11.1.
-
-1 warmup(s) and **6 timed runs per supported case**; medians are reported. 15 selected cases. Every candidate percentage is relative to the baseline; negative means less elapsed time.
-
-Sources run sequentially in rotating case/round order. For cases supported by all sources, each source occupies every order position equally often. Node compile cache is disabled. Rstest build and sequencing caches are cleared before each fixture's warmups and retained during measurement. Workload dependency graphs match. Background load and OS page cache are not controlled.
-
-| Case | baseline: 0.11.0 | candidate: 0.12.6 | Δ |
-| --- | --- | --- | --- |
-| Node module graph / none | 0.67s | 0.70s | +5.02% |
-| Node module graph / v8 | 1.32s | 1.08s | -18.13% |
-| Node module graph / istanbul | 0.99s | 0.86s | -12.82% |
-| Node dependencies and service logic / none | 0.58s | 0.62s | +7.02% |
-| Node dependencies and service logic / v8 | 0.82s | 0.79s | -4.18% |
-| Node dependencies and service logic / istanbul | 0.69s | 0.65s | -5.59% |
-| React + jsdom / none | 3.68s | 1.86s | -49.59% |
-| React + jsdom / v8 | 4.18s | 2.27s | -45.75% |
-| React + jsdom / istanbul | 4.04s | 1.99s | -50.72% |
-| barrel graph · medium / none | 0.41s | 0.43s | +6.97% |
-| barrel graph · medium / v8 | 0.63s | 0.62s | -1.82% |
-| barrel graph · medium / istanbul | 0.53s | 0.50s | -6.42% |
-| barrel graph · large / none | 0.44s | 0.45s | +1.60% |
-| barrel graph · large / v8 | 0.64s | 0.61s | -4.01% |
-| barrel graph · large / istanbul | 0.59s | 0.52s | -12.27% |
-
-### RSS comparison
-
-Median maxrss in MiB; negative percentages mean less memory. This is OS maxrss, not the simultaneous total of all worker processes.
-
-| Case | baseline: 0.11.0 | candidate: 0.12.6 | Δ |
-| --- | --- | --- | --- |
-| Node module graph / none | 202.37 | 211.61 | +4.57% |
-| Node module graph / v8 | 422.49 | 345.38 | -18.25% |
-| Node module graph / istanbul | 304.63 | 336.74 | +10.54% |
-| Node dependencies and service logic / none | 169.91 | 179.90 | +5.88% |
-| Node dependencies and service logic / v8 | 213.02 | 215.48 | +1.15% |
-| Node dependencies and service logic / istanbul | 209.96 | 218.64 | +4.13% |
-| React + jsdom / none | 538.51 | 535.93 | -0.48% |
-| React + jsdom / v8 | 751.02 | 744.12 | -0.92% |
-| React + jsdom / istanbul | 461.52 | 575.39 | +24.67% |
-| barrel graph · medium / none | 173.40 | 181.17 | +4.48% |
-| barrel graph · medium / v8 | 202.46 | 203.30 | +0.42% |
-| barrel graph · medium / istanbul | 213.21 | 219.60 | +3.00% |
-| barrel graph · large / none | 181.84 | 188.88 | +3.87% |
-| barrel graph · large / v8 | 208.60 | 219.97 | +5.45% |
-| barrel graph · large / istanbul | 220.05 | 231.27 | +5.09% |
-
-[Full report, variability and inputs](reports/coverage.md). Generated from published samples and compatibility fingerprints; full logs and snapshots are stored separately.
-
-<!-- benchmark:coverage:end -->
+Each result retains installed versions, the lockfile, generated sources, adapted tests, config fingerprints and a measurement-harness snapshot. Unsupported combinations remain explicit in the report.

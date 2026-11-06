@@ -1,5 +1,6 @@
 import { readFileSync } from 'node:fs'
 import { createHash } from 'node:crypto'
+import { dirname, relative } from 'node:path'
 import { statistics, seconds, percent } from './stats.mjs'
 
 const escape = (value) =>
@@ -532,7 +533,7 @@ export function comparisonReport(
   }
 }
 
-export function readmeBlock(spec, report, load) {
+export function readmeBlock(spec, report, load, readmePath = 'README.md') {
   if (spec.readme) {
     const indices = spec.readme.columns
     if (!Array.isArray(indices) || indices.length < 2 || indices[0] !== 0 ||
@@ -552,5 +553,6 @@ export function readmeBlock(spec, report, load) {
   const memory = report.rssSummary
     ? `\n\n### RSS comparison\n\nMedian maxrss in MiB; negative percentages mean less memory. This is OS maxrss, not the simultaneous total of all worker processes.\n\n${report.rssSummary}`
     : ''
-  return `\n\n${spec.context ? spec.context + '\n\n' : ''}${report.summary}${memory}\n\n[Full report, variability and inputs](${spec.output}). ${report.provenanceNote}\n\n`
+  const reportLink = relative(dirname(readmePath), spec.output).replaceAll('\\', '/')
+  return `\n\n${spec.context ? spec.context + '\n\n' : ''}${report.summary}${memory}\n\n[Full report, variability and inputs](${reportLink}). ${report.provenanceNote}\n\n`
 }

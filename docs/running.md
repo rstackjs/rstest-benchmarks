@@ -58,7 +58,7 @@ The runner executes the same case/round across all sources before moving on. Ord
 
 By default, `compare` only writes its own `results/<comparison>/` directory. `pnpm bench` and `pnpm test` do not update README data either.
 
-`--update-readme` publishes after all selected suites finish successfully and pass compatibility checks. It exports compact inputs into `reports/data/`, updates the selected entries in `reports.config.json`, regenerates their reports and the report index, and updates the main/coverage README blocks with source labels, sample counts, machine information and cache policy. Other suites remain unchanged. Explicit `--no-update-readme` also disables publication.
+`--update-readme` publishes after all selected suites finish successfully and pass compatibility checks. It exports compact inputs into `reports/data/`, updates the selected entries in `reports.config.json`, regenerates their reports and the report index, and updates the main/coverage blocks in [Rstest version benchmarks](../versions/README.md) with source labels, sample counts, machine information and cache policy. Other suites remain unchanged. Explicit `--no-update-readme` also disables publication.
 
 Filters apply to publication too: `--apps node-backend --update-readme` replaces the main table with that selected workload. Use `--suites all` without filters to replace the full published comparison. Pool, scaling and barrel-only runs update their reports and index, without replacing the main/coverage tables.
 
@@ -173,7 +173,7 @@ To pool repeat batches, pass comma-separated input paths. To publish a result, e
 pnpm report:export results/<run>/result.json reports/data/<run>.json
 ```
 
-Select the exported paths for published reports. For pool/provider/config columns, edit [`reports.config.json`](../reports.config.json). A report with a `marker` also updates its matching README block; the main and coverage comparisons are embedded on the homepage. Then run:
+Select the exported paths for published reports. For pool/provider/config columns, edit [`reports.config.json`](../reports.config.json). A report with a `marker` also updates its matching README block; the main and coverage comparisons are embedded in [Rstest version benchmarks](../versions/README.md). The manifest’s `readmePath` selects that page; paths in report specs remain relative to the repository root. Then run:
 
 ```sh
 pnpm report --readme

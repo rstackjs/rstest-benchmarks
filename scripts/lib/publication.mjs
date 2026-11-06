@@ -103,7 +103,8 @@ export function publishComparison(root, directory, record) {
     else manifest.reports[index] = spec
     updated.push({ spec, ...generated })
   }
-  let readme = readFileSync(join(root, 'README.md'), 'utf8')
+  const readmePath = manifest.readmePath ?? 'README.md'
+  let readme = readFileSync(join(root, readmePath), 'utf8')
   for (const report of updated) {
     const { spec } = report
     if (!spec.marker) continue
@@ -126,10 +127,10 @@ export function publishComparison(root, directory, record) {
       throw new Error(`Missing README markers: ${spec.marker}`)
     readme =
       readme.slice(0, from + start.length) +
-      readmeBlock(spec, report) +
+      readmeBlock(spec, report, undefined, readmePath) +
       readme.slice(to)
   }
-  pending.set('README.md', readme)
+  pending.set(readmePath, readme)
   pending.set('reports.config.json', JSON.stringify(manifest, null, 2) + '\n')
   pending.set(
     'reports/README.md',
@@ -188,6 +189,7 @@ export function publishComparison(root, directory, record) {
   }
   return {
     updatedAt: new Date().toISOString(),
+    readmePath,
     suites: selected,
     files: [...pending.keys()],
     retiredInputs: retired,

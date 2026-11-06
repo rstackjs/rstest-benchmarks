@@ -50,7 +50,8 @@ const generated = config.reports.map((spec) => ({
     JSON.parse(readFileSync(resolve(root, file), 'utf8')),
   ),
 }))
-let readme = readFileSync(resolve(root, 'README.md'), 'utf8')
+const readmePath = config.readmePath ?? 'README.md'
+let readme = readFileSync(resolve(root, readmePath), 'utf8')
 for (const { spec, markdown, summary, rssSummary, provenanceNote } of generated) {
   const output = resolve(root, spec.output)
   if (values.check) {
@@ -68,12 +69,15 @@ for (const { spec, markdown, summary, rssSummary, provenanceNote } of generated)
       throw new Error(`Missing README markers: ${spec.marker}`)
     const from = readme.indexOf(start) + start.length,
       to = readme.indexOf(end, from)
-    const body = readmeBlock(spec, { summary, rssSummary, provenanceNote }, (file) =>
-      JSON.parse(readFileSync(resolve(root, file), 'utf8')),
+    const body = readmeBlock(
+      spec,
+      { summary, rssSummary, provenanceNote },
+      (file) => JSON.parse(readFileSync(resolve(root, file), 'utf8')),
+      readmePath,
     )
     readme = readme.slice(0, from) + body + readme.slice(to)
   }
 }
-if (values.check && readme !== readFileSync(resolve(root, 'README.md'), 'utf8'))
+if (values.check && readme !== readFileSync(resolve(root, readmePath), 'utf8'))
   throw new Error('Stale README benchmark tables')
-if (values.readme) writeFileSync(resolve(root, 'README.md'), readme)
+if (values.readme) writeFileSync(resolve(root, readmePath), readme)

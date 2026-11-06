@@ -3,7 +3,7 @@ import { fileURLToPath } from 'node:url'
 import { report } from './report.mjs'
 
 const directory = fileURLToPath(new URL('./reports/', import.meta.url))
-const readmePath = new URL('./README.md', import.meta.url)
+const readmePath = new URL('../README.md', import.meta.url)
 const readme = readFileSync(readmePath, 'utf8')
 const startMarker = '<!-- framework-results:start -->'
 const endMarker = '<!-- framework-results:end -->'

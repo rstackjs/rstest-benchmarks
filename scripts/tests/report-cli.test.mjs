@@ -1,6 +1,6 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { mkdtempSync, writeFileSync, readFileSync, rmSync } from 'node:fs'
+import { mkdtempSync, mkdirSync, writeFileSync, readFileSync, rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -13,13 +13,17 @@ const cli = (args) =>
     encoding: 'utf8',
   })
 
-test('real report CLI creates comparison and detects stale output without rewriting it', () => {
+test('real report CLI updates a nested README and detects stale output without rewriting it', () => {
   const dir = mkdtempSync(join(tmpdir(), 'rstest-report-cli-'))
   try {
     const baseline = join(dir, 'base.json'),
       candidate = join(dir, 'candidate.json'),
       output = join(dir, 'report.md'),
-      config = join(dir, 'config.json')
+      config = join(dir, 'config.json'),
+      readmePath = join(dir, 'versions/README.md')
+    const homepage = readFileSync(join(root, 'README.md'), 'utf8')
+    mkdirSync(join(dir, 'versions'))
+    writeFileSync(readmePath, '<!-- benchmark:versions:start -->\nstale\n<!-- benchmark:versions:end -->\n')
     const document = (samples) => ({
       meta: { runs: 3, cpu: 'test', node: 'v24', platform: 'test' },
       results: [{ app: 'a', case: 'fixture', samples }],
@@ -41,9 +45,11 @@ test('real report CLI creates comparison and detects stale output without rewrit
     writeFileSync(
       config,
       JSON.stringify({
+        readmePath,
         reports: [
           {
             output,
+            marker: 'versions',
             columns: [
               { label: 'Baseline', files: [baseline] },
               { label: 'Candidate', files: [candidate] },
@@ -52,7 +58,18 @@ test('real report CLI creates comparison and detects stale output without rewrit
         ],
       }),
     )
+    assert.equal(cli(['--config', config, '--readme']).status, 0)
+    assert.equal(readFileSync(join(root, 'README.md'), 'utf8'), homepage)
+    const rendered = readFileSync(readmePath, 'utf8')
+    assert.match(rendered, /\]\(\.\.\/report\.md\)/)
+    assert.match(rendered, /-50\.00%/)
     assert.equal(cli(['--config', config, '--check']).status, 0)
+    writeFileSync(readmePath, rendered.replace('-50.00%', 'stale'))
+    const staleReadme = cli(['--config', config, '--check'])
+    assert.notEqual(staleReadme.status, 0)
+    assert.match(staleReadme.stderr, /Stale README/)
+    assert.match(readFileSync(readmePath, 'utf8'), /stale/)
+    writeFileSync(readmePath, rendered)
     writeFileSync(output, 'stale')
     const check = cli(['--config', config, '--check'])
     assert.notEqual(check.status, 0)

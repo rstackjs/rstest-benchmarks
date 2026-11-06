@@ -27,7 +27,9 @@ function fixture() {
   write('reports/versions.md', 'old report')
   write('reports/coverage.md', 'keep coverage')
   write('reports/README.md', 'old index')
+  write('README.md', '# Framework comparisons\n')
   write('reports.config.json', {
+    readmePath: 'versions/README.md',
     reports: [
       {
         title: 'old',
@@ -43,7 +45,7 @@ function fixture() {
     ],
   })
   write(
-    'README.md',
+    'versions/README.md',
     '# Benchmarks\n\n## Published release results\n\nStale versions and five runs.\n\n<!-- benchmark:versions:start -->\nold table\n<!-- benchmark:versions:end -->\n\n## Coverage results\n\nKeep this text and data.\n<!-- benchmark:coverage:start -->\nkeep coverage\n<!-- benchmark:coverage:end -->\n',
   )
   const sources = {
@@ -106,7 +108,10 @@ test('publication updates selected tables, context and inputs, preserving other 
   const { root, record } = fixture()
   try {
     const result = publishComparison(root, join(root, 'results/run'), record)
-    const readme = readFileSync(join(root, 'README.md'), 'utf8')
+    const readme = readFileSync(join(root, 'versions/README.md'), 'utf8')
+    assert.equal(readFileSync(join(root, 'README.md'), 'utf8'), '# Framework comparisons\n')
+    assert.equal(result.readmePath, 'versions/README.md')
+    assert.match(readme, /\]\(\.\.\/reports\/versions\.md\)/)
     assert(!readme.includes('Stale versions'))
     assert.match(readme, /3 timed runs/)
     assert.match(readme, /local abcdef12/)
@@ -135,7 +140,7 @@ test('publication updates selected tables, context and inputs, preserving other 
       generated.markdown,
       readFileSync(join(root, spec.output), 'utf8'),
     )
-    assert(readme.includes(readmeBlock(spec, generated)))
+    assert(readme.includes(readmeBlock(spec, generated, undefined, config.readmePath)))
   } finally {
     rmSync(root, { recursive: true, force: true })
   }
@@ -146,7 +151,7 @@ test('failed or incompatible comparisons leave all published files untouched', (
     const { root, record, write } = fixture()
     try {
       if (failure === 'status') record.status = 'failed'
-      else if (failure === 'markers') write('README.md', '# Missing markers')
+      else if (failure === 'markers') write('versions/README.md', '# Missing markers')
       else {
         const file = record.runs[2].file
         const doc = JSON.parse(readFileSync(join(root, file)))
@@ -155,7 +160,7 @@ test('failed or incompatible comparisons leave all published files untouched', (
         write(file, doc)
       }
       const paths = [
-        'README.md',
+        'versions/README.md',
         'reports.config.json',
         'reports/README.md',
         'reports/versions.md',
@@ -185,7 +190,7 @@ test('publication rolls back already-written reports and inputs when a later wri
   const { syncBuiltinESMExports } = await import('node:module')
   const { root, record } = fixture()
   const paths = [
-    'README.md',
+    'versions/README.md',
     'reports.config.json',
     'reports/README.md',
     'reports/versions.md',
@@ -194,7 +199,7 @@ test('publication rolls back already-written reports and inputs when a later wri
   const original = paths.map((path) => readFileSync(join(root, path), 'utf8'))
   const rename = fs.renameSync
   const patched = t.mock.method(fs, 'renameSync', (from, to) => {
-    if (to === join(root, 'README.md'))
+    if (to === join(root, 'versions/README.md'))
       throw new Error('simulated write failure')
     return rename(from, to)
   })

@@ -1,6 +1,6 @@
 # Framework comparison design
 
-The six main workloads, coverage and browser suites are implemented in `frameworks/`. See [running instructions](../frameworks/README.md). Scale variants remain optional extensions.
+The six main workloads, coverage and browser suites are implemented in `frameworks/`. See [running instructions](../README.md). Scale variants remain optional extensions.
 
 ## Versions
 
@@ -31,7 +31,7 @@ The first scorecard has six cases. Scale variants are optional extensions so tha
 | Sparse barrel imports | 20 test files, 40 tests, 3,200 leaf modules | What happens when tests import a few exports through a large public entry point? | 100 / 800 / 3,200 leaf modules |
 | React + jsdom | Reuse the 30-file, 54-test React workload | What does component testing cost, including DOM setup, rendering and cleanup? | 30 / 300 files with the component graph held fixed |
 
-The two tiny-project workloads are opt-in and are not included in the default matrix. Their command and results are documented with the workload list in [framework comparison instructions](../frameworks/README.md#workloads).
+The two tiny-project workloads are opt-in and are not included in the default matrix. Their command and results are documented with the workload list in [framework comparison instructions](../README.md#workloads).
 
 The module-graph workload must eagerly reach all generated leaves; it must not accidentally become another sparse-barrel case. Increasing its graph also increases deterministic module initialization work, so its result is not compiler time alone.
 
