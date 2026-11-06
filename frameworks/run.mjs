@@ -33,6 +33,7 @@ import {
 import { configure } from './configs.mjs'
 import { report } from './report.mjs'
 import { verify } from './verify.mjs'
+import { ciContext, ciResultDirectory } from '../scripts/lib/ci.mjs'
 import { selectedFor, orderFor } from './order.mjs'
 const { values } = parseArgs({
   options: {
@@ -45,6 +46,14 @@ const { values } = parseArgs({
     frameworks: { type: 'string', default: frameworks.join(',') },
   },
 })
+if (!/^[a-zA-Z0-9][a-zA-Z0-9._-]*$/.test(values.label))
+  throw Error('Invalid label')
+const caseIds = values.cases?.split(',')
+if (caseIds && (
+  new Set(caseIds).size !== caseIds.length ||
+  caseIds.some((id) => !cases.some((item) => item.id === id))
+))
+  throw Error('Unknown or duplicate case')
 const runs = Number(values.runs),
   conditions = values.conditions.split(','),
   suites = values.suites.split(',')
@@ -99,6 +108,7 @@ const directory = join(
   `${values.label}-${new Date().toISOString().replace(/[:.]/g, '-')}`,
 )
 mkdirSync(join(directory, 'logs'), { recursive: true })
+ciResultDirectory(root, directory)
 const lock = join(root, 'results/.runner.lock')
 writeFileSync(lock, String(process.pid), { flag: 'wx' })
 const controller = new AbortController()
@@ -106,6 +116,7 @@ process.on('SIGINT', () => controller.abort())
 process.on('SIGTERM', () => controller.abort())
 const record = {
   schemaVersion: 1,
+  ci: ciContext(),
   status: 'preparing',
   startedAt: new Date().toISOString(),
   options: {

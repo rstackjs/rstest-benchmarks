@@ -1,7 +1,7 @@
 import { statistics } from '../scripts/lib/stats.mjs'
 import { writeFileSync } from 'node:fs'
 import { join } from 'node:path'
-export function report(record, directory) {
+export function renderReport(record) {
   const runners = record.options.frameworks ?? Object.keys(record.versions)
   const names = runners.map(
     (f) =>
@@ -41,6 +41,7 @@ export function report(record, directory) {
     'Jest + Babel retains the default babel-jest transformer and adds Babel presets for TypeScript, CommonJS targeting the current Node, and automatic React JSX in the React case. The SWC and Babel variants use the same Jest package and default scheduling/isolation.',
     '',
   )
+  if (record.ci) lines.splice(4, 0, `Source: [GitHub Actions](${record.ci.url}), commit \`${record.ci.sha}\`, attempt ${record.ci.attempt}; runner ${record.ci.runner}, image ${record.ci.image ?? 'unknown'}.`, '')
   if (record.comparisonNote) lines.splice(4, 0, record.comparisonNote, '')
   if (runners.includes('rstest-vmThreads')) lines.push(
     'Rstest vmThreads uses the same published core package as Rstest, with only pool set to vmThreads. Default concurrency is retained; each file receives a fresh VM context. Browser mode is excluded for this variant. Thread heaps share one process RSS, while fork workers occupy separate processes; maxrss ratios cannot be interpreted as total-memory ratios between these pools.',
@@ -184,13 +185,18 @@ export function report(record, directory) {
     '',
     '[Full variability](variability.md). See [result.json](result.json) for all samples, warmups, counts, cache actions, fixture/config hashes, resolved dependencies and coverage file inventories. ' +
       (record.publication
-        ? 'Local commands, executable paths and log paths are omitted; cache paths are workspace-relative. publication.sourceSha256 identifies the original result. Full logs and source snapshots remain in the local run directory.'
+        ? 'Local commands, executable paths and log paths are omitted; cache paths are workspace-relative. publication.sourceSha256 identifies the original result. Full logs and source snapshots remain in the original run directory or CI artifact.'
         : record.sourceRuns
         ? 'Logs, workspaces and harness snapshots remain in the source batch directories listed in the run history.'
         : 'Logs and final reporter output are under logs/. Workspaces and generated source are retained alongside this report.'),
     '',
   )
-  writeFileSync(join(directory, 'report.md'), lines.join('\n'))
-  writeFileSync(join(directory, 'variability.md'), detail.join('\n') + '\n')
-  return mainTables.join('\n\n')
+  return { markdown: lines.join('\n'), variability: detail.join('\n') + '\n', tables: mainTables.join('\n\n') }
+}
+
+export function report(record, directory) {
+  const rendered = renderReport(record)
+  writeFileSync(join(directory, 'report.md'), rendered.markdown)
+  writeFileSync(join(directory, 'variability.md'), rendered.variability)
+  return rendered.tables
 }

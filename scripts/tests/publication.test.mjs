@@ -7,7 +7,9 @@ import {
   readFileSync,
   rmSync,
   existsSync,
+  cpSync,
 } from 'node:fs'
+import { spawnSync } from 'node:child_process'
 import { join } from 'node:path'
 import { tmpdir } from 'node:os'
 import { publishComparison } from '../lib/publication.mjs'
@@ -141,6 +143,22 @@ test('publication updates selected tables, context and inputs, preserving other 
       readFileSync(join(root, spec.output), 'utf8'),
     )
     assert(readme.includes(readmeBlock(spec, generated, undefined, config.readmePath)))
+  } finally {
+    rmSync(root, { recursive: true, force: true })
+  }
+})
+
+test('publication CLI imports a completed CI artifact without changing the framework homepage', () => {
+  const { root, record, write } = fixture()
+  try {
+    cpSync(new URL('../', import.meta.url), join(root, 'scripts'), { recursive: true })
+    record.ci = { url: 'https://github.com/example/benchmarks/actions/runs/123', sha: 'abc123', attempt: 2 }
+    write('results/run/comparison.json', record)
+    const result = spawnSync(process.execPath, ['scripts/publish-comparison.mjs', '--input', 'results/run/comparison.json'], { cwd: root, encoding: 'utf8' })
+    assert.equal(result.status, 0, result.stderr)
+    assert.match(result.stdout, /Updated versions\/README.md/)
+    assert.equal(readFileSync(join(root, 'README.md'), 'utf8'), '# Framework comparisons\n')
+    assert.match(readFileSync(join(root, 'versions/README.md'), 'utf8'), /actions\/runs\/123/)
   } finally {
     rmSync(root, { recursive: true, force: true })
   }

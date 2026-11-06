@@ -38,6 +38,17 @@ pnpm compare --baseline 0.12.5 --candidate 0.12.6 --suites all --runs 6 --update
 
 Repeat `--candidate` to mix npm and local sources. With N total sources, use a multiple of N timed runs to balance order positions. See [all options and publication behavior](../docs/running.md#compare-versions).
 
+## Run in CI
+
+In **Actions → Benchmark → Run workflow**, choose `versions`, enter the baseline/candidate npm versions and repetition count, and select a runner OS. CI runs all Rstest suites and uploads the results. To publish a successful run after extracting its artifact under `results/`:
+
+```sh
+pnpm report:versions --input results/<comparison>/comparison.json
+pnpm report:check
+```
+
+This updates this page and the version reports; the framework comparison homepage stays unchanged. See [CI and report publication](../docs/ci.md).
+
 ## Suites
 
 | Command | Measures | Results |

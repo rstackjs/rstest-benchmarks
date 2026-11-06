@@ -20,6 +20,8 @@
     "report:export": "node scripts/export-report-input.mjs",
     "compare": "node scripts/compare.mjs",
     "compare:frameworks": "node frameworks/run.mjs",
-    "report:frameworks": "node frameworks/refresh-report.mjs"
+    "report:frameworks": "node frameworks/refresh-report.mjs",
+    "report:versions": "node scripts/publish-comparison.mjs",
+    "report:frameworks:check": "node frameworks/refresh-report.mjs --check"
   }
 }

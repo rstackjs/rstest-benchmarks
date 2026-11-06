@@ -77,6 +77,7 @@ export function publishComparison(root, directory, record) {
     })
     const meta = documents[0].meta
     const context = [
+      ...(record.ci ? [`Source: [GitHub Actions](${record.ci.url}), commit \`${record.ci.sha}\`, attempt ${record.ci.attempt}.`] : []),
       `Sources: ${sides.map((side) => `${side}: **${record.sources[side].label}** (${record.sources[side].kind})`).join('; ')}. Measured ${meta.startedAt.slice(0, 10)} (UTC); ${meta.cpu}, ${meta.platform}, Node ${meta.node}.`,
       `${record.options.warmup} warmup(s) and **${record.options.runs} timed runs per supported case**; medians are reported. ${documents[0].results.length} selected cases. Every candidate percentage is relative to the baseline; negative means less elapsed time.`,
       `Sources run sequentially in rotating case/round order. ${Number(record.options.runs) % sides.length === 0 ? 'For cases supported by all sources, each source occupies every order position equally often.' : 'Round count is not a multiple of source count, so order positions differ by at most one per case.'} Node compile cache is disabled. Rstest build and sequencing caches are cleared before each fixture's warmups and retained during measurement. Workload dependency graphs match. Background load and OS page cache are not controlled.`,

@@ -3,8 +3,11 @@ import { readFileSync } from 'node:fs'
 import { resolve, join } from 'node:path'
 import { pathToFileURL } from 'node:url'
 import { fingerprint } from './fixtures.mjs'
-export function verify(record, directory) {
+export function verifySamples(record) {
   assert.equal(record.status, 'completed')
+  assert(record.plan?.length > 0, 'Missing benchmark plan')
+  assert(Number.isSafeInteger(record.options.runs) && record.options.runs > 0)
+  let expectedSamples = 0
   for (const group of record.plan)
     for (const condition of record.options.conditions) {
       const selected =
@@ -13,6 +16,7 @@ export function verify(record, directory) {
           ? ['vitest', 'rstest']
           : ['jest', 'vitest', 'rstest'])
       const id = `${group.suite}/${group.item.id}/${group.provider}`
+      expectedSamples += selected.length * (record.options.runs + (condition === 'warm' ? 1 : 0))
       for (const framework of selected) {
         const samples = record.samples.filter(
           (s) =>
@@ -35,6 +39,8 @@ export function verify(record, directory) {
         for (const s of samples) {
           assert.equal(s.status, 'passed')
           assert.equal(s.exitCode, 0)
+          assert(!s.timedOut && !s.interrupted && !s.error)
+          assert(Number.isFinite(s.rssBytes) && Number.isFinite(s.wallMs))
           assert.equal(s.counts.files, group.item.files)
           assert.equal(s.counts.tests, group.item.tests)
           assert.equal(s.counts.passed, group.item.tests)
@@ -44,12 +50,6 @@ export function verify(record, directory) {
           assert.equal(s.environment.NODE_COMPILE_CACHE, null)
           if (group.provider !== 'none') assert(s.coveredFiles.length > 0)
         }
-        assert.equal(
-          fingerprint(
-            join(directory, 'workspaces', framework, group.item.id, 'src'),
-          ),
-          record.fixtures[group.item.id].sourceHash,
-        )
       }
       if (record.options.runs % selected.length === 0) {
         for (let position = 0; position < selected.length; position++)
@@ -69,6 +69,7 @@ export function verify(record, directory) {
           }
       }
     }
+  assert.equal(record.samples.length, expectedSamples, 'Unexpected or missing samples')
   const samples = record.samples
     .slice()
     .sort((a, b) => a.startedAt.localeCompare(b.startedAt))
@@ -83,6 +84,17 @@ export function verify(record, directory) {
     warmups: record.samples.filter((s) => s.phase === 'warmup').length,
   }
 }
+export function verify(record, directory) {
+  const summary = verifySamples(record)
+  for (const group of record.plan)
+    for (const framework of group.frameworks ?? (group.suite === 'browser' ? ['vitest', 'rstest'] : ['jest', 'vitest', 'rstest']))
+      assert.equal(
+        fingerprint(join(directory, 'workspaces', framework, group.item.id, 'src')),
+        record.fixtures[group.item.id].sourceHash,
+      )
+  return summary
+}
+
 if (
   process.argv[1] &&
   import.meta.url === pathToFileURL(resolve(process.argv[1])).href

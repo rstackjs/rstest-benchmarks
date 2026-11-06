@@ -1,3 +1,4 @@
+import { ciContext, ciResultDirectory } from './lib/ci.mjs'
 import {
   mkdirSync,
   readFileSync,
@@ -123,7 +124,9 @@ async function compareSources() {
     'results',
     `${values.label}-${new Date().toISOString().replace(/[:.]/g, '-')}-${randomUUID().slice(0, 8)}`,
   )
+  ciResultDirectory(root, dir)
   const record = {
+    ci: ciContext(),
     status: 'preparing',
     options: values,
     sources,

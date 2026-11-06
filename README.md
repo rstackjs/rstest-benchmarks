@@ -14,7 +14,7 @@ pnpm --dir frameworks exec playwright install chromium
 pnpm compare:frameworks --runs 6
 ```
 
-Dependencies are pinned in [package.json](frameworks/package.json) and [pnpm-lock.yaml](frameworks/pnpm-lock.yaml): Jest **30.5.2** + `@swc/jest` **0.2.39**, Vitest **5.1.0**, and Rstest **0.12.6**. The runner installs missing dependencies automatically; Chromium must be installed before browser measurements.
+Dependencies are pinned in [package.json](frameworks/package.json) and [pnpm-lock.yaml](frameworks/pnpm-lock.yaml). The runner installs missing dependencies automatically; Chromium must be installed before browser measurements.
 
 The default run includes main, coverage and browser suites: **456 timed invocations and 38 warmups**. It writes reports, samples, logs and source snapshots to `results/frameworks-*/`. It does not update the repository README or Rstest release reports.
 
@@ -25,6 +25,19 @@ pnpm compare:frameworks --suites main --cases many-files --runs 6
 # Warm framework caches only
 pnpm compare:frameworks --suites main --conditions warm --runs 6
 ```
+
+## Run in CI
+
+The [Benchmark workflow](.github/workflows/benchmark.yml) runs framework comparisons on pull requests and pushes to `main`. Use **Actions → Benchmark → Run workflow** to choose the runner OS, repetition count or Rstest version comparison mode. All compared runners execute sequentially on the same host; CI uploads reports and raw execution artifacts without committing results.
+
+To update this page from a successful full framework run, download its artifact and extract it under `results/`, preserving the run directory:
+
+```sh
+pnpm report:frameworks --input results/<run>/result.json
+pnpm report:frameworks:check
+```
+
+The updater checks the complete matrix and samples, then updates the tables, versions, machine details and CI source link together. See [CI and report publication](docs/ci.md) for artifact layout, partial runs and version reports.
 
 ## Workloads
 
@@ -49,17 +62,20 @@ Each has one source file, one test file and one test. [Node](frameworks/fixtures
 
 ## Results
 
-Reproduce the complete matrix, including both tiny projects, coverage and browser mode:
+🥇 and 🥈 mark the lowest and second-lowest distinct unrounded medians in each row; exact ties share the marker. They do not indicate statistical significance.
+
+<!-- framework-results:start -->
+
+Measured 2026-11-06 (UTC) on Apple M4 Max, darwin arm64, Node v24.11.1; 14 available CPUs. jest **30.5.2**, vitest **5.1.0**, rstest **0.12.6**, rstest-vmForks **0.12.6**; @swc/jest **0.2.39**.
+
+8 timed runs per supported case and cache condition; all **928 timed samples and 58 warmups passed**. Node compile cache is disabled. Default concurrency; named Rstest pool variants change only the pool. Cold and warm framework caches are reported separately; OS page cache and background load are uncontrolled. Browser mode compares Vitest against default Rstest only.
+
+Reproduce this matrix using the matching source checkout and pinned dependencies:
 
 ```sh
 pnpm compare:frameworks --suites main,coverage,browser --cases minimal-node,minimal-react,startup,many-files,module-graph,backend,barrel,react --frameworks jest,vitest,rstest,rstest-vmForks --runs 8
 ```
 
-Measured 2026-11-06 on Apple M4 Max with Node 24.11.1. Jest **30.5.2** + SWC **0.2.39**, Vitest **5.1.0**, Rstest **0.12.6**. Default concurrency; `rstest-vmForks` changes only the Rstest pool. Eight timed runs per supported case and cache condition; all **928 timed samples and 58 warmups passed**. Node compile cache is disabled. Cold and warm framework caches are reported separately; OS page cache and background load are uncontrolled. Browser mode compares Vitest against default Rstest only.
-
-🥇 and 🥈 mark the lowest and second-lowest distinct unrounded medians in each row; exact ties share the marker. They do not indicate statistical significance.
-
-<!-- framework-results:start -->
 **Main suite · cold cache · elapsed time**
 
 | Case | Jest + SWC | Vitest | Rstest | Rstest vmForks |
@@ -111,6 +127,7 @@ Measured 2026-11-06 on Apple M4 Max with Node 24.11.1. Jest **30.5.2** + SWC **0
 | Backend | 284.42 | 🥇 126.57 | 🥈 154.72 | 155.31 |
 | Barrel | 277.62 | 398.31 | 🥇 163.08 | 🥈 164.14 |
 | React + jsdom | 🥇 174.19 | 🥈 178.22 | 436.37 | 364.05 |
+
 <!-- framework-results:end -->
 
 RSS is OS maxrss, not total concurrent worker memory. Full coverage/browser comparisons are in the [complete report](frameworks/reports/report.md), with [variability](frameworks/reports/variability.md) and [all samples and provenance](frameworks/reports/result.json). The tiny-project rows above are part of the same run and result set. Published framework reports use fixed paths in `frameworks/reports/`; each update replaces the current report and samples. Previous results remain available in Git history. Run `pnpm report:frameworks` to regenerate the reports and README tables from the published samples.
