@@ -1,4 +1,4 @@
-# Jest / Vitest / Rstest benchmarks
+# Rstest benchmarks
 
 Compare Jest + SWC, Vitest, and Rstest on shared Node and React workloads. The optional `rstest-vmForks` runner adds Rstest's VM forks pool to the comparison. Each run reports whole-process elapsed time and RSS for cold and warm framework caches.
 
