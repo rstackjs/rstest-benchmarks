@@ -30,7 +30,7 @@ export function report(record, directory) {
     '',
     'RSS is OS /usr/bin/time maxrss (MiB), not simultaneous aggregate process-tree memory. Percentages use Jest when present, Vitest for browser mode, otherwise the first listed framework as baseline. Negative means less time or memory. Installations and generation are outside timing. All samples retained.',
     '',
-    '🥇 marks the lowest unrounded median among complete results in each row; exact ties share the marker. It does not indicate statistical significance.',
+    '🥇 and 🥈 mark the lowest and second-lowest distinct unrounded medians among complete results in each row; exact ties share the marker. They do not indicate statistical significance.',
     '',
   ]
   if (runners.includes('jest-babel') && record.dependencies) lines.push(
@@ -130,15 +130,15 @@ export function report(record, directory) {
           ),
           base = stats[baseIndex],
           notes = []
-        const best = Math.min(
-          ...stats.filter((s) => s.complete).map((s) => s[metric].median),
-        )
+        const ranked = [...new Set(
+          stats.filter((s) => s.complete).map((s) => s[metric].median),
+        )].sort((a, b) => a - b)
         const cells = stats.map((s, i) => {
           if (!sets[i].length) return '—'
           if (!s.complete) return 'INCOMPLETE'
           if (s[metric].cv > 10) notes.push(names[i] + ' CV > 10%')
           const value =
-            (s[metric].median === best ? '🥇 ' : '') +
+            (['🥇 ', '🥈 '][ranked.indexOf(s[metric].median)] ?? '') +
             (metric === 'time'
               ? `${(s.time.median / 1000).toFixed(3)}s`
               : (s.rss.median / 1024 ** 2).toFixed(1))

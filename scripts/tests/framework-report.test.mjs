@@ -41,7 +41,7 @@ test('report excludes warmups and keeps RSS separate from elapsed time', (t) => 
     ...samples('vitest', [500, 1500]),
     ...samples('vitest', [90000], { phase: 'warmup' }),
   ])
-  assert.match(text, /\| main\/startup\/none \| 2\.000s \| 🥇 1\.000s \(-50\.0%\)/)
+  assert.match(text, /\| main\/startup\/none \| 🥈 2\.000s \| 🥇 1\.000s \(-50\.0%\)/)
   assert.match(text, /\| main\/startup\/none \| 🥇 100\.0 \| 🥇 100\.0 \(\+0\.0%\)/)
 })
 
@@ -54,7 +54,7 @@ test('failed baseline is not silently replaced by another framework', (t) => {
   ])
   assert.match(
     text,
-    /\| main\/startup\/none \| INCOMPLETE \| 1\.000s \| 🥇 0\.500s \|/,
+    /\| main\/startup\/none \| INCOMPLETE \| 🥈 1\.000s \| 🥇 0\.500s \|/,
   )
   assert.doesNotMatch(text, /-50\.0%/)
 })
@@ -66,8 +66,18 @@ test('browser comparison uses Vitest as baseline and leaves Jest unavailable', (
   ])
   assert.match(
     text,
-    /\| browser\/react\/none \| — \| 🥇 1\.000s \| 1\.500s \(\+50\.0%\)/,
+    /\| browser\/react\/none \| — \| 🥇 1\.000s \| 🥈 1\.500s \(\+50\.0%\)/,
   )
+})
+
+test('medals use unrounded medians and share second place for exact ties', (t) => {
+  const text = render(t, [
+    ...samples('jest', [1000.1, 1000.1], { rssBytes: 300 * 1024 ** 2 }),
+    ...samples('vitest', [1000.2, 1000.2], { rssBytes: 200 * 1024 ** 2 }),
+    ...samples('rstest', [1000.2, 1000.2]),
+  ])
+  assert.match(text, /\| main\/startup\/none \| 🥇 1\.000s \| 🥈 1\.000s \(\+0\.0%\) \| 🥈 1\.000s \(\+0\.0%\)/)
+  assert.match(text, /\| main\/startup\/none \| 300\.0 \| 🥈 200\.0 \(-33\.3%\) \| 🥇 100\.0 \(-66\.7%\)/)
 })
 
 test('phase timings retain reporter durations and exclude warmup measurements', (t) => {
