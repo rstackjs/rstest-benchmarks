@@ -1,0 +1,16 @@
+node_modules
+.DS_Store
+*.log
+apps/*/src
+apps/*/tests
+apps/*/coverage
+apps/*/.rstest-reports
+apps/*/dist
+/results/
+apps/*/.rstest/
+/archive/
+
+# Local credentials
+.env
+.env.*
+!.env.example

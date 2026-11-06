@@ -1,0 +1,101 @@
+{
+  "reports": [
+    {
+      "title": "main: 0.11.0 vs 0.12.6",
+      "output": "reports/versions.md",
+      "marker": "versions",
+      "context": "Sources: baseline: **0.11.0** (npm); candidate: **0.12.6** (npm). Measured 2026-11-06 (UTC); Apple M4 Max × 14, darwin arm64, Node v24.11.1.\n\n1 warmup(s) and **6 timed runs per supported case**; medians are reported. 10 selected cases. Every candidate percentage is relative to the baseline; negative means less elapsed time.\n\nSources run sequentially in rotating case/round order. For cases supported by all sources, each source occupies every order position equally often. Node compile cache is disabled. Rstest build and sequencing caches are cleared before each fixture's warmups and retained during measurement. Workload dependency graphs match. Background load and OS page cache are not controlled.",
+      "columns": [
+        {
+          "label": "baseline: 0.11.0",
+          "files": [
+            "reports/data/releases-0110-0126-2026-11-06T03-31-19-069Z-c8f4536f-baseline-main.json"
+          ]
+        },
+        {
+          "label": "candidate: 0.12.6",
+          "files": [
+            "reports/data/releases-0110-0126-2026-11-06T03-31-20-664Z-c3b4c790-candidate-main.json"
+          ]
+        }
+      ]
+    },
+    {
+      "title": "scaling: 0.11.0 vs 0.12.6",
+      "output": "reports/scaling.md",
+      "context": "Sources: baseline: **0.11.0** (npm); candidate: **0.12.6** (npm). Measured 2026-11-06 (UTC); Apple M4 Max × 14, darwin arm64, Node v24.11.1.\n\n1 warmup(s) and **6 timed runs per supported case**; medians are reported. 6 selected cases. Every candidate percentage is relative to the baseline; negative means less elapsed time.\n\nSources run sequentially in rotating case/round order. For cases supported by all sources, each source occupies every order position equally often. Node compile cache is disabled. Rstest build and sequencing caches are cleared before each fixture's warmups and retained during measurement. Workload dependency graphs match. Background load and OS page cache are not controlled.",
+      "columns": [
+        {
+          "label": "baseline: 0.11.0",
+          "files": [
+            "reports/data/releases-0110-0126-2026-11-06T03-34-24-999Z-c32b180d-baseline-scaling.json"
+          ]
+        },
+        {
+          "label": "candidate: 0.12.6",
+          "files": [
+            "reports/data/releases-0110-0126-2026-11-06T03-34-27-040Z-27fe0e8d-candidate-scaling.json"
+          ]
+        }
+      ]
+    },
+    {
+      "title": "barrel: 0.11.0 vs 0.12.6",
+      "output": "reports/barrel.md",
+      "context": "Sources: baseline: **0.11.0** (npm); candidate: **0.12.6** (npm). Measured 2026-11-06 (UTC); Apple M4 Max × 14, darwin arm64, Node v24.11.1.\n\n1 warmup(s) and **6 timed runs per supported case**; medians are reported. 6 selected cases. Every candidate percentage is relative to the baseline; negative means less elapsed time.\n\nSources run sequentially in rotating case/round order. For cases supported by all sources, each source occupies every order position equally often. Node compile cache is disabled. Rstest build and sequencing caches are cleared before each fixture's warmups and retained during measurement. Workload dependency graphs match. Background load and OS page cache are not controlled.",
+      "columns": [
+        {
+          "label": "baseline: 0.11.0",
+          "files": [
+            "reports/data/releases-0110-0126-2026-11-06T03-35-39-993Z-0458303c-baseline-barrel.json"
+          ]
+        },
+        {
+          "label": "candidate: 0.12.6",
+          "files": [
+            "reports/data/releases-0110-0126-2026-11-06T03-35-42-602Z-85140dec-candidate-barrel.json"
+          ]
+        }
+      ]
+    },
+    {
+      "title": "pools: 0.11.0 vs 0.12.6",
+      "output": "reports/pools.md",
+      "context": "Sources: baseline: **0.11.0** (npm); candidate: **0.12.6** (npm). Measured 2026-11-06 (UTC); Apple M4 Max × 14, darwin arm64, Node v24.11.1.\n\n1 warmup(s) and **6 timed runs per supported case**; medians are reported. 12 selected cases. Every candidate percentage is relative to the baseline; negative means less elapsed time.\n\nSources run sequentially in rotating case/round order. For cases supported by all sources, each source occupies every order position equally often. Node compile cache is disabled. Rstest build and sequencing caches are cleared before each fixture's warmups and retained during measurement. Workload dependency graphs match. Background load and OS page cache are not controlled.",
+      "columns": [
+        {
+          "label": "baseline: 0.11.0",
+          "files": [
+            "reports/data/releases-0110-0126-2026-11-06T03-36-40-100Z-8f8715f5-baseline-pools.json"
+          ]
+        },
+        {
+          "label": "candidate: 0.12.6",
+          "files": [
+            "reports/data/releases-0110-0126-2026-11-06T03-36-42-128Z-6045e160-candidate-pools.json"
+          ]
+        }
+      ]
+    },
+    {
+      "title": "coverage: 0.11.0 vs 0.12.6",
+      "output": "reports/coverage.md",
+      "marker": "coverage",
+      "context": "Sources: baseline: **0.11.0** (npm); candidate: **0.12.6** (npm). Measured 2026-11-06 (UTC); Apple M4 Max × 14, darwin arm64, Node v24.11.1.\n\n1 warmup(s) and **6 timed runs per supported case**; medians are reported. 15 selected cases. Every candidate percentage is relative to the baseline; negative means less elapsed time.\n\nSources run sequentially in rotating case/round order. For cases supported by all sources, each source occupies every order position equally often. Node compile cache is disabled. Rstest build and sequencing caches are cleared before each fixture's warmups and retained during measurement. Workload dependency graphs match. Background load and OS page cache are not controlled.",
+      "columns": [
+        {
+          "label": "baseline: 0.11.0",
+          "files": [
+            "reports/data/releases-0110-0126-2026-11-06T03-38-14-514Z-06dbc7cd-baseline-coverage.json"
+          ]
+        },
+        {
+          "label": "candidate: 0.12.6",
+          "files": [
+            "reports/data/releases-0110-0126-2026-11-06T03-38-16-748Z-631fde57-candidate-coverage.json"
+          ]
+        }
+      ]
+    }
+  ]
+}

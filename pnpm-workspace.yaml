@@ -1,0 +1,7 @@
+packages:
+  - apps/*
+minimumReleaseAgeExclude:
+  - '@rstest/browser@0.12.6'
+  - '@rstest/core@0.12.6'
+  - '@rstest/coverage-istanbul@0.12.6'
+  - '@rstest/coverage-v8@0.12.6'

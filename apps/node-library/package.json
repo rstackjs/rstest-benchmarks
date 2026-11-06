@@ -1,0 +1,14 @@
+{
+  "name": "@bench-app/node-library",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "generate": "node generate.mjs",
+    "test": "rstest run"
+  },
+  "devDependencies": {
+    "@rstest/core": "0.12.6",
+    "@rstest/coverage-istanbul": "0.12.6",
+    "@rstest/coverage-v8": "0.12.6"
+  }
+}

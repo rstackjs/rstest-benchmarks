@@ -1,0 +1,26 @@
+{
+  "name": "@bench-app/vue-spa",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "generate": "node generate.mjs",
+    "test": "rstest run"
+  },
+  "dependencies": {
+    "vue": "3.5.42"
+  },
+  "devDependencies": {
+    "@rsbuild/core": "2.2.0",
+    "@rsbuild/plugin-vue": "2.0.1",
+    "@rstest/browser": "0.12.6",
+    "@rstest/core": "0.12.6",
+    "@rstest/coverage-istanbul": "0.12.6",
+    "@rstest/coverage-v8": "0.12.6",
+    "@vue/compiler-dom": "3.5.42",
+    "@vue/test-utils": "2.5.0",
+    "jsdom": "29.1.1",
+    "happy-dom": "20.10.6",
+    "playwright": "1.61.1",
+    "typescript": "6.0.3"
+  }
+}
