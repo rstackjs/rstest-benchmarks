@@ -1,0 +1,82 @@
+name: Coverage benchmarks
+
+on:
+  workflow_dispatch:
+    inputs:
+      runner:
+        description: Runner OS (results from different hosts must not be pooled)
+        type: choice
+        options: [ubuntu-24.04, macos-15]
+        default: ubuntu-24.04
+      runs:
+        description: Timed runs per runner/case/provider/cache condition
+        type: string
+        default: '5'
+      cases:
+        description: Coverage workloads
+        type: choice
+        options:
+          - backend,react
+          - backend
+          - react
+        default: backend,react
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.run_id }}
+  cancel-in-progress: false
+
+jobs:
+  benchmark:
+    runs-on: ${{ inputs.runner || 'ubuntu-24.04' }}
+    timeout-minutes: 90
+    env:
+      NODE_DISABLE_COMPILE_CACHE: '1'
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+        with:
+          node-version: 24.11.1
+      - name: Install pinned pnpm
+        run: npm install --global "$(node -p 'require("./package.json").packageManager')"
+      - name: Check harness and published reports
+        run: |
+          pnpm test
+          pnpm report:frameworks:check
+      - name: Install benchmark dependencies
+        run: pnpm --dir frameworks install --frozen-lockfile
+      # Keep all compared frameworks on one host, running sequentially.
+      # Do not restore transform, build or sequencing caches across CI jobs.
+      - name: Run benchmarks
+        id: benchmark
+        env:
+          BENCH_RUNS: ${{ inputs.runs || '5' }}
+          BENCH_CASES: ${{ inputs.cases || 'backend,react' }}
+        shell: bash
+        run: |
+          pnpm compare:frameworks --suites coverage --frameworks jest,vitest,vitest-vmForks,rstest,rstest-vmForks --cases "$BENCH_CASES" --runs "$BENCH_RUNS" --label ci-coverage
+      - name: Publish job summary
+        if: always()
+        env:
+          RESULT_DIR: ${{ steps.benchmark.outputs.result-directory }}
+        shell: bash
+        run: |
+          if [[ -n "$RESULT_DIR" && -f "$RESULT_DIR/report.md" ]]; then
+            cat "$RESULT_DIR/report.md" >> "$GITHUB_STEP_SUMMARY"
+          fi
+      - name: Upload samples, reports and execution evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: benchmark-coverage-${{ runner.os }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            results/
+            !results/**/node_modules/**
+            !results/**/.cache/**
+          include-hidden-files: true
+          if-no-files-found: warn
+          retention-days: 30

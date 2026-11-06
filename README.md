@@ -1,6 +1,6 @@
 # Rstest benchmarks
 
-Compare Jest + SWC, Vitest, and Rstest on shared Node and React workloads. The optional `rstest-vmForks` runner adds Rstest's VM forks pool to the comparison. Each run reports whole-process elapsed time and RSS for cold and warm framework caches.
+Compare Jest + SWC, Vitest, and Rstest on shared Node and React workloads. The optional `vitest-vmForks` and `rstest-vmForks` runners add VM forks pools to the comparison. Each run reports whole-process elapsed time and RSS for cold and warm framework caches.
 
 For comparisons between Rstest releases or a local checkout, see [Rstest version benchmarks](versions/README.md).
 
@@ -28,9 +28,9 @@ pnpm compare:frameworks --suites main --conditions warm --runs 6
 
 ## Run in CI
 
-The [Benchmark workflow](.github/workflows/benchmark.yml) runs framework comparisons on pull requests and pushes to `main`. Use **Actions → Benchmark → Run workflow** to choose the runner OS, repetition count or Rstest version comparison mode. All compared runners execute sequentially on the same host; CI uploads reports and raw execution artifacts without committing results.
+The [Framework benchmarks workflow](.github/workflows/benchmark-frameworks.yml) runs main and browser suites on pull requests and pushes to `main`. Coverage runs separately through the manually triggered [Coverage benchmarks workflow](.github/workflows/benchmark-coverage.yml). Use **Actions → Framework benchmarks → Run workflow** to choose the runner OS, repetition count, cases or suites. Rstest release comparisons have a separate [version workflow](.github/workflows/benchmark-versions.yml). All compared runners execute sequentially on the same host; CI uploads reports and raw execution artifacts without committing results.
 
-To update this page from a successful full framework run, download its artifact and extract it under `results/`, preserving the run directory:
+For combined README/report publication, select `main,coverage,browser` in the framework workflow. To update this page from that successful full run, download its artifact and extract it under `results/`, preserving the run directory:
 
 ```sh
 pnpm report:frameworks --input results/<run>/result.json
@@ -55,7 +55,7 @@ The updater checks the complete matrix and samples, then updates the tables, ver
 Coverage compares none/V8/Istanbul on selected workloads, including no-coverage controls. Browser mode runs the React workload in Chromium with Vitest and the default Rstest runner. The two tiny-project workloads are opt-in and measure startup overhead; they are excluded from the default matrix. Run them with:
 
 ```sh
-pnpm compare:frameworks --suites main --cases minimal-node,minimal-react --frameworks jest,vitest,rstest,rstest-vmForks --runs 8
+pnpm compare:frameworks --suites main --cases minimal-node,minimal-react --frameworks jest,vitest,vitest-vmForks,rstest,rstest-vmForks --runs 5
 ```
 
 Each has one source file, one test file and one test. [Node](frameworks/fixtures/minimal-node/tests/add.test.ts) exercises an addition function; [React](frameworks/fixtures/minimal-react/tests/Counter.test.tsx) renders a counter in jsdom and clicks it once. They measure tiny-project startup overhead, not throughput on larger projects.
@@ -142,11 +142,11 @@ See [workload design](docs/framework-comparison.md) for performance questions an
 | `--conditions` | `cold,warm` | Cache conditions, reported separately |
 | `--suites` | `main,coverage,browser` | Comma-separated suites |
 | `--cases` | six main cases | Comma-separated case IDs from the table; also accepts `minimal-node,minimal-react` |
-| `--frameworks` | `jest,vitest,rstest` | Select frameworks; optional entries: `rstest-vmForks`, `jest-babel` |
+| `--frameworks` | `jest,vitest,rstest` | Select frameworks; optional entries: `vitest-vmForks`, `rstest-vmForks`, `jest-babel` |
 | `--install` | off | Reinstall pinned dependencies before measuring |
 | `--label` | `frameworks` | Result directory prefix |
 
-With three frameworks, use a multiple of six runs to balance order. For four-framework comparisons including `rstest-vmForks`, use a multiple of eight. Browser mode compares Vitest and the default Rstest runner.
+With three frameworks, use a multiple of six runs to balance order. For four-framework comparisons including `rstest-vmForks`, use a multiple of eight. With both Vitest and Rstest vmForks variants (five runners), CI defaults to five runs; ten is optional for forward/reverse and browser order balancing. Browser mode compares Vitest and the default Rstest runner.
 
 ## Measurement and limitations
 

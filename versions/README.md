@@ -40,7 +40,7 @@ Repeat `--candidate` to mix npm and local sources. With N total sources, use a m
 
 ## Run in CI
 
-In **Actions → Benchmark → Run workflow**, choose `versions`, enter the baseline/candidate npm versions and repetition count, and select a runner OS. CI runs all Rstest suites and uploads the results. To publish a successful run after extracting its artifact under `results/`:
+In **Actions → Rstest version benchmarks → Run workflow**, enter the baseline/candidate npm versions and repetition count, and select a runner OS. This [workflow](../.github/workflows/benchmark-versions.yml) is triggered manually and defaults to six timed runs per case. CI runs all Rstest suites and uploads the results. To publish a successful run after extracting its artifact under `results/`:
 
 ```sh
 pnpm report:versions --input results/<comparison>/comparison.json

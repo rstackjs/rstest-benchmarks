@@ -32,7 +32,7 @@ export function configure(directory, framework, item) {
       collectCoverageFrom: ['src/**/*.{ts,tsx}', '!src/**/*.d.ts', '!src/features/*/index.ts'], coverageReporters: ['json'], coverageDirectory: '<rootDir>/coverage',
     }\n`,
     )
-  } else if (framework === 'vitest') {
+  } else if (framework.startsWith('vitest')) {
     write(
       join(directory, 'vitest.config.mjs'),
       `import { defineConfig } from 'vitest/config'
@@ -41,7 +41,7 @@ import Reporter from ${JSON.stringify(join(reporters, 'vitest.mjs'))}
 export default defineConfig({
   cacheDir: './.cache/vite',
   oxc: { jsx: { runtime: 'automatic' } },
-  test: { fsModuleCachePath: process.cwd() + '/.cache/vitest-modules', include: ['tests/**/*.test.{ts,tsx}'], environment: ${JSON.stringify(react ? 'jsdom' : 'node')},
+  test: { ${framework === 'vitest-vmForks' ? "pool: 'vmForks'," : ''}fsModuleCachePath: process.cwd() + '/.cache/vitest-modules', include: ['tests/**/*.test.{ts,tsx}'], environment: ${JSON.stringify(react ? 'jsdom' : 'node')},
     setupFiles: ${JSON.stringify(setup ? ['./tests/setup.ts'] : [])}, reporters: [new Reporter()],
     coverage: ${coverage},
     ...(process.env.BENCH_BROWSER ? { browser: { enabled: true, headless: true, provider: browserProvider, instances: [{ browser: 'chromium' }] } } : {}),

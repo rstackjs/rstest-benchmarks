@@ -5,6 +5,7 @@ import {
   writeFileSync,
   rmSync,
   cpSync,
+  realpathSync,
 } from 'node:fs'
 import { resolve, join, relative } from 'node:path'
 import { parseArgs } from 'node:util'
@@ -18,6 +19,7 @@ import {
 } from 'node:os'
 import { createHash } from 'node:crypto'
 import { spawnSync } from 'node:child_process'
+import { createRequire } from 'node:module'
 import { execute, readRss } from '../scripts/lib/process.mjs'
 import { environment } from '../scripts/runner.mjs'
 import {
@@ -102,6 +104,11 @@ const resolved = Object.fromEntries(
 for (const [name, version] of Object.entries(deps))
   if (resolved[name] !== version)
     throw Error(`Installed ${name} differs from pinned version`)
+// Jest resolves its default transformer from jest-config's own dependency graph.
+const jestRequire = createRequire(realpathSync(join(root, 'frameworks/node_modules/jest/package.json')))
+const jestCliRequire = createRequire(jestRequire.resolve('jest-cli/package.json'))
+const jestConfigRequire = createRequire(jestCliRequire.resolve('jest-config/package.json'))
+resolved['babel-jest'] = JSON.parse(readFileSync(jestConfigRequire.resolve('babel-jest/package.json'))).version
 const directory = join(
   root,
   'results',
@@ -256,13 +263,15 @@ try {
   )
   if (!groups.length) throw Error('No matching cases')
   record.plan = groups
-  const { chromium } = await import('playwright')
-  const executable = chromium.executablePath()
-  record.browser = {
-    executable,
-    version: spawnSync(executable, ['--version'], {
-      encoding: 'utf8',
-    }).stdout?.trim(),
+  if (groups.some((group) => group.suite === 'browser')) {
+    const { chromium } = await import('playwright')
+    const executable = chromium.executablePath()
+    record.browser = {
+      executable,
+      version: spawnSync(executable, ['--version'], {
+        encoding: 'utf8',
+      }).stdout?.trim(),
+    }
   }
   record.status = 'running'
   save()

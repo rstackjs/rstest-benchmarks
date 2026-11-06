@@ -30,5 +30,8 @@ export function orderFor(selected, round) {
     return permutations[round % 6].map((i) => selected[i])
   }
   const offset = round % selected.length
-  return [...selected.slice(offset), ...selected.slice(0, offset)]
+  const order = selected.length >= 5 && Math.floor(round / selected.length) % 2
+    ? [...selected].reverse()
+    : selected
+  return [...order.slice(offset), ...order.slice(0, offset)]
 }

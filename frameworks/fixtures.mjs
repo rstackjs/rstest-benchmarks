@@ -13,8 +13,9 @@ import { createHash } from 'node:crypto'
 import { tsModule } from '../tools/generator/helpers.mjs'
 export const root = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 export const frameworks = ['jest', 'vitest', 'rstest']
-export const supportedFrameworks = [...frameworks, 'rstest-vmForks', 'rstest-vmThreads', 'jest-babel']
+export const supportedFrameworks = [...frameworks, 'vitest-vmForks', 'rstest-vmForks', 'rstest-vmThreads', 'jest-babel']
 export function frameworkFamily(framework) {
+  if (framework.startsWith('vitest')) return 'vitest'
   if (framework.startsWith('rstest')) return 'rstest'
   if (framework.startsWith('jest')) return 'jest'
   return framework

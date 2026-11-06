@@ -1,37 +1,53 @@
 # CI benchmarks and report publication
 
-The [Benchmark workflow](../.github/workflows/benchmark.yml) follows the run-summary and artifact approach used by [build-tools-performance](https://github.com/rstackjs/build-tools-performance/blob/main/.github/workflows/benchmark.yml). Its [README sync skill](https://github.com/rstackjs/build-tools-performance/blob/main/.agents/skills/benchmark-readme-sync/SKILL.md) also informed the provenance and completeness checks implemented here.
+The workflows follow the run-summary and artifact approach used by [build-tools-performance](https://github.com/rstackjs/build-tools-performance/blob/main/.github/workflows/benchmark.yml). Its [README sync skill](https://github.com/rstackjs/build-tools-performance/blob/main/.agents/skills/benchmark-readme-sync/SKILL.md) also informed the provenance and completeness checks implemented here.
 
 ## Run benchmarks
 
-Pull requests, pushes to `main` and merge-queue events run the complete framework comparison. Markdown and published-result-only changes do not trigger push/PR benchmarks. In GitHub Actions, **Benchmark → Run workflow** also accepts:
+The comparisons have separate workflows, inputs and concurrency groups:
 
-| Input | Default | Purpose |
+| Workflow | Trigger | Default workload |
 | --- | --- | --- |
-| `mode` | `frameworks` | Framework comparison, or Rstest `versions` comparison |
-| `runner` | `ubuntu-24.04` | Linux or `macos-15`; keep results from different hosts separate |
-| `runs` | `8` | Timed runs per supported case and cache condition |
-| `cases` | all eight | Optional comma-separated framework cases; ignored in versions mode |
-| `baseline` | `0.11.0` | Baseline npm release for versions mode |
-| `candidate` | `0.12.6` | Candidate npm release(s), comma-separated, for versions mode |
+| [Framework benchmarks](../.github/workflows/benchmark-frameworks.yml) | Pull requests, pushes to `main`, merge queue, or manual dispatch | Jest + SWC, Vitest, Vitest vmForks, Rstest and Rstest vmForks; all eight main cases and browser mode; 5 timed runs per runner/case/cache condition, cold and warm caches |
+| [Coverage benchmarks](../.github/workflows/benchmark-coverage.yml) | Manual dispatch | The same five runners; backend and React; none/V8/Istanbul; 5 timed runs per runner/case/provider/cache condition, cold and warm caches |
+| [Rstest version benchmarks](../.github/workflows/benchmark-versions.yml) | Manual dispatch | Rstest 0.11.0 vs 0.12.6; all five suites; 1 warmup and 6 timed runs per supported case |
 
-Framework mode includes Jest + SWC, Vitest, Rstest and Rstest vmForks; all eight main cases, coverage and browser mode; cold and warm caches. Eight runs balance the four-way comparisons and the two-way browser comparison. Version mode runs all five Rstest suites, with one warmup per case and rotating source order. With N versions, use a multiple of N repetitions. Local checkout comparison remains available through the local CLI; the workflow inputs are for npm releases.
+Markdown and published-result-only changes do not trigger push/PR framework benchmarks. Choose the workflow under **Actions**, then **Run workflow**:
 
-Node is pinned to 24.11.1 and pnpm comes from `package.json`. Framework dependencies use the frozen lockfile. Browser dependencies and Chromium are installed before measurement. Node compile cache is disabled. All compared tools/versions run sequentially in one job on one host, with their default concurrency. CI does not restore framework transformation, build or sequencing caches. Cache resets and warmups remain controlled by the existing runners.
+| Input | Framework workflow | Version workflow |
+| --- | --- | --- |
+| `runner` | `ubuntu-24.04` or `macos-15`; defaults to Linux | Same |
+| `runs` | Defaults to `5`; `10` is optional for forward/reverse and browser order balancing | Defaults to `6`; use a multiple of the number of versions |
+| `cases` | Optional comma-separated IDs; empty selects all eight | — |
+| `suites` | Defaults to `main,browser`; choose `main,coverage,browser` for combined README/report publication | — |
+| `baseline` | — | Exact npm release, default `0.11.0` |
+| `candidate` | — | Exact npm release(s), comma-separated, default `0.12.6` |
+
+The separate coverage workflow accepts `runner`, `runs` (default `5`) and `cases` (`backend,react`, `backend` or `react`). It runs only the coverage suite and does not install Chromium. It measures one `none` control series per workload/runner/cache condition, with the selected repetition count, on the same host as the instrumented runs. Controls are not reused across workflows, which can land on different machines.
+
+With the five default runners and five repetitions, the automatic framework job now has 420 timed invocations and 42 warmups, down from 720 and 72 when it also included coverage. The coverage workflow is optional and has 300 timed invocations and 30 warmups for both workloads. These counts describe the selected work, not a wall-time guarantee.
+
+Five rounds let each of the five Node/DOM runners occupy each order position once. Browser mode has two runners, so an odd repetition count gives one runner one extra first position; reports disclose this imbalance. Ten rounds balance both directions and browser order, but are optional. Each repetition is a separate invocation of every supported runner, not a shared repetition across runners.
+
+Local checkout comparison remains available through the local CLI; the version workflow inputs are for npm releases.
+
+Node is pinned to 24.11.1 and pnpm comes from `package.json`. The framework workflow installs its frozen lockfile and Chromium before measurement. The version workflow installs Chromium's Linux system dependencies, then lets `compare` install each Rstest version and Chromium in its isolated workspace; it does not install the framework-comparison dependency set.
+
+Node compile cache is disabled. All compared tools/versions run sequentially in one job on one host, with their default concurrency. CI does not restore framework transformation, build or sequencing caches. Cache resets, warmups and rotating order remain controlled by the existing runners.
 
 Hosted runners can vary in CPU model, load and available parallelism. Use each run's host information and variability report when interpreting differences; do not pool local and CI samples or different workflow runs. There is no automatic performance regression threshold.
 
 ## Inspect results
 
-The job summary shows the generated comparison reports. The artifact is named `benchmark-<mode>-<OS>-<run ID>-<attempt>` and is retained for 30 days. It includes result JSON, reports, logs, generated source/configs, dependency lockfiles and harness snapshots. Installed `node_modules` and framework caches are excluded. Hidden configuration files are included.
+The job summary shows the generated comparison reports. The artifact is named `benchmark-frameworks-<OS>-<run ID>-<attempt>`, `benchmark-coverage-<OS>-<run ID>-<attempt>` or `benchmark-versions-<OS>-<run ID>-<attempt>` and is retained for 30 days. It includes result JSON, reports, logs, generated source/configs, dependency lockfiles and harness snapshots. Installed `node_modules` and framework caches are excluded. Hidden configuration files are included.
 
 Artifacts are uploaded even after failure when a result directory exists. Failed or partial runs are diagnostic evidence, not publishable benchmark results. Full raw samples retain the run URL, commit, attempt and runner information. Download artifacts you need before retention expires.
 
-Nothing in the workflow writes to Git or opens a PR. The workflow only needs read access to repository contents.
+The workflows do not write to Git or open PRs. They only need read access to repository contents.
 
 ## Update the framework homepage
 
-Download the artifact from one successful **complete framework run**. Extract its contents into the repository's ignored `results/` directory. The expected layout is `results/ci-frameworks-<timestamp>/result.json`, with its reports and logs alongside it.
+For combined README/report publication, manually run **Framework benchmarks** with `suites: main,coverage,browser`, all eight cases and both cache conditions. Download the artifact from that successful **complete framework run**. The default main/browser job and the separate coverage job provide independent reports; do not merge their samples into a single published run. Extract its contents into the repository's ignored `results/` directory. The expected layout is `results/ci-frameworks-<timestamp>/result.json`, with its reports and logs alongside it.
 
 ```sh
 pnpm report:frameworks --input results/ci-frameworks-<timestamp>/result.json

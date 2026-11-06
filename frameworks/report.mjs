@@ -9,6 +9,7 @@ export function renderReport(record) {
         jest: 'Jest + SWC',
         'jest-babel': 'Jest + Babel',
         vitest: 'Vitest',
+        'vitest-vmForks': 'Vitest vmForks',
         rstest: 'Rstest',
         'rstest-vmForks': 'Rstest vmForks',
         'rstest-vmThreads': 'Rstest vmThreads',

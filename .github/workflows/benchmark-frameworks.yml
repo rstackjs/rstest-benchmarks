@@ -1,4 +1,4 @@
-name: Benchmark
+name: Framework benchmarks
 
 on:
   pull_request:
@@ -10,31 +10,25 @@ on:
   merge_group:
   workflow_dispatch:
     inputs:
-      mode:
-        description: Comparison to run
-        type: choice
-        options: [frameworks, versions]
-        default: frameworks
       runner:
         description: Runner OS (results from different hosts must not be pooled)
         type: choice
         options: [ubuntu-24.04, macos-15]
         default: ubuntu-24.04
       runs:
-        description: Timed runs (multiples of 8 balance the default framework comparison)
+        description: Timed runs per runner/case/cache condition (10 is optional for fuller order balancing)
         type: string
-        default: '8'
+        default: '5'
+      suites:
+        description: Suites (full matrix is available for combined report publication)
+        type: choice
+        options:
+          - main,browser
+          - main,coverage,browser
+        default: main,browser
       cases:
         description: Framework case IDs, comma-separated (empty runs all eight)
         type: string
-      baseline:
-        description: Rstest baseline npm version (versions mode only)
-        type: string
-        default: '0.11.0'
-      candidate:
-        description: Rstest candidate npm version(s), comma-separated (versions mode only)
-        type: string
-        default: '0.12.6'
 
 permissions:
   contents: read
@@ -61,44 +55,36 @@ jobs:
       - name: Check harness and published reports
         run: |
           pnpm test
-          pnpm report:check
           pnpm report:frameworks:check
       - name: Install benchmark dependencies and Chromium
         run: |
           pnpm --dir frameworks install --frozen-lockfile
           pnpm --dir frameworks exec playwright install --with-deps chromium
-      # Keep all compared frameworks/versions on one host, running sequentially.
+      # Keep all compared frameworks on one host, running sequentially.
       # Do not restore transform, build or sequencing caches across CI jobs.
       - name: Run benchmarks
         id: benchmark
         env:
-          BENCH_MODE: ${{ inputs.mode || 'frameworks' }}
-          BENCH_RUNS: ${{ inputs.runs || '8' }}
+          BENCH_SUITES: ${{ inputs.suites || 'main,browser' }}
+          BENCH_RUNS: ${{ inputs.runs || '5' }}
           BENCH_CASES: ${{ inputs.cases || 'minimal-node,minimal-react,startup,many-files,module-graph,backend,barrel,react' }}
-          BENCH_BASELINE: ${{ inputs.baseline || '0.11.0' }}
-          BENCH_CANDIDATE: ${{ inputs.candidate || '0.12.6' }}
         shell: bash
         run: |
-          if [[ "$BENCH_MODE" == versions ]]; then
-            pnpm compare --baseline "$BENCH_BASELINE" --candidate "$BENCH_CANDIDATE" --suites all --runs "$BENCH_RUNS" --label ci-versions
-          else
-            pnpm compare:frameworks --frameworks jest,vitest,rstest,rstest-vmForks --cases "$BENCH_CASES" --runs "$BENCH_RUNS" --label ci-frameworks
-          fi
+          pnpm compare:frameworks --suites "$BENCH_SUITES" --frameworks jest,vitest,vitest-vmForks,rstest,rstest-vmForks --cases "$BENCH_CASES" --runs "$BENCH_RUNS" --label ci-frameworks
       - name: Publish job summary
         if: always()
         env:
           RESULT_DIR: ${{ steps.benchmark.outputs.result-directory }}
         shell: bash
         run: |
-          if [[ -z "$RESULT_DIR" ]]; then exit 0; fi
-          for report in "$RESULT_DIR/report.md" "$RESULT_DIR"/reports/*.md; do
-            if [[ -f "$report" ]]; then cat "$report" >> "$GITHUB_STEP_SUMMARY"; fi
-          done
+          if [[ -n "$RESULT_DIR" && -f "$RESULT_DIR/report.md" ]]; then
+            cat "$RESULT_DIR/report.md" >> "$GITHUB_STEP_SUMMARY"
+          fi
       - name: Upload samples, reports and execution evidence
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
-          name: benchmark-${{ inputs.mode || 'frameworks' }}-${{ runner.os }}-${{ github.run_id }}-${{ github.run_attempt }}
+          name: benchmark-frameworks-${{ runner.os }}-${{ github.run_id }}-${{ github.run_attempt }}
           path: |
             results/
             !results/**/node_modules/**

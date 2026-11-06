@@ -16,6 +16,8 @@ Use published packages and pin exact versions before measuring. Record the resol
 
 Jest's published `jest-environment-jsdom@30.5.2` depends on `jsdom@^26.1.0`. Pin jsdom 26.1.0 for all three frameworks in the shared DOM scenario. React, Testing Library, and application dependencies must also resolve to identical versions. Framework-owned dependencies may differ and must be recorded.
 
+Optional `vitest-vmForks` and `rstest-vmForks` runners use the same pinned packages and configurations as their default runner, changing only the pool. They run Node/DOM and coverage workloads; browser mode uses the default Vitest and Rstest runners. Vitest's VM pool normalizes the reported `isolate` setting to `false`; that option has no effect on VM pools. The adapter does not set `isolate`, worker limits or VM memory limits; the reporter records Vitest's resolved settings. With all five runners, CI defaults to five timed rounds, rotating each runner through every position once. Ten rounds additionally balance forward/reverse ordering and the two-way browser comparison; this is optional.
+
 ## Shared workloads
 
 The first scorecard has six cases. Scale variants are optional extensions so that the main comparison stays readable. The main sizes below describe the implemented shared fixtures.
