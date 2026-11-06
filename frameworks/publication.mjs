@@ -6,6 +6,7 @@ import { cases } from './fixtures.mjs'
 import { selectedFor } from './order.mjs'
 import { renderReport } from './report.mjs'
 import { verifySamples } from './verify.mjs'
+import { formatCpu } from '../scripts/lib/host.mjs'
 
 function validate(record) {
   assert.equal(record.schemaVersion, 1, 'Unsupported framework result schema')
@@ -17,10 +18,12 @@ function validate(record) {
   assert.deepEqual([...record.options.conditions].sort(), ['cold', 'warm'])
   const expected = [
     ...cases.map((item) => `main/${item.id}/none`),
-    ...['backend', 'react'].flatMap((id) => ['none', 'v8', 'istanbul'].map((provider) => `coverage/${id}/${provider}`)),
+    ...(record.options.suites.includes('coverage')
+      ? ['backend', 'react'].flatMap((id) => ['none', 'v8', 'istanbul'].map((provider) => `coverage/${id}/${provider}`))
+      : []),
     'browser/react/none',
   ].sort()
-  assert.deepEqual(record.plan.map((g) => `${g.suite}/${g.item.id}/${g.provider}`).sort(), expected, 'README publication requires the complete main, coverage and browser matrix')
+  assert.deepEqual(record.plan.map((g) => `${g.suite}/${g.item.id}/${g.provider}`).sort(), expected, 'README publication requires the complete main and browser matrix, plus coverage when selected')
   for (const group of record.plan) {
     assert.deepEqual(group.frameworks, selectedFor(group, runners), 'Missing framework in benchmark plan')
     const item = cases.find((item) => item.id === group.item.id)
@@ -62,7 +65,7 @@ function context(record) {
     ? `Source: [GitHub Actions](${record.ci.url}), commit \`${record.ci.sha}\`, attempt ${record.ci.attempt}. Runner ${record.ci.runner}; image ${record.ci.image ?? 'unknown'}.\n\n`
     : ''
   const versions = Object.entries(record.versions).map(([name, version]) => `${name} **${version}**`).join(', ')
-  return `${source}Measured ${record.startedAt.slice(0, 10)} (UTC) on ${record.host.cpu}, ${record.host.platform}, Node ${record.host.node}; ${record.host.parallelism} available CPUs. ${versions}; @swc/jest **${record.dependencies['@swc/jest']}**.\n\n${record.options.runs} timed runs per supported case and cache condition; all **${summary.measured} timed samples and ${summary.warmups} warmups passed**. Node compile cache is disabled. Default concurrency; named Rstest pool variants change only the pool. Cold and warm framework caches are reported separately; OS page cache and background load are uncontrolled. Browser mode compares Vitest against default Rstest only.`
+  return `${source}Measured ${record.startedAt.slice(0, 10)} (UTC) on ${formatCpu(record.host)}; ${record.host.platform}, Node ${record.host.node}. ${versions}; @swc/jest **${record.dependencies['@swc/jest']}**.\n\n${record.options.runs} timed runs per supported case and cache condition; all **${summary.measured} timed samples and ${summary.warmups} warmups passed**. Node compile cache is disabled. Default concurrency; named Rstest pool variants change only the pool. Cold and warm framework caches are reported separately; OS page cache and background load are uncontrolled. Browser mode compares Vitest against default Rstest only.`
 }
 
 export function refreshReport({ root, input = join(root, 'frameworks/reports/result.json'), check = false }) {

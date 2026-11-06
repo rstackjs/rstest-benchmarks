@@ -2,7 +2,7 @@
 
 Compare Jest + SWC, Vitest, and Rstest on shared Node and React workloads. The optional `vitest-vmForks` and `rstest-vmForks` runners add VM forks pools to the comparison. Each run reports whole-process elapsed time and RSS for cold and warm framework caches.
 
-For comparisons between Rstest releases or a local checkout, see [Rstest version benchmarks](versions/README.md).
+For comparisons between Rstest releases or a local checkout, see [Rstest version benchmark](versions/README.md).
 
 ## Quick start
 
@@ -16,7 +16,7 @@ pnpm compare:frameworks --runs 6
 
 Dependencies are pinned in [package.json](frameworks/package.json) and [pnpm-lock.yaml](frameworks/pnpm-lock.yaml). The runner installs missing dependencies automatically; Chromium must be installed before browser measurements.
 
-The default run includes main, coverage and browser suites: **456 timed invocations and 38 warmups**. It writes reports, samples, logs and source snapshots to `results/frameworks-*/`. It does not update the repository README or Rstest release reports.
+The default run includes main and browser suites: **240 timed invocations and 20 warmups**. It writes reports, samples, logs and source snapshots to `results/frameworks-*/`. It does not update the repository README or Rstest release reports.
 
 ```sh
 # One workload, all three frameworks
@@ -28,9 +28,9 @@ pnpm compare:frameworks --suites main --conditions warm --runs 6
 
 ## Run in CI
 
-The [Framework benchmarks workflow](.github/workflows/benchmark-frameworks.yml) runs main and browser suites on pull requests and pushes to `main`. Coverage runs separately through the manually triggered [Coverage benchmarks workflow](.github/workflows/benchmark-coverage.yml). Use **Actions → Framework benchmarks → Run workflow** to choose the runner OS, repetition count, cases or suites. Rstest release comparisons have a separate [version workflow](.github/workflows/benchmark-versions.yml). All compared runners execute sequentially on the same host; CI uploads reports and raw execution artifacts without committing results.
+The [Frameworks benchmark workflow](.github/workflows/benchmark-frameworks.yml) runs main and browser suites on pull requests and pushes to `main`. Use **Actions → Frameworks benchmark → Run workflow** to choose the runner OS, repetition count or cases. Rstest release comparisons have separate manual workflows for [performance](.github/workflows/benchmark-versions.yml) and [coverage](.github/workflows/benchmark-version-coverage.yml). All compared runners execute sequentially on the same host; CI uploads reports and raw execution artifacts without committing results.
 
-For combined README/report publication, select `main,coverage,browser` in the framework workflow. To update this page from that successful full run, download its artifact and extract it under `results/`, preserving the run directory:
+To update this page from a successful framework run with all eight cases and browser mode, download its artifact and extract it under `results/`, preserving the run directory:
 
 ```sh
 pnpm report:frameworks --input results/<run>/result.json
@@ -52,7 +52,7 @@ The updater checks the complete matrix and samples, then updates the tables, ver
 | `barrel` | 20 / 40 | Sparse imports from a barrel exporting 3,200 leaf modules |
 | `react` | 30 / 54 | React component tests using jsdom and Testing Library |
 
-Coverage compares none/V8/Istanbul on selected workloads, including no-coverage controls. Browser mode runs the React workload in Chromium with Vitest and the default Rstest runner. The two tiny-project workloads are opt-in and measure startup overhead; they are excluded from the default matrix. Run them with:
+Optional cross-framework coverage measurements are available locally with `--suites coverage`; CI does not run them. Browser mode runs the React workload in Chromium with Vitest and the default Rstest runner. The two tiny-project workloads are opt-in and measure startup overhead; they are excluded from the default matrix. Run them with:
 
 ```sh
 pnpm compare:frameworks --suites main --cases minimal-node,minimal-react --frameworks jest,vitest,vitest-vmForks,rstest,rstest-vmForks --runs 5
@@ -66,7 +66,7 @@ Each has one source file, one test file and one test. [Node](frameworks/fixtures
 
 <!-- framework-results:start -->
 
-Measured 2026-11-06 (UTC) on Apple M4 Max, darwin arm64, Node v24.11.1; 14 available CPUs. jest **30.5.2**, vitest **5.1.0**, rstest **0.12.6**, rstest-vmForks **0.12.6**; @swc/jest **0.2.39**.
+Measured 2026-11-06 (UTC) on Apple M4 Max; logical CPUs: not recorded; available parallelism: 14; darwin arm64, Node v24.11.1. jest **30.5.2**, vitest **5.1.0**, rstest **0.12.6**, rstest-vmForks **0.12.6**; @swc/jest **0.2.39**.
 
 8 timed runs per supported case and cache condition; all **928 timed samples and 58 warmups passed**. Node compile cache is disabled. Default concurrency; named Rstest pool variants change only the pool. Cold and warm framework caches are reported separately; OS page cache and background load are uncontrolled. Browser mode compares Vitest against default Rstest only.
 
@@ -140,8 +140,10 @@ See [workload design](docs/framework-comparison.md) for performance questions an
 | --- | --- | --- |
 | `--runs` | `6` | Timed repetitions per framework/case/cache condition |
 | `--conditions` | `cold,warm` | Cache conditions, reported separately |
-| `--suites` | `main,coverage,browser` | Comma-separated suites |
-| `--cases` | six main cases | Comma-separated case IDs from the table; also accepts `minimal-node,minimal-react` |
+| `--suites` | `main,browser` | Comma-separated suites; coverage is opt-in |
+| `--cases` | six main cases | Comma-separated case IDs or full `suite/case/provider` IDs; also accepts `minimal-node,minimal-react` |
+| `--exclude-cases` | none | Exclude case IDs after applying `--cases` |
+| `--dry-run` | off | Print the selected workload without installing or running tests |
 | `--frameworks` | `jest,vitest,rstest` | Select frameworks; optional entries: `vitest-vmForks`, `rstest-vmForks`, `jest-babel` |
 | `--install` | off | Reinstall pinned dependencies before measuring |
 | `--label` | `frameworks` | Result directory prefix |
@@ -153,6 +155,7 @@ With three frameworks, use a multiple of six runs to balance order. For four-fra
 - **Elapsed time:** process start through exit, including configuration, transformation, workers, tests, reporting and shutdown. Installations, fixture generation and cache cleanup happen outside the timed interval.
 - **Cold / warm:** cold clears framework caches before every invocation; warm retains them after one warmup. Every invocation starts a new process. Node compile cache is disabled; OS page caches and background load are uncontrolled.
 - **Concurrency:** each framework retains its default scheduling and isolation. Jest may choose in-band execution for small suites using cached test timings, so warm results include scheduling decisions as well as transform-cache reuse.
+- **Observed workers:** reports and CI summaries show the distinct worker slots that executed test setup, collected from Jest, Vitest and Rstest runtime IDs. Counts are not inferred from CPU counts or configured limits. Recycled processes do not add slots; browser mode is marked separately. The shared probe writes once per process/thread per invocation, and its overhead is included in elapsed time. Raw samples retain slot IDs, process IDs and thread IDs.
 - **RSS:** median OS maxrss from `/usr/bin/time`, not the simultaneous total of worker or browser memory. Thread and fork pools have different process layouts; their maxrss ratios are not total-memory ratios.
 - **Statistics:** medians and rankings use unrounded samples; tables display two decimal places. Detailed variability includes absolute standard deviation, range and CV. Evaluate both absolute and relative variation before rerunning a case. Rerun all compared runners for that case under the same cache conditions and balanced order, retaining the original batch; do not select only favorable samples.
 

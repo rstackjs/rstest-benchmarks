@@ -1,4 +1,4 @@
-# Rstest version benchmarks
+# Rstest version benchmark
 
 Reproducible workloads for comparing Rstest releases and configurations: Node.js, React, Vue, browser mode, worker pools, module graphs, barrels, and coverage.
 
@@ -22,7 +22,8 @@ By default, it runs the **main suite**, with **1 warmup + 5 timed runs per case*
 
 | Add to either command | Purpose |
 | --- | --- |
-| `--apps node-backend` | Compare one workload |
+| `--cases node-backend` | Compare one workload across selected suites |
+| `--exclude-cases vue-spa` | Skip all Vue cases; full case IDs can target individual variants |
 | `--suites all` | Include scaling, barrels, worker pools, and coverage/RSS |
 | `--runs 10` | Collect more samples |
 
@@ -40,14 +41,14 @@ Repeat `--candidate` to mix npm and local sources. With N total sources, use a m
 
 ## Run in CI
 
-In **Actions → Rstest version benchmarks → Run workflow**, enter the baseline/candidate npm versions and repetition count, and select a runner OS. This [workflow](../.github/workflows/benchmark-versions.yml) is triggered manually and defaults to six timed runs per case. CI runs all Rstest suites and uploads the results. To publish a successful run after extracting its artifact under `results/`:
+In **Actions**, choose [Rstest version benchmark](../.github/workflows/benchmark-versions.yml) for the main comparison shown below (scaling, barrel and pools are opt-in through `suites`), or [Rstest coverage benchmark](../.github/workflows/benchmark-version-coverage.yml) for coverage and RSS. Both workflows accept baseline/candidate npm versions, a runner OS and the repetition count, defaulting to six timed runs per case. Coverage includes fresh no-coverage controls on the same host. To publish either successful run after extracting its artifact under `results/`:
 
 ```sh
 pnpm report:versions --input results/<comparison>/comparison.json
 pnpm report:check
 ```
 
-This updates this page and the version reports; the framework comparison homepage stays unchanged. See [CI and report publication](../docs/ci.md).
+This updates only the selected suites on this page and in the version reports. Importing performance and coverage artifacts separately preserves the other tables and each run’s host information; samples from the two hosts are not merged. The framework comparison homepage stays unchanged. See [CI and report publication](../docs/ci.md).
 
 ## Suites
 

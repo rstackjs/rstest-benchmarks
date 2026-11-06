@@ -4,6 +4,7 @@ export function configure(directory, framework, item) {
   const react = ['react', 'minimal-react'].includes(item.id)
   const setup = item.id === 'react'
   const reporters = join(root, 'frameworks/reporters')
+  const workerProbe = JSON.stringify(join(reporters, 'worker-probe.cjs'))
   const coverage = `{ enabled: !!process.env.BENCH_COVERAGE, provider: process.env.BENCH_COVERAGE || 'v8', include: ['src/**/*.{ts,tsx}'], exclude: ['src/**/*.d.ts', 'src/features/*/index.ts'], reporter: ['json'], reportsDirectory: './coverage' }`
   if (framework.startsWith('jest')) {
     if (framework === 'jest-babel') {
@@ -26,6 +27,7 @@ export function configure(directory, framework, item) {
       moduleNameMapper: { '\\\\.css$': '<rootDir>/style.cjs' },
       setupFilesAfterEnv: ${JSON.stringify(setup ? ['<rootDir>/tests/setup.ts'] : [])},
       cacheDirectory: '<rootDir>/.cache/jest',
+      setupFiles: [${workerProbe}],
       reporters: [${JSON.stringify(join(reporters, 'jest.cjs'))}],
       collectCoverage: !!process.env.BENCH_COVERAGE,
       coverageProvider: process.env.BENCH_COVERAGE === 'istanbul' ? 'babel' : 'v8',
@@ -42,7 +44,7 @@ export default defineConfig({
   cacheDir: './.cache/vite',
   oxc: { jsx: { runtime: 'automatic' } },
   test: { ${framework === 'vitest-vmForks' ? "pool: 'vmForks'," : ''}fsModuleCachePath: process.cwd() + '/.cache/vitest-modules', include: ['tests/**/*.test.{ts,tsx}'], environment: ${JSON.stringify(react ? 'jsdom' : 'node')},
-    setupFiles: ${JSON.stringify(setup ? ['./tests/setup.ts'] : [])}, reporters: [new Reporter()],
+    setupFiles: [...(process.env.BENCH_BROWSER ? [] : [${workerProbe}]), ...${JSON.stringify(setup ? ['./tests/setup.ts'] : [])}], reporters: [new Reporter()],
     coverage: ${coverage},
     ...(process.env.BENCH_BROWSER ? { browser: { enabled: true, headless: true, provider: browserProvider, instances: [{ browser: 'chromium' }] } } : {}),
   },
@@ -55,7 +57,7 @@ export default defineConfig({
 ${react ? "import { pluginReact } from '@rsbuild/plugin-react'" : ''}
 import Reporter from ${JSON.stringify(join(reporters, 'rstest.mjs'))}
 export default defineConfig({ include: ['tests/**/*.test.{ts,tsx}'], testEnvironment: ${JSON.stringify(react ? 'jsdom' : 'node')},
-  setupFiles: ${JSON.stringify(setup ? ['./tests/setup.ts'] : [])}, reporters: [new Reporter()],
+  setupFiles: [...(process.env.BENCH_BROWSER ? [] : [${workerProbe}]), ...${JSON.stringify(setup ? ['./tests/setup.ts'] : [])}], reporters: [new Reporter()],
   plugins: ${react ? '[pluginReact()]' : '[]'},
   ${framework === 'rstest-vmForks' ? "pool: 'vmForks'," : ''}
   ${framework === 'rstest-vmThreads' ? "pool: 'vmThreads'," : ''}

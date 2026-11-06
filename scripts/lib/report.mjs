@@ -2,6 +2,7 @@ import { readFileSync } from 'node:fs'
 import { createHash } from 'node:crypto'
 import { dirname, relative } from 'node:path'
 import { statistics, seconds, percent } from './stats.mjs'
+import { formatCpu } from './host.mjs'
 
 const escape = (value) =>
   String(value ?? 'unknown')
@@ -120,6 +121,7 @@ function compatibility(a, b, withinColumn = false) {
   for (const key of [
     'node',
     'cpu',
+    'logicalCpuCount',
     'platform',
     'osRelease',
     'availableParallelism',
@@ -271,7 +273,7 @@ export function singleReport(document) {
   return [
     `# ${document.meta.label}`,
     '',
-    `Status: ${document.status}. ${document.meta.cpu}; ${document.meta.platform}; Node ${document.meta.node}.`,
+    `Status: ${document.status}. ${formatCpu(document.meta)}; ${document.meta.platform}; Node ${document.meta.node}.`,
     '',
     `Started: ${document.meta.startedAt}. Ended: ${document.meta.endedAt ?? 'running'}.`,
     '',
@@ -443,11 +445,29 @@ export function comparisonReport(
     ).entries(),
   ]
   const published = inputs.some(([, meta]) => meta.publication)
+  const rssSummary = rssSummaryRows.length ? table(headers, rssSummaryRows) : ''
   return {
     summary,
-    rssSummary: rssSummaryRows.length
-      ? table(headers, rssSummaryRows)
-      : '',
+    rssSummary,
+    jobSummary: [
+      `# ${spec.title ?? 'Benchmark comparison'}`,
+      '',
+      ...new Set(inputs.map(([, meta]) =>
+        `Node ${meta.node}; ${formatCpu(meta)}; ${meta.platform}.`,
+      )),
+      '',
+      ...new Set(inputs.map(([, meta]) =>
+        `${meta.measurement?.warmup ?? meta.options?.warmup ?? 'Not recorded'} warmup(s), ${meta.measurement?.runs ?? meta.options?.runs ?? meta.runs ?? 'not recorded'} timed runs per supported case; medians.`,
+      )),
+      '',
+      ...(spec.context ? [spec.context, ''] : []),
+      'Each Δ is relative to the baseline; negative means less elapsed time or memory. Values display two decimal places; changes use unrounded medians.',
+      '',
+      compactTables({ summary, rssSummary }),
+      '',
+      'Full reports, variability, samples and execution details are available in the workflow artifact.',
+      '',
+    ].join('\n'),
     provenanceNote: columns.some((column) =>
       [...column.rows.values()].some((row) => row.legacy),
     )
@@ -509,7 +529,7 @@ export function comparisonReport(
       '',
       ...inputs.map(
         ([file, meta]) =>
-          `- \`${file}\`: ${meta.startedAt ?? meta.date ?? 'unknown date'}; Node ${meta.node}; ${meta.cpu}; ${meta.platform}; lockfile SHA-256: ${meta.lockfileSha256 ?? 'unknown (legacy)'}.${meta.source ? ` Source: ${meta.source.kind} / ${meta.source.label}; fingerprint: ${meta.source.fingerprint}.` : ''}`,
+          `- \`${file}\`: ${meta.startedAt ?? meta.date ?? 'unknown date'}; Node ${meta.node}; ${formatCpu(meta)}; ${meta.platform}; lockfile SHA-256: ${meta.lockfileSha256 ?? 'unknown (legacy)'}.${meta.source ? ` Source: ${meta.source.kind} / ${meta.source.label}; fingerprint: ${meta.source.fingerprint}.` : ''}`,
       ),
       '',
       ...(columns.some((column) =>
@@ -533,6 +553,13 @@ export function comparisonReport(
   }
 }
 
+function compactTables(report) {
+  const memory = report.rssSummary
+    ? `\n\n### RSS comparison\n\nMedian maxrss in MiB; negative percentages mean less memory. This is OS maxrss, not the simultaneous total of all worker processes.\n\n${report.rssSummary}`
+    : ''
+  return `${report.summary}${memory}`
+}
+
 export function readmeBlock(spec, report, load, readmePath = 'README.md') {
   if (spec.readme) {
     const indices = spec.readme.columns
@@ -550,9 +577,6 @@ export function readmeBlock(spec, report, load, readmePath = 'README.md') {
     }
     report = comparisonReport(spec, load)
   }
-  const memory = report.rssSummary
-    ? `\n\n### RSS comparison\n\nMedian maxrss in MiB; negative percentages mean less memory. This is OS maxrss, not the simultaneous total of all worker processes.\n\n${report.rssSummary}`
-    : ''
   const reportLink = relative(dirname(readmePath), spec.output).replaceAll('\\', '/')
-  return `\n\n${spec.context ? spec.context + '\n\n' : ''}${report.summary}${memory}\n\n[Full report, variability and inputs](${reportLink}). ${report.provenanceNote}\n\n`
+  return `\n\n${spec.context ? spec.context + '\n\n' : ''}${compactTables(report)}\n\n[Full report, variability and inputs](${reportLink}). ${report.provenanceNote}\n\n`
 }

@@ -56,8 +56,8 @@ MAD is unscaled. CV uses sample standard deviation (n − 1). Evaluate CV togeth
 
 ## Inputs and provenance
 
-- `reports/data/releases-0110-0126-2026-11-06T03-36-40-100Z-8f8715f5-baseline-pools.json`: 2026-11-06T03:36:40.118Z; Node v24.11.1; Apple M4 Max × 14; darwin arm64; lockfile SHA-256: 7f35af5876a5c68b2da3985e75cf92db3f4ae3891a513ba7c354e587e09b8421. Source: npm / 0.11.0; fingerprint: 27da13cc2b4ab0a6ce1f46eab28f7cf323a8fce1a7074ae84c2b26d151792f8c.
-- `reports/data/releases-0110-0126-2026-11-06T03-36-42-128Z-6045e160-candidate-pools.json`: 2026-11-06T03:36:42.146Z; Node v24.11.1; Apple M4 Max × 14; darwin arm64; lockfile SHA-256: 7123888d5cfe1ee770452ece3fca53bf0702544ea23a11b4dce7557cace858c1. Source: npm / 0.12.6; fingerprint: 7d901a930ef93f885c74f9d3e8ab22dbdaef06698b4f32a0611c98105e956bde.
+- `reports/data/releases-0110-0126-2026-11-06T03-36-40-100Z-8f8715f5-baseline-pools.json`: 2026-11-06T03:36:40.118Z; Node v24.11.1; Apple M4 Max × 14; logical CPUs: not recorded; available parallelism: 14; darwin arm64; lockfile SHA-256: 7f35af5876a5c68b2da3985e75cf92db3f4ae3891a513ba7c354e587e09b8421. Source: npm / 0.11.0; fingerprint: 27da13cc2b4ab0a6ce1f46eab28f7cf323a8fce1a7074ae84c2b26d151792f8c.
+- `reports/data/releases-0110-0126-2026-11-06T03-36-42-128Z-6045e160-candidate-pools.json`: 2026-11-06T03:36:42.146Z; Node v24.11.1; Apple M4 Max × 14; logical CPUs: not recorded; available parallelism: 14; darwin arm64; lockfile SHA-256: 7123888d5cfe1ee770452ece3fca53bf0702544ea23a11b4dce7557cace858c1. Source: npm / 0.12.6; fingerprint: 7d901a930ef93f885c74f9d3e8ab22dbdaef06698b4f32a0611c98105e956bde.
 
 Published inputs retain every sample, warmup, test count, timestamp and compatibility fingerprint. Full logs, commands and source snapshots are stored separately; meta.publication.sourceSha256 identifies the original result JSON.
 Versions are measured in paired case/round order, alternating the first side each round and fixture. No benchmark processes overlap. Workload dependencies, fixtures, configurations, harness and host compatibility are checked before calculating changes.

@@ -37,12 +37,18 @@ import { report } from './report.mjs'
 import { verify } from './verify.mjs'
 import { ciContext, ciResultDirectory } from '../scripts/lib/ci.mjs'
 import { selectedFor, orderFor } from './order.mjs'
+import { formatCpu } from '../scripts/lib/host.mjs'
+import { createProgress, frameworkRunCounts } from '../scripts/lib/progress.mjs'
+import { readWorkers, slotVariables } from './workers.mjs'
+import { selectCases } from '../scripts/lib/selection.mjs'
 const { values } = parseArgs({
   options: {
     runs: { type: 'string', default: '6' },
     conditions: { type: 'string', default: 'cold,warm' },
-    suites: { type: 'string', default: 'main,coverage,browser' },
+    suites: { type: 'string', default: 'main,browser' },
     cases: { type: 'string' },
+    'exclude-cases': { type: 'string' },
+    'dry-run': { type: 'boolean' },
     label: { type: 'string', default: 'frameworks' },
     install: { type: 'boolean', default: false },
     frameworks: { type: 'string', default: frameworks.join(',') },
@@ -50,12 +56,6 @@ const { values } = parseArgs({
 })
 if (!/^[a-zA-Z0-9][a-zA-Z0-9._-]*$/.test(values.label))
   throw Error('Invalid label')
-const caseIds = values.cases?.split(',')
-if (caseIds && (
-  new Set(caseIds).size !== caseIds.length ||
-  caseIds.some((id) => !cases.some((item) => item.id === id))
-))
-  throw Error('Unknown or duplicate case')
 const runs = Number(values.runs),
   conditions = values.conditions.split(','),
   suites = values.suites.split(',')
@@ -76,6 +76,48 @@ if (suites.some((x) => !['main', 'coverage', 'browser'].includes(x)))
   throw Error('unknown suite')
 if (!['darwin', 'linux'].includes(platform()))
   throw Error('RSS requires macOS or Linux')
+const planned = selectCases(
+  [
+    ...(suites.includes('main')
+      ? cases.map((item) => ({ item, provider: 'none', suite: 'main' }))
+      : []),
+    ...(suites.includes('coverage')
+      ? cases
+          .filter((c) => ['backend', 'react'].includes(c.id))
+          .flatMap((item) =>
+            ['none', 'v8', 'istanbul'].map((provider) => ({
+              item,
+              provider,
+              suite: 'coverage',
+            })),
+          )
+      : []),
+    ...(suites.includes('browser')
+      ? [{ item: cases.find((c) => c.id === 'react'), provider: 'none', suite: 'browser' }]
+      : []),
+  ],
+  {
+    include: values.cases,
+    exclude: values['exclude-cases'],
+    keys: (g) => [g.item.id, `${g.suite}/${g.item.id}/${g.provider}`],
+    defaults: (g) => !g.item.optional,
+  },
+).map((g) => ({ ...g, frameworks: selectedFor(g, requested) }))
+const groups = planned.filter((g) => g.frameworks.length)
+if (!groups.length) throw Error('No matching cases')
+if (values['dry-run']) {
+  console.log(JSON.stringify({ groups }, null, 2))
+  process.exit(0)
+}
+const host = {
+  node: process.version,
+  cpu: cpus()[0]?.model ?? 'unknown',
+  logicalCpuCount: cpus().length,
+  platform: platform() + ' ' + arch(),
+  os: release(),
+  parallelism: availableParallelism(),
+}
+console.log(`[host] ${formatCpu(host)}; ${host.platform}; Node ${host.node}`)
 const deps = JSON.parse(
   readFileSync(join(root, 'frameworks/package.json')),
 ).dependencies
@@ -131,15 +173,10 @@ const record = {
     conditions,
     suites,
     cases: values.cases,
+    excludeCases: values['exclude-cases'],
     frameworks: requested,
   },
-  host: {
-    node: process.version,
-    cpu: cpus()[0].model,
-    platform: platform() + ' ' + arch(),
-    os: release(),
-    parallelism: availableParallelism(),
-  },
+  host,
   versions: {
     ...Object.fromEntries(
       requested.map((f) => [
@@ -219,34 +256,6 @@ try {
           .update(readFileSync(join(directory, 'workspaces', framework, item.id, 'babel.config.cjs')))
           .digest('hex')
     }
-  const planned = [
-    ...(suites.includes('main')
-      ? cases.map((item) => ({ item, provider: 'none', suite: 'main' }))
-      : []),
-    ...(suites.includes('coverage')
-      ? cases
-          .filter((c) => ['backend', 'react'].includes(c.id))
-          .flatMap((item) =>
-            ['none', 'v8', 'istanbul'].map((provider) => ({
-              item,
-              provider,
-              suite: 'coverage',
-            })),
-          )
-      : []),
-    ...(suites.includes('browser')
-      ? [
-          {
-            item: cases.find((c) => c.id === 'react'),
-            provider: 'none',
-            suite: 'browser',
-          },
-        ]
-      : []),
-  ]
-    .filter((g) => values.cases ? values.cases.split(',').includes(g.item.id) : !g.item.optional)
-    .map((g) => ({ ...g, frameworks: selectedFor(g, requested) }))
-  const groups = planned.filter((g) => g.frameworks.length)
   record.unsupported = planned.flatMap((g) =>
     requested
       .filter((f) => !g.frameworks.includes(f))
@@ -263,6 +272,7 @@ try {
   )
   if (!groups.length) throw Error('No matching cases')
   record.plan = groups
+  const progress = createProgress(frameworkRunCounts(groups, conditions, runs))
   if (groups.some((group) => group.suite === 'browser')) {
     const { chromium } = await import('playwright')
     const executable = chromium.executablePath()
@@ -291,6 +301,12 @@ try {
     }
     if (group.provider !== 'none') env.BENCH_COVERAGE = group.provider
     if (group.suite === 'browser') env.BENCH_BROWSER = '1'
+    const workerDirectory = prefix + '.workers'
+    if (group.suite !== 'browser') {
+      mkdirSync(workerDirectory)
+      env.BENCH_WORKER_REPORT_DIR = workerDirectory
+      env.BENCH_WORKER_SLOT_VARIABLE = slotVariables[frameworkFamily(framework)]
+    }
     const pkg = framework.startsWith('rstest')
         ? '@rstest/core'
         : frameworkFamily(framework)
@@ -312,6 +328,9 @@ try {
         : ['run', '--config', frameworkFamily(framework) + '.config.mjs']),
     ]
     const startLoad = loadavg()
+    const finish = progress.start(
+      `${phase} ${phase === 'warmup' ? 1 : round + 1} ${condition} ${group.suite}/${group.item.id}/${group.provider} ${framework}`,
+    )
     const r = await execute({
       command,
       cwd,
@@ -353,14 +372,26 @@ try {
       if (JSON.stringify(expected) !== JSON.stringify(coveredFiles))
         coverageError = `Coverage file set mismatch: ${prefix}.coverage.json; expected ${expected.length}, got ${coveredFiles?.length}`
     }
+    let workers = { status: 'not-applicable', reason: 'Browser mode' }
+    let workerError
+    if (group.suite !== 'browser') {
+      try {
+        workers = readWorkers(workerDirectory, env.BENCH_WORKER_SLOT_VARIABLE, counts?.settings?.runnerPid)
+      } catch (error) {
+        workerError = error.message
+        workers = { status: 'unavailable', reason: workerError }
+      }
+    }
     const s = {
       group: group.suite + '/' + group.item.id + '/' + group.provider,
       condition,
       framework,
       round,
       phase,
-      status: passed && !coverageError ? 'passed' : 'failed',
+      status: passed && !coverageError && !workerError ? 'passed' : 'failed',
       coverageError,
+      workerError,
+      workers,
       command,
       cwd,
       environment: {
@@ -380,10 +411,9 @@ try {
     }
     record.samples.push(s)
     save()
-    console.log(
-      `${phase} ${phase === 'warmup' ? 1 : round + 1} ${condition} ${s.group} ${framework}: ${(r.wallMs / 1000).toFixed(3)}s ${s.status}`,
-    )
+    finish(`${(r.wallMs / 1000).toFixed(3)}s ${s.status}`)
     if (coverageError) throw Error(coverageError)
+    if (workerError) throw Error(workerError)
     if (!passed)
       throw Error(`Failed sample: ${prefix}; counts ${JSON.stringify(counts)}`)
   }

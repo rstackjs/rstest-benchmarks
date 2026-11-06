@@ -30,6 +30,8 @@ import {
   browserIdentity,
 } from './lib/provenance.mjs'
 import { singleReport } from './lib/report.mjs'
+import { formatCpu } from './lib/host.mjs'
+import { createProgress, versionRunCounts } from './lib/progress.mjs'
 
 const ROOT = fileURLToPath(new URL('..', import.meta.url))
 export const CACHE = [
@@ -140,7 +142,11 @@ export async function runSuite(suite, args = process.argv.slice(2)) {
   }
 }
 
-export async function* suiteSteps(suite, args, { root = ROOT, order } = {}) {
+export async function* suiteSteps(
+  suite,
+  args,
+  { root = ROOT, order, progress, progressLabel = suite, caseIds } = {},
+) {
   const options = parseOptions(suite, args)
   if (options.help) {
     console.log(
@@ -152,7 +158,9 @@ export async function* suiteSteps(suite, args, { root = ROOT, order } = {}) {
     throw new Error(
       'Coverage RSS measurements require macOS or Linux /usr/bin/time',
     )
-  const items = casesFor(suite, options)
+  const items = casesFor(suite, options).filter((item) => !caseIds || caseIds.includes(item.id))
+  if (!items.length) throw new Error('No benchmark cases selected')
+  if (caseIds) options.cases = caseIds
   if (options.list) {
     console.log(JSON.stringify({ suite, cases: items }, null, 2))
     return
@@ -250,6 +258,16 @@ export async function* suiteSteps(suite, args, { root = ROOT, order } = {}) {
         rssStats: statistics([]),
       })),
     }
+    console.log(
+      `[host] ${formatCpu(document.meta)}; ${document.meta.platform}; Node ${document.meta.node}`,
+    )
+    progress ??= createProgress(
+      versionRunCounts(items, options, (item) =>
+        JSON.parse(
+          readFileSync(join(root, 'apps', item.app, 'node_modules/@rstest/core/package.json')),
+        ).version,
+      ),
+    )
     persist()
     const groups = new Map()
     for (const item of document.results) {
@@ -361,6 +379,7 @@ export async function* suiteSteps(suite, args, { root = ROOT, order } = {}) {
         if (reason) {
           item.status = 'skipped'
           item.reason = reason
+          console.log(`${progressLabel}: skipped ${item.id}: ${reason}`)
         }
       }
       const run = async (item, phase, round) => {
@@ -411,6 +430,9 @@ export async function* suiteSteps(suite, args, { root = ROOT, order } = {}) {
         }
         item.samples.push(sample)
         persist()
+        const finish = progress.start(
+          `${progressLabel}: ${phase} ${round + 1} ${item.id}`,
+        )
         Object.assign(
           sample,
           await execute({
@@ -460,8 +482,10 @@ export async function* suiteSteps(suite, args, { root = ROOT, order } = {}) {
           ),
         )
         persist()
-        console.log(
-          `${phase} ${round + 1}: ${item.name} / ${item.pool} / ${item.provider}: ${sample.status === 'passed' ? seconds(sample.wallMs) : sample.error}`,
+        finish(
+          sample.status === 'passed'
+            ? `passed ${seconds(sample.wallMs)}`
+            : `failed: ${sample.error}`,
         )
       }
       clearFixtureCaches(appDir)

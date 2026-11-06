@@ -4,6 +4,7 @@ module.exports = class {
     this.settings = {
       maxWorkers: config.maxWorkers,
       workerThreads: config.workerThreads,
+      runnerPid: process.pid,
     }
   }
   onRunComplete(_, result) {

@@ -1,4 +1,4 @@
-name: Rstest version benchmarks
+name: Rstest version benchmark
 
 on:
   workflow_dispatch:
@@ -20,6 +20,16 @@ on:
         description: Rstest candidate npm version(s), comma-separated
         type: string
         default: '0.12.6'
+      suites:
+        description: Suites to run, comma-separated (main matches the README; scaling,barrel,pools are optional)
+        type: string
+        default: main
+      cases:
+        description: App names or full case IDs, comma-separated (empty runs all)
+        type: string
+      exclude_cases:
+        description: Case IDs to exclude, comma-separated (applied after cases)
+        type: string
 
 permissions:
   contents: read
@@ -30,6 +40,7 @@ concurrency:
 
 jobs:
   benchmark:
+    name: Benchmark
     runs-on: ${{ inputs.runner || 'ubuntu-24.04' }}
     timeout-minutes: 90
     env:
@@ -57,25 +68,27 @@ jobs:
       - name: Run benchmarks
         id: benchmark
         env:
+          BENCH_SUITES: ${{ inputs.suites || 'main' }}
           BENCH_RUNS: ${{ inputs.runs || '6' }}
+          BENCH_CASES: ${{ inputs.cases }}
+          BENCH_EXCLUDE_CASES: ${{ inputs.exclude_cases }}
           BENCH_BASELINE: ${{ inputs.baseline || '0.11.0' }}
           BENCH_CANDIDATE: ${{ inputs.candidate || '0.12.6' }}
         shell: bash
         run: |
-          pnpm compare --baseline "$BENCH_BASELINE" --candidate "$BENCH_CANDIDATE" --suites all --runs "$BENCH_RUNS" --label ci-versions
+          pnpm compare --baseline "$BENCH_BASELINE" --candidate "$BENCH_CANDIDATE" --suites "$BENCH_SUITES" --cases "$BENCH_CASES" --exclude-cases "$BENCH_EXCLUDE_CASES" --runs "$BENCH_RUNS" --label ci-versions
       - name: Publish job summary
         if: always()
         env:
           RESULT_DIR: ${{ steps.benchmark.outputs.result-directory }}
         shell: bash
         run: |
-          if [[ -z "$RESULT_DIR" ]]; then exit 0; fi
-          for report in "$RESULT_DIR"/reports/*.md; do
-            if [[ -f "$report" ]]; then cat "$report" >> "$GITHUB_STEP_SUMMARY"; fi
-          done
+          if [[ -n "$RESULT_DIR" && -f "$RESULT_DIR/summary.md" ]]; then
+            cat "$RESULT_DIR/summary.md" >> "$GITHUB_STEP_SUMMARY"
+          fi
       - name: Upload samples, reports and execution evidence
         if: always()
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: benchmark-versions-${{ runner.os }}-${{ github.run_id }}-${{ github.run_attempt }}
           path: |

@@ -1,4 +1,4 @@
-name: Coverage benchmarks
+name: Rstest coverage benchmark
 
 on:
   workflow_dispatch:
@@ -9,17 +9,23 @@ on:
         options: [ubuntu-24.04, macos-15]
         default: ubuntu-24.04
       runs:
-        description: Timed runs per runner/case/provider/cache condition
+        description: Timed runs per case (use a multiple of the number of versions)
         type: string
-        default: '5'
+        default: '6'
+      baseline:
+        description: Rstest baseline npm version
+        type: string
+        default: '0.11.0'
+      candidate:
+        description: Rstest candidate npm version(s), comma-separated
+        type: string
+        default: '0.12.6'
       cases:
-        description: Coverage workloads
-        type: choice
-        options:
-          - backend,react
-          - backend
-          - react
-        default: backend,react
+        description: App names or full case IDs, comma-separated (empty runs all)
+        type: string
+      exclude_cases:
+        description: Case IDs to exclude, comma-separated (applied after cases)
+        type: string
 
 permissions:
   contents: read
@@ -30,6 +36,7 @@ concurrency:
 
 jobs:
   benchmark:
+    name: Benchmark
     runs-on: ${{ inputs.runner || 'ubuntu-24.04' }}
     timeout-minutes: 90
     env:
@@ -46,33 +53,33 @@ jobs:
       - name: Check harness and published reports
         run: |
           pnpm test
-          pnpm report:frameworks:check
-      - name: Install benchmark dependencies
-        run: pnpm --dir frameworks install --frozen-lockfile
-      # Keep all compared frameworks on one host, running sequentially.
-      # Do not restore transform, build or sequencing caches across CI jobs.
+          pnpm report:check
+      # Compared versions run sequentially on one host with runner-managed caches.
       - name: Run benchmarks
         id: benchmark
         env:
-          BENCH_RUNS: ${{ inputs.runs || '5' }}
-          BENCH_CASES: ${{ inputs.cases || 'backend,react' }}
+          BENCH_RUNS: ${{ inputs.runs || '6' }}
+          BENCH_CASES: ${{ inputs.cases }}
+          BENCH_EXCLUDE_CASES: ${{ inputs.exclude_cases }}
+          BENCH_BASELINE: ${{ inputs.baseline || '0.11.0' }}
+          BENCH_CANDIDATE: ${{ inputs.candidate || '0.12.6' }}
         shell: bash
         run: |
-          pnpm compare:frameworks --suites coverage --frameworks jest,vitest,vitest-vmForks,rstest,rstest-vmForks --cases "$BENCH_CASES" --runs "$BENCH_RUNS" --label ci-coverage
+          pnpm compare --baseline "$BENCH_BASELINE" --candidate "$BENCH_CANDIDATE" --suites coverage --cases "$BENCH_CASES" --exclude-cases "$BENCH_EXCLUDE_CASES" --runs "$BENCH_RUNS" --label ci-version-coverage
       - name: Publish job summary
         if: always()
         env:
           RESULT_DIR: ${{ steps.benchmark.outputs.result-directory }}
         shell: bash
         run: |
-          if [[ -n "$RESULT_DIR" && -f "$RESULT_DIR/report.md" ]]; then
-            cat "$RESULT_DIR/report.md" >> "$GITHUB_STEP_SUMMARY"
+          if [[ -n "$RESULT_DIR" && -f "$RESULT_DIR/summary.md" ]]; then
+            cat "$RESULT_DIR/summary.md" >> "$GITHUB_STEP_SUMMARY"
           fi
       - name: Upload samples, reports and execution evidence
         if: always()
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
-          name: benchmark-coverage-${{ runner.os }}-${{ github.run_id }}-${{ github.run_attempt }}
+          name: benchmark-version-coverage-${{ runner.os }}-${{ github.run_id }}-${{ github.run_attempt }}
           path: |
             results/
             !results/**/node_modules/**

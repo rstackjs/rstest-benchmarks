@@ -16,6 +16,8 @@ function fixture(t) {
   writeFileSync(join(root, 'README.md'), '# Rstest benchmarks\n\nBefore\n<!-- framework-results:start -->\nOld results\n<!-- framework-results:end -->\nAfter\n')
   const input = join(root, 'raw.json')
   const record = JSON.parse(samples)
+  record.host.logicalCpuCount = 8
+  record.host.parallelism = 2
   delete record.publication
   record.ci = {
     url: 'https://github.com/example/benchmarks/actions/runs/123',
@@ -31,6 +33,7 @@ test('framework publication updates tables and provenance together, with repeata
   const readme = readFileSync(join(root, 'README.md'), 'utf8')
   assert.match(readme, /actions\/runs\/123/)
   assert.match(readme, /commit `abc123`, attempt 2/)
+  assert.match(readme, /logical CPUs: 8; available parallelism: 2/)
   const measured = original.samples.filter((s) => s.phase === 'timed').length
   const warmups = original.samples.filter((s) => s.phase === 'warmup').length
   assert(readme.includes(`${measured} timed samples and ${warmups} warmups`))
@@ -41,6 +44,8 @@ test('framework publication updates tables and provenance together, with repeata
   assert.equal(readFileSync(join(root, 'versions/README.md'), 'utf8'), 'Keep version results')
   const exported = readFileSync(join(root, 'frameworks/reports/result.json'), 'utf8')
   const record = JSON.parse(exported)
+  assert.equal(record.host.logicalCpuCount, 8)
+  assert.equal(record.host.parallelism, 2)
   assert.equal(record.publication.sourceSha256, createHash('sha256').update(readFileSync(input)).digest('hex'))
   refreshReport({ root, check: true })
   refreshReport({ root })
@@ -48,6 +53,23 @@ test('framework publication updates tables and provenance together, with repeata
   writeFileSync(join(root, 'README.md'), readme.replace(`${measured} timed samples`, 'invalid timed samples'))
   assert.throws(() => refreshReport({ root, check: true }), /Stale framework report/)
   assert.match(readFileSync(join(root, 'README.md'), 'utf8'), /invalid timed samples/)
+})
+
+test('main and browser CI results publish without coverage; missing browser still fails', (t) => {
+  const { root, input, record } = fixture(t)
+  record.options.suites = ['main', 'browser']
+  record.plan = record.plan.filter((group) => group.suite !== 'coverage')
+  record.samples = record.samples.filter((sample) => !sample.group.startsWith('coverage/'))
+  writeFileSync(input, JSON.stringify(record))
+  refreshReport({ root, input })
+  refreshReport({ root, check: true })
+  const readme = readFileSync(join(root, 'README.md'), 'utf8')
+  assert.match(readme, /--suites main,browser/)
+  record.plan = record.plan.filter((group) => group.suite !== 'browser')
+  record.samples = record.samples.filter((sample) => !sample.group.startsWith('browser/'))
+  writeFileSync(input, JSON.stringify(record))
+  assert.throws(() => refreshReport({ root, input }), /complete main and browser/)
+  assert.equal(readFileSync(join(root, 'README.md'), 'utf8'), readme)
 })
 
 test('framework publication rejects incomplete, failed, partial or invalid samples before writing', (t) => {

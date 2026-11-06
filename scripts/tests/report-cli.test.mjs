@@ -13,6 +13,46 @@ const cli = (args) =>
     encoding: 'utf8',
   })
 
+test('CI summary shares README tables and retains CPU metadata without variability tables', async () => {
+  const { comparisonReport, readmeBlock } = await import('../lib/report.mjs')
+  const spec = {
+    title: 'Rstest version benchmark',
+    output: 'reports/main.md',
+    columns: [{ label: 'Baseline', files: ['base'] }, { label: 'Candidate', files: ['next'] }],
+  }
+  const load = (file) => ({
+    meta: {
+      runs: 3, cpu: 'test CPU', node: 'v24', platform: 'linux',
+      logicalCpuCount: 4, availableParallelism: 2,
+      measurement: { warmup: 1, runs: 3 },
+    },
+    results: [{
+      app: 'a', case: 'fixture',
+      samples: file === 'base' ? [10, 20, 30] : [5, 10, 15],
+      rssSamples: [90, 100, 110].map((n) => n * 1024 ** 2),
+    }],
+  })
+  const report = comparisonReport(spec, load)
+  const readme = readmeBlock(spec, report, load)
+  for (const table of [report.summary, report.rssSummary]) {
+    assert(table.length > 0)
+    assert(report.jobSummary.includes(table))
+    assert(readme.includes(table))
+  }
+  assert.match(report.jobSummary, /logical CPUs: 4; available parallelism: 2/)
+  assert.match(report.jobSummary, /1 warmup\(s\), 3 timed runs/)
+  assert.match(report.jobSummary, /### RSS comparison/)
+  assert.doesNotMatch(report.jobSummary, /## Variability|## Memory|Min–max|\| CV \|/)
+  assert.match(report.markdown, /## Variability/)
+  assert.match(report.markdown, /## Memory/)
+  const noRss = comparisonReport(spec, (file) => {
+    const data = load(file)
+    delete data.results[0].rssSamples
+    return data
+  })
+  assert.doesNotMatch(noRss.jobSummary, /### RSS comparison/)
+})
+
 test('real report CLI updates a nested README and detects stale output without rewriting it', () => {
   const dir = mkdtempSync(join(tmpdir(), 'rstest-report-cli-'))
   try {

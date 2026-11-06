@@ -45,6 +45,7 @@ export function machine(root) {
     nodePath: realpathSync(process.execPath),
     nodeVersions: process.versions,
     cpu: `${cpus()[0]?.model} × ${cpus().length}`,
+    logicalCpuCount: cpus().length,
     platform: `${platform()} ${arch()}`,
     osRelease: release(),
     totalMemoryBytes: totalmem(),

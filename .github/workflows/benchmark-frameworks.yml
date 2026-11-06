@@ -1,4 +1,4 @@
-name: Framework benchmarks
+name: Frameworks benchmark
 
 on:
   pull_request:
@@ -19,15 +19,11 @@ on:
         description: Timed runs per runner/case/cache condition (10 is optional for fuller order balancing)
         type: string
         default: '5'
-      suites:
-        description: Suites (full matrix is available for combined report publication)
-        type: choice
-        options:
-          - main,browser
-          - main,coverage,browser
-        default: main,browser
       cases:
         description: Framework case IDs, comma-separated (empty runs all eight)
+        type: string
+      exclude_cases:
+        description: Case IDs to exclude, comma-separated (applied after cases)
         type: string
 
 permissions:
@@ -39,6 +35,7 @@ concurrency:
 
 jobs:
   benchmark:
+    name: Benchmark
     runs-on: ${{ inputs.runner || 'ubuntu-24.04' }}
     timeout-minutes: 90
     env:
@@ -65,24 +62,24 @@ jobs:
       - name: Run benchmarks
         id: benchmark
         env:
-          BENCH_SUITES: ${{ inputs.suites || 'main,browser' }}
           BENCH_RUNS: ${{ inputs.runs || '5' }}
+          BENCH_EXCLUDE_CASES: ${{ inputs.exclude_cases }}
           BENCH_CASES: ${{ inputs.cases || 'minimal-node,minimal-react,startup,many-files,module-graph,backend,barrel,react' }}
         shell: bash
         run: |
-          pnpm compare:frameworks --suites "$BENCH_SUITES" --frameworks jest,vitest,vitest-vmForks,rstest,rstest-vmForks --cases "$BENCH_CASES" --runs "$BENCH_RUNS" --label ci-frameworks
+          pnpm compare:frameworks --suites main,browser --frameworks jest,vitest,vitest-vmForks,rstest,rstest-vmForks --cases "$BENCH_CASES" --exclude-cases "$BENCH_EXCLUDE_CASES" --runs "$BENCH_RUNS" --label ci-frameworks
       - name: Publish job summary
         if: always()
         env:
           RESULT_DIR: ${{ steps.benchmark.outputs.result-directory }}
         shell: bash
         run: |
-          if [[ -n "$RESULT_DIR" && -f "$RESULT_DIR/report.md" ]]; then
-            cat "$RESULT_DIR/report.md" >> "$GITHUB_STEP_SUMMARY"
+          if [[ -n "$RESULT_DIR" && -f "$RESULT_DIR/summary.md" ]]; then
+            cat "$RESULT_DIR/summary.md" >> "$GITHUB_STEP_SUMMARY"
           fi
       - name: Upload samples, reports and execution evidence
         if: always()
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: benchmark-frameworks-${{ runner.os }}-${{ github.run_id }}-${{ github.run_attempt }}
           path: |

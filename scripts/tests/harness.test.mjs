@@ -10,6 +10,7 @@ import {
   mergeRows,
   compare,
   comparisonReport,
+  singleReport,
 } from '../lib/report.mjs'
 import { rotate, casesFor } from '../lib/cases.mjs'
 import { execute, reportCounts } from '../lib/process.mjs'
@@ -31,6 +32,21 @@ const legacy = (overrides = {}) => ({
       ...overrides,
     },
   ],
+})
+
+test('version reports expose recorded CPU counts without guessing historical counts', () => {
+  const document = legacy()
+  Object.assign(document.meta, {
+    cpu: 'EPYC 80-Core Processor', logicalCpuCount: 8, availableParallelism: 2,
+  })
+  assert.match(singleReport(document), /logical CPUs: 8; available parallelism: 2/)
+  const comparison = comparisonReport({
+    columns: [{ label: 'baseline', files: ['baseline.json'] }, { label: 'candidate', files: ['candidate.json'] }],
+  }, () => document)
+  assert.match(comparison.markdown, /EPYC 80-Core Processor; logical CPUs: 8; available parallelism: 2/)
+  delete document.meta.logicalCpuCount
+  delete document.meta.availableParallelism
+  assert.match(singleReport(document), /logical CPUs: not recorded; available parallelism: not recorded/)
 })
 
 test('median, MAD, sample SD, CV and empty/singleton behavior', () => {

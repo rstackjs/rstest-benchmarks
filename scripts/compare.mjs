@@ -21,7 +21,10 @@ import { execute } from './lib/process.mjs'
 import { parseOptions, environment, suiteSteps } from './runner.mjs'
 import { runPaired } from './lib/paired.mjs'
 import { casesFor } from './lib/cases.mjs'
-import { fileHash } from './lib/provenance.mjs'
+import { selectCases } from './lib/selection.mjs'
+import { fileHash, machine } from './lib/provenance.mjs'
+import { formatCpu } from './lib/host.mjs'
+import { createProgress, versionRunCounts } from './lib/progress.mjs'
 import { comparisonReport } from './lib/report.mjs'
 import { publishComparison } from './lib/publication.mjs'
 import {
@@ -45,6 +48,8 @@ const { values } = parseArgs({
     'update-readme': { type: 'boolean', default: false },
     suites: { type: 'string', default: 'main' },
     apps: { type: 'string' },
+    cases: { type: 'string' },
+    'exclude-cases': { type: 'string' },
     scales: { type: 'string' },
     runs: { type: 'string', default: '5' },
     warmup: { type: 'string', default: '1' },
@@ -59,6 +64,7 @@ if (values.help) {
   console.log(`Usage: pnpm compare --baseline <version|local:path> --candidate <version|local:path>
   --suites main|scaling|barrel|pools|coverage (comma-separated, or all; default main)
   --apps <names> --scales <sizes> --runs 5 --warmup 1 --label compare
+  --cases <app names or full case IDs> --exclude-cases <app names or full case IDs>
   --timeout-ms 120000 --reverse --dry-run --update-readme
 Repeat --candidate or use comma-separated npm versions. README updates are off by default.
 Local sources are installed, freshly built and packed before timing. Outputs stay under results/.`)
@@ -67,7 +73,7 @@ Local sources are installed, freshly built and packed before timing. Outputs sta
 }
 
 async function compareSources() {
-  const selected = values.suites === 'all' ? suites : values.suites.split(',')
+  let selected = values.suites === 'all' ? suites : values.suites.split(',')
   if (
     new Set(selected).size !== selected.length ||
     selected.some((suite) => !suites.includes(suite))
@@ -100,6 +106,16 @@ async function compareSources() {
       casesFor(suite, parseOptions(suite, args)),
     ]),
   )
+  const selectedIds = new Set(selectCases(Object.values(matrix).flat(), {
+    include: values.cases,
+    exclude: values['exclude-cases'],
+    keys: (item) => [item.app, item.id],
+  }).map((item) => item.id))
+  for (const suite of selected) {
+    matrix[suite] = matrix[suite].filter((item) => selectedIds.has(item.id))
+    if (!matrix[suite].length) delete matrix[suite]
+  }
+  selected = Object.keys(matrix)
   if (
     selected.includes('coverage') &&
     !['darwin', 'linux'].includes(process.platform)
@@ -126,6 +142,7 @@ async function compareSources() {
   )
   ciResultDirectory(root, dir)
   const record = {
+    host: machine(root),
     ci: ciContext(),
     status: 'preparing',
     options: values,
@@ -136,10 +153,14 @@ async function compareSources() {
     startedAt: new Date().toISOString(),
   }
   const controller = new AbortController()
+  console.log(
+    `[host] ${formatCpu(record.host)}; ${record.host.platform}; Node ${record.host.node}`,
+  )
   const abort = () => controller.abort()
   process.on('SIGINT', abort)
   process.on('SIGTERM', abort)
   let sequence = 0
+  const summaries = []
   const save = () => {
     writeFileSync(
       join(dir, 'comparison.json.tmp'),
@@ -330,6 +351,19 @@ async function compareSources() {
       )
     record.status = 'running'
     save()
+    const counts = sides.map((side) =>
+      versionRunCounts(
+        Object.values(matrix).flat(),
+        { runs: Number(values.runs), warmup: Number(values.warmup) },
+        () => sources[side].kind === 'npm'
+          ? sources[side].version
+          : sources[side].packages.core.version,
+      ),
+    )
+    const progress = createProgress({
+      timed: counts.reduce((sum, count) => sum + count.timed, 0),
+      warmup: counts.reduce((sum, count) => sum + count.warmup, 0),
+    })
     for (const [index, suite] of selected.entries()) {
       const iterators = {}
       for (const side of sides) {
@@ -338,6 +372,9 @@ async function compareSources() {
         record.runs.push({ side, suite, status: 'running' })
         iterators[side] = suiteSteps(suite, args, {
           root: workspace,
+          caseIds: matrix[suite].map((item) => item.id),
+          progress,
+          progressLabel: `${side}/${suite}`,
           order:
             sides.length === 2
               ? 'paired versions per case/round; alternating first side each round and fixture; rotating variants'
@@ -356,9 +393,8 @@ async function compareSources() {
             startedAt: new Date().toISOString(),
           })
           save()
-          console.log(
-            `${step.side}/${suite}: ${step.kind === 'prepare' ? step.group : `${step.phase} ${step.round + 1} ${step.id}`}`,
-          )
+          if (step.kind === 'prepare')
+            console.log(`${step.side}/${suite}: preparing ${step.group}`)
         },
       })
       for (const [side, result] of Object.entries(results)) {
@@ -375,7 +411,7 @@ async function compareSources() {
       if (incomplete)
         throw new Error(`Incomplete benchmark: ${incomplete.file}`)
       const spec = {
-        title: `${suite}: ${comparisonTitle()}`,
+        title: `Rstest ${suite === 'main' ? 'version' : suite} benchmark`,
         output: relative(root, join(dir, 'reports', `${suite}.md`)),
         columns: sides.map((side) => ({
           label: `${side}: ${sources[side].label}`,
@@ -386,7 +422,10 @@ async function compareSources() {
         })),
       }
       mkdirSync(join(dir, 'reports'), { recursive: true })
-      writeFileSync(resolve(root, spec.output), comparisonReport(spec).markdown)
+      const rendered = comparisonReport(spec)
+      writeFileSync(resolve(root, spec.output), rendered.markdown)
+      summaries.push(rendered.jobSummary)
+      writeFileSync(join(dir, 'summary.md'), summaries.join('\n'))
       record.reports.push(spec)
       writeFileSync(
         join(dir, 'reports.config.json'),
@@ -397,7 +436,7 @@ async function compareSources() {
     record.status = 'completed'
     writeFileSync(
       join(dir, 'README.md'),
-      `# Benchmark comparison\n\n${comparisonTitle()}. ${values.warmup} warmup(s), ${values.runs} timed runs per case.\n\n` +
+      `# Rstest ${selected.length === 1 && selected[0] === 'coverage' ? 'coverage' : 'version'} benchmark\n\n${comparisonTitle()}. ${values.warmup} warmup(s), ${values.runs} timed runs per case.\n\n` +
         selected
           .map((suite) => `- [${suite}](reports/${suite}.md)`)
           .join('\n') +

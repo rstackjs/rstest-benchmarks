@@ -1,6 +1,18 @@
 import { statistics } from '../scripts/lib/stats.mjs'
+import { formatCpu } from '../scripts/lib/host.mjs'
 import { writeFileSync } from 'node:fs'
 import { join } from 'node:path'
+import { workerLabel } from './workers.mjs'
+
+function caseName(group) {
+  const [suite, name, provider] = group.split('/')
+  if (suite === 'main') return name
+  if (suite === 'browser') return `${name} (browser)`
+  if (suite === 'coverage')
+    return `${name} (${provider === 'none' ? 'coverage off' : provider})`
+  return group
+}
+
 export function renderReport(record) {
   const runners = record.options.frameworks ?? Object.keys(record.versions)
   const names = runners.map(
@@ -17,9 +29,9 @@ export function renderReport(record) {
   )
 
   const lines = [
-    '# ' + names.join(' / ') + ' comparison',
+    '# Frameworks benchmark',
     '',
-    `Status: **${record.status}**. ${record.startedAt}. Node ${record.host.node}; ${record.host.cpu}; ${record.host.platform}.`,
+    `Status: **${record.status}**. ${record.startedAt}. Node ${record.host.node}; ${formatCpu(record.host)}; ${record.host.platform}.`,
     '',
     'Published packages: ' +
       Object.entries(record.versions)
@@ -75,7 +87,7 @@ export function renderReport(record) {
     for (const reason of new Set(record.unsupported.map((s) => s.reason))) {
       const entries = record.unsupported.filter((s) => s.reason === reason)
       lines.push(
-        `- ${[...new Set(entries.map((s) => s.framework))].join(', ')}: ${reason}. Affected: ${[...new Set(entries.map((s) => s.group))].join(', ')}.`,
+        `- ${[...new Set(entries.map((s) => s.framework))].join(', ')}: ${reason}. Affected: ${[...new Set(entries.map((s) => caseName(s.group)))].join(', ')}.`,
       )
     }
     lines.push('')
@@ -100,6 +112,21 @@ export function renderReport(record) {
     react: 'React + jsdom',
   }
   const groups = [...new Set(record.samples.map((s) => s.group))]
+  lines.push(
+    '## Observed test workers',
+    '',
+    'Distinct worker slots that executed test setup in each invocation, read from framework-assigned runtime IDs. Ranges span timed runs and cache conditions. These are observed slots, not configured limits or peak simultaneous workers; recycled processes do not add slots. In-process means tests ran in the Jest runner itself. Browser mode does not use Node test workers. Historical runs without observations show Not recorded.',
+    '',
+    `| Case | ${names.join(' | ')} |`,
+    `| --- | ${names.map(() => '---:').join(' | ')} |`,
+  )
+  for (const group of groups) {
+    const cells = runners.map((framework) => workerLabel(record.samples.filter((sample) =>
+      sample.group === group && sample.framework === framework && sample.phase === 'timed',
+    )))
+    lines.push(`| ${caseName(group)} | ${cells.join(' | ')} |`)
+  }
+  lines.push('')
   for (const condition of record.options.conditions) {
     const rows = groups.map((group) => {
       const sets = runners.map((f) =>
@@ -125,12 +152,12 @@ export function renderReport(record) {
       stats.forEach((s, i) => {
         if (s.time.n)
           detail.push(
-            `| ${condition} / ${group} | ${names[i]} | ${s.time.n} | ${(s.time.median / 1000).toFixed(2)}s | ${(s.time.min / 1000).toFixed(2)}–${(s.time.max / 1000).toFixed(2)}s | ${s.time.sd == null ? '—' : (s.time.sd / 1000).toFixed(2) + 's'} | ${s.time.cv?.toFixed(2) ?? '—'}% | ${(s.rss.median / 1024 ** 2).toFixed(2)} MiB | ${s.rss.cv?.toFixed(2) ?? '—'}% |`,
+            `| ${condition} / ${caseName(group)} | ${names[i]} | ${s.time.n} | ${(s.time.median / 1000).toFixed(2)}s | ${(s.time.min / 1000).toFixed(2)}–${(s.time.max / 1000).toFixed(2)}s | ${s.time.sd == null ? '—' : (s.time.sd / 1000).toFixed(2) + 's'} | ${s.time.cv?.toFixed(2) ?? '—'}% | ${(s.rss.median / 1024 ** 2).toFixed(2)} MiB | ${s.rss.cv?.toFixed(2) ?? '—'}% |`,
           )
       })
       return { group, sets, stats }
     })
-    lines.push(`## ${condition} framework cache`, '')
+    lines.push(`## ${condition === 'warm' ? 'Warm' : 'Cold'} framework cache`, '')
     for (const metric of ['time', 'rss']) {
       const title = metric === 'time' ? 'Elapsed time' : 'RSS (MiB)'
       const header = `| Case | ${names.join(' | ')} |`
@@ -149,7 +176,7 @@ export function renderReport(record) {
               ? `${(s.time.median / 1000).toFixed(2)}s`
               : (s.rss.median / 1024 ** 2).toFixed(2))
         })
-        lines.push(`| ${group} | ${cells.join(' | ')} |`)
+        lines.push(`| ${caseName(group)} | ${cells.join(' | ')} |`)
         if (group.startsWith('main/')) {
           const id = group.split('/')[1]
           main.push(`| ${mainCaseNames[id] ?? id} | ${cells.join(' | ')} |`)
@@ -159,6 +186,11 @@ export function renderReport(record) {
       lines.push('')
     }
   }
+  const summary = [
+    ...lines,
+    'Full reports, phase timings and raw samples are available in the workflow artifact.',
+    '',
+  ].join('\n')
   const phased = record.samples.filter((s) => s.phase === 'timed' && s.counts?.duration)
   if (phased.length) {
     lines.push(
@@ -173,11 +205,11 @@ export function renderReport(record) {
       const selected = phased.filter((s) => s.condition === condition && s.group === group && s.framework === framework)
       if (!selected.length) continue
       if (selected.length !== record.options.runs || selected.some((s) => s.status !== 'passed')) {
-        lines.push(`| ${condition} / ${group} | ${names[i]} | ${selected.length} | INCOMPLETE | INCOMPLETE | INCOMPLETE |`)
+        lines.push(`| ${condition} / ${caseName(group)} | ${names[i]} | ${selected.length} | INCOMPLETE | INCOMPLETE | INCOMPLETE |`)
         continue
       }
       const med = (values) => (statistics(values).median / 1000).toFixed(2)
-      lines.push(`| ${condition} / ${group} | ${names[i]} | ${selected.length} | ${med(selected.map((s) => s.counts.duration.buildTime))} | ${med(selected.map((s) => s.counts.duration.testTime))} | ${med(selected.map((s) => s.wallMs))} |`)
+      lines.push(`| ${condition} / ${caseName(group)} | ${names[i]} | ${selected.length} | ${med(selected.map((s) => s.counts.duration.buildTime))} | ${med(selected.map((s) => s.counts.duration.testTime))} | ${med(selected.map((s) => s.wallMs))} |`)
     }
     lines.push('')
   }
@@ -192,12 +224,13 @@ export function renderReport(record) {
         : 'Logs and final reporter output are under logs/. Workspaces and generated source are retained alongside this report.'),
     '',
   )
-  return { markdown: lines.join('\n'), variability: detail.join('\n') + '\n', tables: mainTables.join('\n\n') }
+  return { markdown: lines.join('\n'), summary, variability: detail.join('\n') + '\n', tables: mainTables.join('\n\n') }
 }
 
 export function report(record, directory) {
   const rendered = renderReport(record)
   writeFileSync(join(directory, 'report.md'), rendered.markdown)
+  writeFileSync(join(directory, 'summary.md'), rendered.summary)
   writeFileSync(join(directory, 'variability.md'), rendered.variability)
   return rendered.tables
 }
