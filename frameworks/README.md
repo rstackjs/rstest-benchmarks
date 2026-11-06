@@ -109,7 +109,7 @@ Measured 2026-11-06 on Apple M4 Max with Node 24.11.1. Jest **30.5.2** + SWC **0
 | Barrel | 277.6 | 398.3 (+43.5%) | 🥇 163.1 (-41.3%) | 🥈 164.1 (-40.9%) |
 | React + jsdom | 🥇 174.2 | 🥈 178.2 (+2.3%) | 436.4 (+150.5%) | 364.0 (+109.0%) |
 
-RSS is OS maxrss, not total concurrent worker memory. CV flags and full coverage/browser comparisons are in the [complete report](reports/framework-comparison-2026-11-06/report.md), with [variability](reports/framework-comparison-2026-11-06/variability.md) and [all samples and provenance](reports/framework-comparison-2026-11-06/result.json). The tiny-project rows above are part of the same run and result set.
+RSS is OS maxrss, not total concurrent worker memory. CV flags and full coverage/browser comparisons are in the [complete report](reports/report.md), with [variability](reports/variability.md) and [all samples and provenance](reports/result.json). The tiny-project rows above are part of the same run and result set. Published reports use fixed paths in `reports/`; each update replaces the current report and samples. Previous results remain available in Git history.
 
 See [workload design](../docs/framework-comparison.md) for performance questions and fixture details. The proposed scaling extensions are not part of the implemented default matrix.
 
