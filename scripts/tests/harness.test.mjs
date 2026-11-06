@@ -35,7 +35,7 @@ const legacy = (overrides = {}) => ({
 
 test('median, MAD, sample SD, CV and empty/singleton behavior', () => {
   assert.equal(median([4, 1, 2, 3]), 2.5)
-  assert.equal(seconds(295.5), '0.296s')
+  assert.equal(seconds(295.5), '0.30s')
   const stats = statistics([10, 20, 30])
   assert.deepEqual(stats, {
     n: 3,

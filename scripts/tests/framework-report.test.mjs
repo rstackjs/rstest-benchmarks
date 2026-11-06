@@ -19,7 +19,11 @@ function render(t, samples) {
     },
     directory,
   )
-  return readFileSync(join(directory, 'report.md'), 'utf8')
+  const detail = readFileSync(join(directory, 'variability.md'), 'utf8')
+  assert.match(detail, /Time SD/)
+  const text = readFileSync(join(directory, 'report.md'), 'utf8')
+  assert.doesNotMatch(text, /CV > 10%|high variation|\| Notes \||Δ|%/)
+  return text
 }
 
 function samples(framework, times, overrides = {}) {
@@ -41,11 +45,11 @@ test('report excludes warmups and keeps RSS separate from elapsed time', (t) => 
     ...samples('vitest', [500, 1500]),
     ...samples('vitest', [90000], { phase: 'warmup' }),
   ])
-  assert.match(text, /\| main\/startup\/none \| 🥈 2\.000s \| 🥇 1\.000s \(-50\.0%\)/)
-  assert.match(text, /\| main\/startup\/none \| 🥇 100\.0 \| 🥇 100\.0 \(\+0\.0%\)/)
+  assert.match(text, /\| main\/startup\/none \| 🥈 2\.00s \| 🥇 1\.00s \|/)
+  assert.match(text, /\| main\/startup\/none \| 🥇 100\.00 \| 🥇 100\.00 \|/)
 })
 
-test('failed baseline is not silently replaced by another framework', (t) => {
+test('incomplete results are excluded from rankings', (t) => {
   const text = render(t, [
     ...samples('jest', [1000]),
     ...samples('jest', [1000], { status: 'failed' }),
@@ -54,19 +58,19 @@ test('failed baseline is not silently replaced by another framework', (t) => {
   ])
   assert.match(
     text,
-    /\| main\/startup\/none \| INCOMPLETE \| 🥈 1\.000s \| 🥇 0\.500s \|/,
+    /\| main\/startup\/none \| INCOMPLETE \| 🥈 1\.00s \| 🥇 0\.50s \|/,
   )
-  assert.doesNotMatch(text, /-50\.0%/)
 })
 
-test('browser comparison uses Vitest as baseline and leaves Jest unavailable', (t) => {
+test('browser comparison ranks available frameworks and leaves Jest unavailable', (t) => {
   const text = render(t, [
     ...samples('vitest', [1000, 1000], { group: 'browser/react/none' }),
     ...samples('rstest', [1500, 1500], { group: 'browser/react/none' }),
   ])
+  assert.match(text, /\| Case \| Jest \+ SWC \| Vitest \| Rstest \|/)
   assert.match(
     text,
-    /\| browser\/react\/none \| — \| 🥇 1\.000s \| 🥈 1\.500s \(\+50\.0%\)/,
+    /\| browser\/react\/none \| — \| 🥇 1\.00s \| 🥈 1\.50s \|/,
   )
 })
 
@@ -76,8 +80,8 @@ test('medals use unrounded medians and share second place for exact ties', (t) =
     ...samples('vitest', [1000.2, 1000.2], { rssBytes: 200 * 1024 ** 2 }),
     ...samples('rstest', [1000.2, 1000.2]),
   ])
-  assert.match(text, /\| main\/startup\/none \| 🥇 1\.000s \| 🥈 1\.000s \(\+0\.0%\) \| 🥈 1\.000s \(\+0\.0%\)/)
-  assert.match(text, /\| main\/startup\/none \| 300\.0 \| 🥈 200\.0 \(-33\.3%\) \| 🥇 100\.0 \(-66\.7%\)/)
+  assert.match(text, /\| main\/startup\/none \| 🥇 1\.00s \| 🥈 1\.00s \| 🥈 1\.00s \|/)
+  assert.match(text, /\| main\/startup\/none \| 300\.00 \| 🥈 200\.00 \| 🥇 100\.00 \|/)
 })
 
 test('phase timings retain reporter durations and exclude warmup measurements', (t) => {
@@ -90,5 +94,5 @@ test('phase timings retain reporter durations and exclude warmup measurements', 
       counts: { duration: { buildTime: 9000, testTime: 80000, totalTime: 89000 } },
     }),
   ])
-  assert.match(text, /\| warm \/ main\/startup\/none \| Rstest \| 2 \| 0\.100 \| 0\.800 \| 1\.100 \|/)
+  assert.match(text, /\| warm \/ main\/startup\/none \| Rstest \| 2 \| 0\.10 \| 0\.80 \| 1\.10 \|/)
 })

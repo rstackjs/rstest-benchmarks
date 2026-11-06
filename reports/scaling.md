@@ -6,35 +6,35 @@ Sources: baseline: **0.11.0** (npm); candidate: **0.12.6** (npm). Measured 2026-
 
 Sources run sequentially in rotating case/round order. For cases supported by all sources, each source occupies every order position equally often. Node compile cache is disabled. Rstest build and sequencing caches are cleared before each fixture's warmups and retained during measurement. Workload dependency graphs match. Background load and OS page cache are not controlled.
 
-Generated from raw samples. Change = (candidate / baseline − 1) × 100%; negative means faster. The first column is the baseline. All repetitions are retained; combined batches use the median of pooled samples, not the median of batch medians.
+Generated from raw samples. Change = (candidate / baseline − 1) × 100%; negative means faster. The first value column is the baseline; each Δ column shows the change relative to it. Values display two decimal places; changes use unrounded medians. All repetitions are retained; combined batches use the median of pooled samples, not the median of batch medians.
 
-| Case | baseline: 0.11.0 | candidate: 0.12.6 | Notes |
+| Case | baseline: 0.11.0 | candidate: 0.12.6 | Δ |
 | --- | --- | --- | --- |
-| files scaling · small | 0.314s | 0.324s (+3.2%) | high variation (CV > 10%) |
-| files scaling · medium | 0.712s | 0.802s (+12.7%) | high variation (CV > 10%) |
-| files scaling · large | 1.448s | 1.552s (+7.2%) | — |
-| graph scaling · small | 0.657s | 0.674s (+2.6%) | — |
-| graph scaling · medium | 0.707s | 0.773s (+9.4%) | high variation (CV > 10%) |
-| graph scaling · large | 0.811s | 0.854s (+5.3%) | — |
+| files scaling · small | 0.31s | 0.32s | +3.20% |
+| files scaling · medium | 0.71s | 0.80s | +12.65% |
+| files scaling · large | 1.45s | 1.55s | +7.19% |
+| graph scaling · small | 0.66s | 0.67s | +2.64% |
+| graph scaling · medium | 0.71s | 0.77s | +9.35% |
+| graph scaling · large | 0.81s | 0.85s | +5.28% |
 
 ## Variability
 
-MAD is unscaled. CV uses sample standard deviation (n − 1). CV > 10% is flagged as high variation, not as a significance test; small sample counts do not establish a regression. Failed or incomplete batches never receive a speedup percentage.
+MAD is unscaled. CV uses sample standard deviation (n − 1). Evaluate CV together with absolute SD and range before deciding whether a fluctuation warrants a rerun. Small sample counts do not establish a regression. Failed or incomplete batches never receive a speedup percentage.
 
-| Case | Column | Status | n | Median | Min–max | MAD | CV | Files | Tests |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| files scaling · small | baseline: 0.11.0 | passed | 6 | 0.314s | 0.295s–0.549s | 0.018s | 27.8% | 10 | 20 |
-| files scaling · small | candidate: 0.12.6 | passed | 6 | 0.324s | 0.319s–0.475s | 0.005s | 17.7% | 10 | 20 |
-| files scaling · medium | baseline: 0.11.0 | passed | 6 | 0.712s | 0.637s–0.957s | 0.009s | 14.8% | 40 | 80 |
-| files scaling · medium | candidate: 0.12.6 | passed | 6 | 0.802s | 0.700s–0.993s | 0.070s | 14.2% | 40 | 80 |
-| files scaling · large | baseline: 0.11.0 | passed | 6 | 1.448s | 1.338s–1.599s | 0.092s | 7.0% | 120 | 240 |
-| files scaling · large | candidate: 0.12.6 | passed | 6 | 1.552s | 1.421s–1.811s | 0.044s | 8.5% | 120 | 240 |
-| graph scaling · small | baseline: 0.11.0 | passed | 6 | 0.657s | 0.609s–0.722s | 0.036s | 6.5% | 40 | 80 |
-| graph scaling · small | candidate: 0.12.6 | passed | 6 | 0.674s | 0.621s–0.708s | 0.028s | 4.9% | 40 | 80 |
-| graph scaling · medium | baseline: 0.11.0 | passed | 6 | 0.707s | 0.647s–0.878s | 0.052s | 11.7% | 40 | 80 |
-| graph scaling · medium | candidate: 0.12.6 | passed | 6 | 0.773s | 0.661s–0.859s | 0.053s | 9.4% | 40 | 80 |
-| graph scaling · large | baseline: 0.11.0 | passed | 6 | 0.811s | 0.791s–0.838s | 0.017s | 2.4% | 40 | 80 |
-| graph scaling · large | candidate: 0.12.6 | passed | 6 | 0.854s | 0.819s–0.896s | 0.016s | 3.1% | 40 | 80 |
+| Case | Column | Status | n | Median | Min–max | MAD | SD | CV | Files | Tests |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| files scaling · small | baseline: 0.11.0 | passed | 6 | 0.31s | 0.29s–0.55s | 0.02s | 0.10s | 27.76% | 10 | 20 |
+| files scaling · small | candidate: 0.12.6 | passed | 6 | 0.32s | 0.32s–0.48s | 0.00s | 0.06s | 17.74% | 10 | 20 |
+| files scaling · medium | baseline: 0.11.0 | passed | 6 | 0.71s | 0.64s–0.96s | 0.01s | 0.11s | 14.78% | 40 | 80 |
+| files scaling · medium | candidate: 0.12.6 | passed | 6 | 0.80s | 0.70s–0.99s | 0.07s | 0.12s | 14.19% | 40 | 80 |
+| files scaling · large | baseline: 0.11.0 | passed | 6 | 1.45s | 1.34s–1.60s | 0.09s | 0.10s | 6.97% | 120 | 240 |
+| files scaling · large | candidate: 0.12.6 | passed | 6 | 1.55s | 1.42s–1.81s | 0.04s | 0.13s | 8.47% | 120 | 240 |
+| graph scaling · small | baseline: 0.11.0 | passed | 6 | 0.66s | 0.61s–0.72s | 0.04s | 0.04s | 6.49% | 40 | 80 |
+| graph scaling · small | candidate: 0.12.6 | passed | 6 | 0.67s | 0.62s–0.71s | 0.03s | 0.03s | 4.94% | 40 | 80 |
+| graph scaling · medium | baseline: 0.11.0 | passed | 6 | 0.71s | 0.65s–0.88s | 0.05s | 0.08s | 11.65% | 40 | 80 |
+| graph scaling · medium | candidate: 0.12.6 | passed | 6 | 0.77s | 0.66s–0.86s | 0.05s | 0.07s | 9.37% | 40 | 80 |
+| graph scaling · large | baseline: 0.11.0 | passed | 6 | 0.81s | 0.79s–0.84s | 0.02s | 0.02s | 2.36% | 40 | 80 |
+| graph scaling · large | candidate: 0.12.6 | passed | 6 | 0.85s | 0.82s–0.90s | 0.02s | 0.03s | 3.08% | 40 | 80 |
 
 ## Inputs and provenance
 

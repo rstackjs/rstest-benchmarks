@@ -1,120 +1,122 @@
 # Variability
 
-| Cache / case | Framework | n | Time median | Time min–max | Time CV | RSS median | RSS CV |
-| --- | --- | --- | --- | --- | --- | --- | --- |
-| cold / main/minimal-node/none | Jest + SWC | 8 | 0.442s | 0.419–0.506s | 6.2% | 101.7 MiB | 0.7% |
-| cold / main/minimal-node/none | Vitest | 8 | 0.304s | 0.297–0.333s | 3.6% | 116.5 MiB | 0.9% |
-| cold / main/minimal-node/none | Rstest | 8 | 0.241s | 0.227–0.292s | 8.2% | 129.6 MiB | 0.7% |
-| cold / main/minimal-node/none | Rstest vmForks | 8 | 0.256s | 0.245–0.273s | 3.5% | 128.9 MiB | 0.7% |
-| cold / main/minimal-react/none | Jest + SWC | 8 | 0.765s | 0.740–0.897s | 6.6% | 182.5 MiB | 2.6% |
-| cold / main/minimal-react/none | Vitest | 8 | 0.641s | 0.587–0.698s | 6.9% | 157.7 MiB | 1.2% |
-| cold / main/minimal-react/none | Rstest | 8 | 0.506s | 0.484–0.601s | 7.2% | 262.3 MiB | 2.0% |
-| cold / main/minimal-react/none | Rstest vmForks | 8 | 0.539s | 0.512–0.562s | 4.1% | 262.4 MiB | 1.3% |
-| cold / main/startup/none | Jest + SWC | 8 | 0.651s | 0.633–0.679s | 2.0% | 93.2 MiB | 0.4% |
-| cold / main/startup/none | Vitest | 8 | 0.344s | 0.330–0.361s | 3.5% | 122.8 MiB | 1.1% |
-| cold / main/startup/none | Rstest | 8 | 0.272s | 0.254–0.286s | 3.8% | 140.1 MiB | 0.7% |
-| cold / main/startup/none | Rstest vmForks | 8 | 0.297s | 0.271–0.342s | 7.1% | 139.5 MiB | 1.3% |
-| cold / main/many-files/none | Jest + SWC | 8 | 3.204s | 2.860–3.502s | 6.5% | 202.2 MiB | 1.6% |
-| cold / main/many-files/none | Vitest | 8 | 7.062s | 6.518–9.062s | 10.6% | 217.2 MiB | 0.7% |
-| cold / main/many-files/none | Rstest | 8 | 4.621s | 4.273–5.060s | 6.6% | 385.7 MiB | 1.3% |
-| cold / main/many-files/none | Rstest vmForks | 8 | 1.110s | 1.063–1.297s | 6.7% | 286.7 MiB | 0.6% |
-| cold / main/module-graph/none | Jest + SWC | 8 | 7.169s | 6.858–7.757s | 4.4% | 207.6 MiB | 3.0% |
-| cold / main/module-graph/none | Vitest | 8 | 4.695s | 4.165–5.314s | 9.3% | 312.0 MiB | 3.2% |
-| cold / main/module-graph/none | Rstest | 8 | 1.010s | 0.967–1.181s | 6.8% | 372.6 MiB | 3.9% |
-| cold / main/module-graph/none | Rstest vmForks | 8 | 0.780s | 0.740–1.250s | 20.3% | 287.5 MiB | 2.7% |
-| cold / main/backend/none | Jest + SWC | 8 | 1.151s | 1.108–1.349s | 7.4% | 151.9 MiB | 3.6% |
-| cold / main/backend/none | Vitest | 8 | 0.880s | 0.831–1.251s | 15.0% | 137.4 MiB | 2.0% |
-| cold / main/backend/none | Rstest | 8 | 0.628s | 0.593–0.934s | 16.7% | 154.9 MiB | 0.6% |
-| cold / main/backend/none | Rstest vmForks | 8 | 0.729s | 0.616–1.019s | 16.0% | 155.4 MiB | 0.6% |
-| cold / main/barrel/none | Jest + SWC | 8 | 21.992s | 20.321–24.611s | 6.5% | 363.3 MiB | 6.7% |
-| cold / main/barrel/none | Vitest | 8 | 9.939s | 9.196–12.472s | 10.6% | 429.6 MiB | 5.6% |
-| cold / main/barrel/none | Rstest | 8 | 0.561s | 0.471–0.692s | 13.3% | 163.5 MiB | 0.9% |
-| cold / main/barrel/none | Rstest vmForks | 8 | 0.468s | 0.423–0.551s | 11.8% | 163.7 MiB | 1.0% |
-| cold / main/react/none | Jest + SWC | 8 | 2.388s | 2.286–2.725s | 6.5% | 182.5 MiB | 1.5% |
-| cold / main/react/none | Vitest | 8 | 3.942s | 3.820–4.279s | 3.9% | 176.9 MiB | 1.9% |
-| cold / main/react/none | Rstest | 8 | 1.742s | 1.663–1.796s | 2.3% | 444.2 MiB | 1.8% |
-| cold / main/react/none | Rstest vmForks | 8 | 1.175s | 1.087–1.248s | 5.0% | 357.9 MiB | 1.3% |
-| cold / coverage/backend/none | Jest + SWC | 8 | 1.261s | 1.128–1.430s | 7.6% | 146.8 MiB | 6.0% |
-| cold / coverage/backend/none | Vitest | 8 | 0.902s | 0.870–0.956s | 3.7% | 138.2 MiB | 1.1% |
-| cold / coverage/backend/none | Rstest | 8 | 0.690s | 0.630–0.862s | 10.6% | 154.6 MiB | 1.1% |
-| cold / coverage/backend/none | Rstest vmForks | 8 | 0.755s | 0.663–0.846s | 8.8% | 154.6 MiB | 0.7% |
-| cold / coverage/backend/v8 | Jest + SWC | 8 | 1.596s | 1.464–1.874s | 9.7% | 170.6 MiB | 1.0% |
-| cold / coverage/backend/v8 | Vitest | 8 | 1.036s | 0.967–1.283s | 9.4% | 170.5 MiB | 1.7% |
-| cold / coverage/backend/v8 | Rstest | 8 | 0.858s | 0.800–0.980s | 6.7% | 193.8 MiB | 1.8% |
-| cold / coverage/backend/v8 | Rstest vmForks | 8 | 0.885s | 0.823–0.969s | 6.1% | 196.5 MiB | 1.9% |
-| cold / coverage/backend/istanbul | Jest + SWC | 8 | 2.701s | 2.193–3.836s | 18.3% | 232.2 MiB | 1.6% |
-| cold / coverage/backend/istanbul | Vitest | 8 | 1.262s | 1.005–1.881s | 22.9% | 178.0 MiB | 1.8% |
-| cold / coverage/backend/istanbul | Rstest | 8 | 1.074s | 0.911–1.742s | 26.6% | 338.0 MiB | 2.6% |
-| cold / coverage/backend/istanbul | Rstest vmForks | 8 | 1.227s | 0.960–1.560s | 18.4% | 334.8 MiB | 1.6% |
-| cold / coverage/react/none | Jest + SWC | 8 | 2.391s | 2.230–3.208s | 13.3% | 180.8 MiB | 1.9% |
-| cold / coverage/react/none | Vitest | 8 | 3.919s | 3.769–4.743s | 9.9% | 174.9 MiB | 2.9% |
-| cold / coverage/react/none | Rstest | 8 | 1.658s | 1.555–2.329s | 16.7% | 442.9 MiB | 3.7% |
-| cold / coverage/react/none | Rstest vmForks | 8 | 1.080s | 1.038–2.018s | 27.6% | 366.0 MiB | 2.1% |
-| cold / coverage/react/v8 | Jest + SWC | 8 | 3.248s | 3.192–4.145s | 9.6% | 233.8 MiB | 3.6% |
-| cold / coverage/react/v8 | Vitest | 8 | 4.219s | 3.940–4.620s | 4.6% | 187.1 MiB | 3.1% |
-| cold / coverage/react/v8 | Rstest | 8 | 2.079s | 1.980–2.186s | 3.5% | 673.4 MiB | 4.6% |
-| cold / coverage/react/v8 | Rstest vmForks | 8 | 1.493s | 1.428–1.671s | 5.0% | 558.9 MiB | 4.6% |
-| cold / coverage/react/istanbul | Jest + SWC | 8 | 3.822s | 3.681–4.259s | 5.0% | 231.6 MiB | 2.4% |
-| cold / coverage/react/istanbul | Vitest | 8 | 4.165s | 3.865–4.750s | 6.9% | 184.4 MiB | 1.8% |
-| cold / coverage/react/istanbul | Rstest | 8 | 1.932s | 1.822–2.783s | 15.3% | 578.0 MiB | 1.5% |
-| cold / coverage/react/istanbul | Rstest vmForks | 8 | 1.429s | 1.332–1.733s | 8.3% | 493.5 MiB | 1.6% |
-| cold / browser/react/none | Vitest | 8 | 2.387s | 2.300–2.789s | 6.6% | 1126.0 MiB | 3.5% |
-| cold / browser/react/none | Rstest | 8 | 1.640s | 1.560–1.860s | 6.0% | 458.7 MiB | 1.4% |
-| warm / main/minimal-node/none | Jest + SWC | 8 | 0.206s | 0.202–0.237s | 6.0% | 94.9 MiB | 0.5% |
-| warm / main/minimal-node/none | Vitest | 8 | 0.270s | 0.224–0.304s | 11.0% | 114.2 MiB | 1.1% |
-| warm / main/minimal-node/none | Rstest | 8 | 0.234s | 0.218–0.257s | 6.2% | 129.0 MiB | 1.1% |
-| warm / main/minimal-node/none | Rstest vmForks | 8 | 0.268s | 0.246–0.318s | 10.1% | 129.1 MiB | 1.2% |
-| warm / main/minimal-react/none | Jest + SWC | 8 | 0.524s | 0.499–0.557s | 4.3% | 170.8 MiB | 0.7% |
-| warm / main/minimal-react/none | Vitest | 8 | 0.576s | 0.566–0.612s | 2.7% | 159.0 MiB | 0.7% |
-| warm / main/minimal-react/none | Rstest | 8 | 0.499s | 0.493–0.509s | 1.2% | 268.6 MiB | 1.7% |
-| warm / main/minimal-react/none | Rstest vmForks | 8 | 0.528s | 0.520–0.595s | 4.7% | 267.3 MiB | 1.2% |
-| warm / main/startup/none | Jest + SWC | 8 | 0.257s | 0.252–0.296s | 5.7% | 107.7 MiB | 1.2% |
-| warm / main/startup/none | Vitest | 8 | 0.280s | 0.259–0.304s | 5.3% | 116.7 MiB | 0.6% |
-| warm / main/startup/none | Rstest | 8 | 0.266s | 0.250–0.271s | 2.8% | 139.3 MiB | 0.9% |
-| warm / main/startup/none | Rstest vmForks | 8 | 0.291s | 0.272–0.331s | 6.6% | 138.6 MiB | 0.9% |
-| warm / main/many-files/none | Jest + SWC | 8 | 2.198s | 2.023–2.470s | 6.6% | 195.0 MiB | 3.1% |
-| warm / main/many-files/none | Vitest | 8 | 6.212s | 6.093–6.628s | 2.7% | 200.8 MiB | 2.9% |
-| warm / main/many-files/none | Rstest | 8 | 4.470s | 4.301–4.839s | 4.5% | 388.0 MiB | 1.1% |
-| warm / main/many-files/none | Rstest vmForks | 8 | 1.104s | 1.069–1.420s | 11.4% | 288.2 MiB | 0.7% |
-| warm / main/module-graph/none | Jest + SWC | 8 | 2.377s | 2.310–3.260s | 14.4% | 192.8 MiB | 3.8% |
-| warm / main/module-graph/none | Vitest | 8 | 3.095s | 3.029–3.742s | 7.4% | 239.4 MiB | 1.9% |
-| warm / main/module-graph/none | Rstest | 8 | 0.966s | 0.940–1.150s | 6.9% | 390.2 MiB | 3.3% |
-| warm / main/module-graph/none | Rstest vmForks | 8 | 0.750s | 0.729–1.103s | 15.9% | 286.0 MiB | 1.3% |
-| warm / main/backend/none | Jest + SWC | 8 | 0.796s | 0.725–1.173s | 18.3% | 284.4 MiB | 2.9% |
-| warm / main/backend/none | Vitest | 8 | 0.760s | 0.730–1.026s | 12.4% | 126.6 MiB | 1.1% |
-| warm / main/backend/none | Rstest | 8 | 0.703s | 0.624–0.883s | 11.5% | 154.7 MiB | 1.4% |
-| warm / main/backend/none | Rstest vmForks | 8 | 0.729s | 0.642–1.085s | 18.7% | 155.3 MiB | 0.6% |
-| warm / main/barrel/none | Jest + SWC | 8 | 5.204s | 4.812–10.038s | 29.6% | 277.6 MiB | 5.5% |
-| warm / main/barrel/none | Vitest | 8 | 5.428s | 5.187–8.091s | 16.8% | 398.3 MiB | 4.9% |
-| warm / main/barrel/none | Rstest | 8 | 0.480s | 0.455–0.764s | 19.9% | 163.1 MiB | 0.7% |
-| warm / main/barrel/none | Rstest vmForks | 8 | 0.455s | 0.432–0.532s | 8.9% | 164.1 MiB | 0.8% |
-| warm / main/react/none | Jest + SWC | 8 | 2.258s | 2.089–2.707s | 9.2% | 174.2 MiB | 1.9% |
-| warm / main/react/none | Vitest | 8 | 4.040s | 3.647–5.591s | 14.4% | 178.2 MiB | 2.4% |
-| warm / main/react/none | Rstest | 8 | 1.669s | 1.576–2.784s | 24.1% | 436.4 MiB | 4.5% |
-| warm / main/react/none | Rstest vmForks | 8 | 1.126s | 1.067–1.256s | 5.6% | 364.0 MiB | 1.5% |
-| warm / coverage/backend/none | Jest + SWC | 8 | 0.757s | 0.732–1.549s | 33.1% | 294.6 MiB | 3.5% |
-| warm / coverage/backend/none | Vitest | 8 | 0.784s | 0.729–0.898s | 6.5% | 126.5 MiB | 0.8% |
-| warm / coverage/backend/none | Rstest | 8 | 0.638s | 0.607–1.224s | 28.4% | 154.7 MiB | 1.0% |
-| warm / coverage/backend/none | Rstest vmForks | 8 | 0.684s | 0.657–0.742s | 4.0% | 155.2 MiB | 0.8% |
-| warm / coverage/backend/v8 | Jest + SWC | 8 | 3.044s | 2.943–3.401s | 5.2% | 391.7 MiB | 4.2% |
-| warm / coverage/backend/v8 | Vitest | 8 | 1.063s | 0.968–1.250s | 7.7% | 165.4 MiB | 2.5% |
-| warm / coverage/backend/v8 | Rstest | 8 | 0.881s | 0.838–1.021s | 7.9% | 192.9 MiB | 1.7% |
-| warm / coverage/backend/v8 | Rstest vmForks | 8 | 0.935s | 0.873–1.182s | 10.4% | 198.7 MiB | 1.6% |
-| warm / coverage/backend/istanbul | Jest + SWC | 8 | 1.415s | 1.171–1.836s | 16.0% | 308.0 MiB | 1.4% |
-| warm / coverage/backend/istanbul | Vitest | 8 | 1.055s | 0.908–1.419s | 15.8% | 168.4 MiB | 2.4% |
-| warm / coverage/backend/istanbul | Rstest | 8 | 0.832s | 0.680–1.208s | 20.1% | 193.8 MiB | 0.9% |
-| warm / coverage/backend/istanbul | Rstest vmForks | 8 | 0.853s | 0.734–1.344s | 22.5% | 192.7 MiB | 0.7% |
-| warm / coverage/react/none | Jest + SWC | 8 | 2.126s | 2.076–2.631s | 8.6% | 174.8 MiB | 1.1% |
-| warm / coverage/react/none | Vitest | 8 | 3.949s | 3.694–5.691s | 15.6% | 178.9 MiB | 1.9% |
-| warm / coverage/react/none | Rstest | 8 | 1.998s | 1.608–2.987s | 23.1% | 438.4 MiB | 2.6% |
-| warm / coverage/react/none | Rstest vmForks | 8 | 1.332s | 1.049–1.499s | 13.0% | 356.9 MiB | 2.5% |
-| warm / coverage/react/v8 | Jest + SWC | 8 | 3.015s | 2.837–3.115s | 3.2% | 225.4 MiB | 1.4% |
-| warm / coverage/react/v8 | Vitest | 8 | 4.029s | 3.910–4.277s | 2.9% | 189.2 MiB | 2.3% |
-| warm / coverage/react/v8 | Rstest | 8 | 2.036s | 2.008–2.392s | 6.2% | 658.5 MiB | 3.5% |
-| warm / coverage/react/v8 | Rstest vmForks | 8 | 1.478s | 1.402–1.546s | 4.2% | 562.3 MiB | 6.3% |
-| warm / coverage/react/istanbul | Jest + SWC | 8 | 2.876s | 2.814–3.145s | 4.4% | 179.3 MiB | 4.1% |
-| warm / coverage/react/istanbul | Vitest | 8 | 4.121s | 3.752–4.898s | 9.4% | 177.3 MiB | 3.0% |
-| warm / coverage/react/istanbul | Rstest | 8 | 1.791s | 1.669–2.170s | 9.5% | 469.3 MiB | 2.8% |
-| warm / coverage/react/istanbul | Rstest vmForks | 8 | 1.192s | 1.150–1.924s | 20.0% | 396.2 MiB | 2.0% |
-| warm / browser/react/none | Vitest | 8 | 2.308s | 2.239–2.786s | 7.6% | 985.0 MiB | 3.0% |
-| warm / browser/react/none | Rstest | 8 | 1.652s | 1.558–1.891s | 6.4% | 446.4 MiB | 2.8% |
+CV is shown with absolute standard deviation and range; CV alone does not establish a meaningful fluctuation or regression.
+
+| Cache / case | Framework | n | Time median | Time min–max | Time SD | Time CV | RSS median | RSS CV |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| cold / main/minimal-node/none | Jest + SWC | 8 | 0.44s | 0.42–0.51s | 0.03s | 6.24% | 101.73 MiB | 0.66% |
+| cold / main/minimal-node/none | Vitest | 8 | 0.30s | 0.30–0.33s | 0.01s | 3.63% | 116.45 MiB | 0.88% |
+| cold / main/minimal-node/none | Rstest | 8 | 0.24s | 0.23–0.29s | 0.02s | 8.22% | 129.59 MiB | 0.70% |
+| cold / main/minimal-node/none | Rstest vmForks | 8 | 0.26s | 0.24–0.27s | 0.01s | 3.47% | 128.85 MiB | 0.65% |
+| cold / main/minimal-react/none | Jest + SWC | 8 | 0.76s | 0.74–0.90s | 0.05s | 6.58% | 182.49 MiB | 2.65% |
+| cold / main/minimal-react/none | Vitest | 8 | 0.64s | 0.59–0.70s | 0.04s | 6.90% | 157.73 MiB | 1.18% |
+| cold / main/minimal-react/none | Rstest | 8 | 0.51s | 0.48–0.60s | 0.04s | 7.16% | 262.34 MiB | 1.97% |
+| cold / main/minimal-react/none | Rstest vmForks | 8 | 0.54s | 0.51–0.56s | 0.02s | 4.08% | 262.43 MiB | 1.25% |
+| cold / main/startup/none | Jest + SWC | 8 | 0.65s | 0.63–0.68s | 0.01s | 1.95% | 93.20 MiB | 0.42% |
+| cold / main/startup/none | Vitest | 8 | 0.34s | 0.33–0.36s | 0.01s | 3.53% | 122.80 MiB | 1.12% |
+| cold / main/startup/none | Rstest | 8 | 0.27s | 0.25–0.29s | 0.01s | 3.79% | 140.07 MiB | 0.70% |
+| cold / main/startup/none | Rstest vmForks | 8 | 0.30s | 0.27–0.34s | 0.02s | 7.06% | 139.54 MiB | 1.30% |
+| cold / main/many-files/none | Jest + SWC | 8 | 3.20s | 2.86–3.50s | 0.21s | 6.47% | 202.16 MiB | 1.64% |
+| cold / main/many-files/none | Vitest | 8 | 7.06s | 6.52–9.06s | 0.77s | 10.63% | 217.23 MiB | 0.67% |
+| cold / main/many-files/none | Rstest | 8 | 4.62s | 4.27–5.06s | 0.31s | 6.63% | 385.74 MiB | 1.31% |
+| cold / main/many-files/none | Rstest vmForks | 8 | 1.11s | 1.06–1.30s | 0.08s | 6.72% | 286.70 MiB | 0.56% |
+| cold / main/module-graph/none | Jest + SWC | 8 | 7.17s | 6.86–7.76s | 0.32s | 4.40% | 207.59 MiB | 2.99% |
+| cold / main/module-graph/none | Vitest | 8 | 4.69s | 4.17–5.31s | 0.44s | 9.30% | 311.98 MiB | 3.19% |
+| cold / main/module-graph/none | Rstest | 8 | 1.01s | 0.97–1.18s | 0.07s | 6.77% | 372.55 MiB | 3.87% |
+| cold / main/module-graph/none | Rstest vmForks | 8 | 0.78s | 0.74–1.25s | 0.17s | 20.27% | 287.53 MiB | 2.68% |
+| cold / main/backend/none | Jest + SWC | 8 | 1.15s | 1.11–1.35s | 0.09s | 7.37% | 151.85 MiB | 3.62% |
+| cold / main/backend/none | Vitest | 8 | 0.88s | 0.83–1.25s | 0.14s | 14.96% | 137.45 MiB | 1.98% |
+| cold / main/backend/none | Rstest | 8 | 0.63s | 0.59–0.93s | 0.11s | 16.75% | 154.85 MiB | 0.58% |
+| cold / main/backend/none | Rstest vmForks | 8 | 0.73s | 0.62–1.02s | 0.12s | 15.99% | 155.45 MiB | 0.65% |
+| cold / main/barrel/none | Jest + SWC | 8 | 21.99s | 20.32–24.61s | 1.44s | 6.54% | 363.26 MiB | 6.74% |
+| cold / main/barrel/none | Vitest | 8 | 9.94s | 9.20–12.47s | 1.09s | 10.58% | 429.61 MiB | 5.61% |
+| cold / main/barrel/none | Rstest | 8 | 0.56s | 0.47–0.69s | 0.07s | 13.32% | 163.47 MiB | 0.88% |
+| cold / main/barrel/none | Rstest vmForks | 8 | 0.47s | 0.42–0.55s | 0.06s | 11.84% | 163.73 MiB | 0.96% |
+| cold / main/react/none | Jest + SWC | 8 | 2.39s | 2.29–2.72s | 0.16s | 6.46% | 182.54 MiB | 1.45% |
+| cold / main/react/none | Vitest | 8 | 3.94s | 3.82–4.28s | 0.16s | 3.91% | 176.92 MiB | 1.93% |
+| cold / main/react/none | Rstest | 8 | 1.74s | 1.66–1.80s | 0.04s | 2.34% | 444.17 MiB | 1.84% |
+| cold / main/react/none | Rstest vmForks | 8 | 1.18s | 1.09–1.25s | 0.06s | 5.01% | 357.92 MiB | 1.34% |
+| cold / coverage/backend/none | Jest + SWC | 8 | 1.26s | 1.13–1.43s | 0.10s | 7.62% | 146.84 MiB | 5.96% |
+| cold / coverage/backend/none | Vitest | 8 | 0.90s | 0.87–0.96s | 0.03s | 3.66% | 138.24 MiB | 1.13% |
+| cold / coverage/backend/none | Rstest | 8 | 0.69s | 0.63–0.86s | 0.08s | 10.63% | 154.61 MiB | 1.06% |
+| cold / coverage/backend/none | Rstest vmForks | 8 | 0.76s | 0.66–0.85s | 0.07s | 8.81% | 154.64 MiB | 0.72% |
+| cold / coverage/backend/v8 | Jest + SWC | 8 | 1.60s | 1.46–1.87s | 0.16s | 9.75% | 170.59 MiB | 0.96% |
+| cold / coverage/backend/v8 | Vitest | 8 | 1.04s | 0.97–1.28s | 0.10s | 9.42% | 170.52 MiB | 1.70% |
+| cold / coverage/backend/v8 | Rstest | 8 | 0.86s | 0.80–0.98s | 0.06s | 6.74% | 193.79 MiB | 1.83% |
+| cold / coverage/backend/v8 | Rstest vmForks | 8 | 0.89s | 0.82–0.97s | 0.05s | 6.05% | 196.46 MiB | 1.86% |
+| cold / coverage/backend/istanbul | Jest + SWC | 8 | 2.70s | 2.19–3.84s | 0.50s | 18.29% | 232.23 MiB | 1.58% |
+| cold / coverage/backend/istanbul | Vitest | 8 | 1.26s | 1.00–1.88s | 0.30s | 22.86% | 178.04 MiB | 1.78% |
+| cold / coverage/backend/istanbul | Rstest | 8 | 1.07s | 0.91–1.74s | 0.33s | 26.61% | 337.98 MiB | 2.60% |
+| cold / coverage/backend/istanbul | Rstest vmForks | 8 | 1.23s | 0.96–1.56s | 0.23s | 18.41% | 334.81 MiB | 1.57% |
+| cold / coverage/react/none | Jest + SWC | 8 | 2.39s | 2.23–3.21s | 0.33s | 13.32% | 180.79 MiB | 1.94% |
+| cold / coverage/react/none | Vitest | 8 | 3.92s | 3.77–4.74s | 0.40s | 9.90% | 174.86 MiB | 2.88% |
+| cold / coverage/react/none | Rstest | 8 | 1.66s | 1.56–2.33s | 0.30s | 16.75% | 442.92 MiB | 3.74% |
+| cold / coverage/react/none | Rstest vmForks | 8 | 1.08s | 1.04–2.02s | 0.34s | 27.63% | 366.02 MiB | 2.12% |
+| cold / coverage/react/v8 | Jest + SWC | 8 | 3.25s | 3.19–4.15s | 0.32s | 9.64% | 233.76 MiB | 3.59% |
+| cold / coverage/react/v8 | Vitest | 8 | 4.22s | 3.94–4.62s | 0.19s | 4.58% | 187.13 MiB | 3.11% |
+| cold / coverage/react/v8 | Rstest | 8 | 2.08s | 1.98–2.19s | 0.07s | 3.54% | 673.41 MiB | 4.60% |
+| cold / coverage/react/v8 | Rstest vmForks | 8 | 1.49s | 1.43–1.67s | 0.08s | 5.04% | 558.93 MiB | 4.55% |
+| cold / coverage/react/istanbul | Jest + SWC | 8 | 3.82s | 3.68–4.26s | 0.20s | 5.04% | 231.59 MiB | 2.44% |
+| cold / coverage/react/istanbul | Vitest | 8 | 4.17s | 3.87–4.75s | 0.29s | 6.93% | 184.40 MiB | 1.85% |
+| cold / coverage/react/istanbul | Rstest | 8 | 1.93s | 1.82–2.78s | 0.31s | 15.34% | 578.03 MiB | 1.51% |
+| cold / coverage/react/istanbul | Rstest vmForks | 8 | 1.43s | 1.33–1.73s | 0.12s | 8.29% | 493.47 MiB | 1.61% |
+| cold / browser/react/none | Vitest | 8 | 2.39s | 2.30–2.79s | 0.16s | 6.58% | 1126.05 MiB | 3.47% |
+| cold / browser/react/none | Rstest | 8 | 1.64s | 1.56–1.86s | 0.10s | 6.02% | 458.66 MiB | 1.43% |
+| warm / main/minimal-node/none | Jest + SWC | 8 | 0.21s | 0.20–0.24s | 0.01s | 5.96% | 94.88 MiB | 0.51% |
+| warm / main/minimal-node/none | Vitest | 8 | 0.27s | 0.22–0.30s | 0.03s | 10.99% | 114.16 MiB | 1.13% |
+| warm / main/minimal-node/none | Rstest | 8 | 0.23s | 0.22–0.26s | 0.01s | 6.19% | 129.01 MiB | 1.11% |
+| warm / main/minimal-node/none | Rstest vmForks | 8 | 0.27s | 0.25–0.32s | 0.03s | 10.08% | 129.13 MiB | 1.17% |
+| warm / main/minimal-react/none | Jest + SWC | 8 | 0.52s | 0.50–0.56s | 0.02s | 4.25% | 170.76 MiB | 0.69% |
+| warm / main/minimal-react/none | Vitest | 8 | 0.58s | 0.57–0.61s | 0.02s | 2.75% | 159.03 MiB | 0.75% |
+| warm / main/minimal-react/none | Rstest | 8 | 0.50s | 0.49–0.51s | 0.01s | 1.16% | 268.55 MiB | 1.70% |
+| warm / main/minimal-react/none | Rstest vmForks | 8 | 0.53s | 0.52–0.59s | 0.03s | 4.70% | 267.31 MiB | 1.24% |
+| warm / main/startup/none | Jest + SWC | 8 | 0.26s | 0.25–0.30s | 0.01s | 5.67% | 107.67 MiB | 1.15% |
+| warm / main/startup/none | Vitest | 8 | 0.28s | 0.26–0.30s | 0.01s | 5.28% | 116.68 MiB | 0.60% |
+| warm / main/startup/none | Rstest | 8 | 0.27s | 0.25–0.27s | 0.01s | 2.82% | 139.25 MiB | 0.85% |
+| warm / main/startup/none | Rstest vmForks | 8 | 0.29s | 0.27–0.33s | 0.02s | 6.56% | 138.64 MiB | 0.94% |
+| warm / main/many-files/none | Jest + SWC | 8 | 2.20s | 2.02–2.47s | 0.15s | 6.60% | 195.02 MiB | 3.10% |
+| warm / main/many-files/none | Vitest | 8 | 6.21s | 6.09–6.63s | 0.17s | 2.66% | 200.84 MiB | 2.93% |
+| warm / main/many-files/none | Rstest | 8 | 4.47s | 4.30–4.84s | 0.21s | 4.54% | 387.97 MiB | 1.14% |
+| warm / main/many-files/none | Rstest vmForks | 8 | 1.10s | 1.07–1.42s | 0.13s | 11.36% | 288.22 MiB | 0.75% |
+| warm / main/module-graph/none | Jest + SWC | 8 | 2.38s | 2.31–3.26s | 0.37s | 14.37% | 192.76 MiB | 3.76% |
+| warm / main/module-graph/none | Vitest | 8 | 3.10s | 3.03–3.74s | 0.24s | 7.43% | 239.39 MiB | 1.90% |
+| warm / main/module-graph/none | Rstest | 8 | 0.97s | 0.94–1.15s | 0.07s | 6.93% | 390.24 MiB | 3.30% |
+| warm / main/module-graph/none | Rstest vmForks | 8 | 0.75s | 0.73–1.10s | 0.13s | 15.95% | 286.01 MiB | 1.30% |
+| warm / main/backend/none | Jest + SWC | 8 | 0.80s | 0.73–1.17s | 0.16s | 18.25% | 284.42 MiB | 2.93% |
+| warm / main/backend/none | Vitest | 8 | 0.76s | 0.73–1.03s | 0.10s | 12.38% | 126.57 MiB | 1.08% |
+| warm / main/backend/none | Rstest | 8 | 0.70s | 0.62–0.88s | 0.08s | 11.54% | 154.72 MiB | 1.41% |
+| warm / main/backend/none | Rstest vmForks | 8 | 0.73s | 0.64–1.09s | 0.14s | 18.66% | 155.31 MiB | 0.61% |
+| warm / main/barrel/none | Jest + SWC | 8 | 5.20s | 4.81–10.04s | 1.75s | 29.62% | 277.62 MiB | 5.46% |
+| warm / main/barrel/none | Vitest | 8 | 5.43s | 5.19–8.09s | 0.99s | 16.83% | 398.31 MiB | 4.95% |
+| warm / main/barrel/none | Rstest | 8 | 0.48s | 0.46–0.76s | 0.10s | 19.89% | 163.08 MiB | 0.67% |
+| warm / main/barrel/none | Rstest vmForks | 8 | 0.45s | 0.43–0.53s | 0.04s | 8.90% | 164.14 MiB | 0.82% |
+| warm / main/react/none | Jest + SWC | 8 | 2.26s | 2.09–2.71s | 0.21s | 9.21% | 174.19 MiB | 1.89% |
+| warm / main/react/none | Vitest | 8 | 4.04s | 3.65–5.59s | 0.60s | 14.40% | 178.22 MiB | 2.42% |
+| warm / main/react/none | Rstest | 8 | 1.67s | 1.58–2.78s | 0.46s | 24.10% | 436.37 MiB | 4.49% |
+| warm / main/react/none | Rstest vmForks | 8 | 1.13s | 1.07–1.26s | 0.06s | 5.61% | 364.05 MiB | 1.51% |
+| warm / coverage/backend/none | Jest + SWC | 8 | 0.76s | 0.73–1.55s | 0.28s | 33.08% | 294.61 MiB | 3.54% |
+| warm / coverage/backend/none | Vitest | 8 | 0.78s | 0.73–0.90s | 0.05s | 6.54% | 126.52 MiB | 0.81% |
+| warm / coverage/backend/none | Rstest | 8 | 0.64s | 0.61–1.22s | 0.21s | 28.43% | 154.73 MiB | 0.95% |
+| warm / coverage/backend/none | Rstest vmForks | 8 | 0.68s | 0.66–0.74s | 0.03s | 4.01% | 155.22 MiB | 0.78% |
+| warm / coverage/backend/v8 | Jest + SWC | 8 | 3.04s | 2.94–3.40s | 0.16s | 5.15% | 391.67 MiB | 4.18% |
+| warm / coverage/backend/v8 | Vitest | 8 | 1.06s | 0.97–1.25s | 0.08s | 7.69% | 165.45 MiB | 2.51% |
+| warm / coverage/backend/v8 | Rstest | 8 | 0.88s | 0.84–1.02s | 0.07s | 7.93% | 192.93 MiB | 1.70% |
+| warm / coverage/backend/v8 | Rstest vmForks | 8 | 0.94s | 0.87–1.18s | 0.10s | 10.35% | 198.71 MiB | 1.61% |
+| warm / coverage/backend/istanbul | Jest + SWC | 8 | 1.42s | 1.17–1.84s | 0.23s | 15.99% | 307.98 MiB | 1.38% |
+| warm / coverage/backend/istanbul | Vitest | 8 | 1.05s | 0.91–1.42s | 0.17s | 15.77% | 168.41 MiB | 2.39% |
+| warm / coverage/backend/istanbul | Rstest | 8 | 0.83s | 0.68–1.21s | 0.17s | 20.09% | 193.84 MiB | 0.88% |
+| warm / coverage/backend/istanbul | Rstest vmForks | 8 | 0.85s | 0.73–1.34s | 0.21s | 22.47% | 192.69 MiB | 0.71% |
+| warm / coverage/react/none | Jest + SWC | 8 | 2.13s | 2.08–2.63s | 0.19s | 8.58% | 174.84 MiB | 1.14% |
+| warm / coverage/react/none | Vitest | 8 | 3.95s | 3.69–5.69s | 0.66s | 15.57% | 178.91 MiB | 1.87% |
+| warm / coverage/react/none | Rstest | 8 | 2.00s | 1.61–2.99s | 0.48s | 23.08% | 438.43 MiB | 2.56% |
+| warm / coverage/react/none | Rstest vmForks | 8 | 1.33s | 1.05–1.50s | 0.17s | 13.03% | 356.91 MiB | 2.53% |
+| warm / coverage/react/v8 | Jest + SWC | 8 | 3.01s | 2.84–3.11s | 0.10s | 3.22% | 225.43 MiB | 1.41% |
+| warm / coverage/react/v8 | Vitest | 8 | 4.03s | 3.91–4.28s | 0.12s | 2.87% | 189.21 MiB | 2.30% |
+| warm / coverage/react/v8 | Rstest | 8 | 2.04s | 2.01–2.39s | 0.13s | 6.19% | 658.50 MiB | 3.48% |
+| warm / coverage/react/v8 | Rstest vmForks | 8 | 1.48s | 1.40–1.55s | 0.06s | 4.17% | 562.27 MiB | 6.28% |
+| warm / coverage/react/istanbul | Jest + SWC | 8 | 2.88s | 2.81–3.14s | 0.13s | 4.35% | 179.25 MiB | 4.10% |
+| warm / coverage/react/istanbul | Vitest | 8 | 4.12s | 3.75–4.90s | 0.40s | 9.37% | 177.30 MiB | 2.96% |
+| warm / coverage/react/istanbul | Rstest | 8 | 1.79s | 1.67–2.17s | 0.17s | 9.47% | 469.28 MiB | 2.79% |
+| warm / coverage/react/istanbul | Rstest vmForks | 8 | 1.19s | 1.15–1.92s | 0.26s | 20.05% | 396.18 MiB | 2.00% |
+| warm / browser/react/none | Vitest | 8 | 2.31s | 2.24–2.79s | 0.18s | 7.63% | 984.98 MiB | 2.97% |
+| warm / browser/react/none | Rstest | 8 | 1.65s | 1.56–1.89s | 0.11s | 6.35% | 446.41 MiB | 2.75% |

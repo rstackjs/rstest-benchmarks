@@ -28,7 +28,7 @@ export function report(record, directory) {
     '',
     `${record.options.runs} measured runs per framework/case/cache condition; medians. Each sample is a fresh process. Warm cache: one warmup after clearing caches; cold cache: cleared before every measured run. Node compile cache disabled; OS page cache and background load uncontrolled. Framework defaults, except explicitly named variants.`,
     '',
-    'RSS is OS /usr/bin/time maxrss (MiB), not simultaneous aggregate process-tree memory. Percentages use Jest when present, Vitest for browser mode, otherwise the first listed framework as baseline. Negative means less time or memory. Installations and generation are outside timing. All samples retained.',
+    'RSS is OS /usr/bin/time maxrss (MiB), not simultaneous aggregate process-tree memory. Installations and generation are outside timing. All samples retained.',
     '',
     '🥇 and 🥈 mark the lowest and second-lowest distinct unrounded medians among complete results in each row; exact ties share the marker. They do not indicate statistical significance.',
     '',
@@ -81,9 +81,22 @@ export function report(record, directory) {
   const detail = [
     '# Variability',
     '',
-    '| Cache / case | Framework | n | Time median | Time min–max | Time CV | RSS median | RSS CV |',
-    '| --- | --- | --- | --- | --- | --- | --- | --- |',
+    'CV is shown with absolute standard deviation and range; CV alone does not establish a meaningful fluctuation or regression.',
+    '',
+    '| Cache / case | Framework | n | Time median | Time min–max | Time SD | Time CV | RSS median | RSS CV |',
+    '| --- | --- | --- | --- | --- | --- | --- | --- | --- |',
   ]
+  const mainTables = []
+  const mainCaseNames = {
+    'minimal-node': 'Node · single-file',
+    'minimal-react': 'React · single-file',
+    startup: 'Node startup',
+    'many-files': 'Many files',
+    'module-graph': 'Module graph',
+    backend: 'Backend',
+    barrel: 'Barrel',
+    react: 'React + jsdom',
+  }
   const groups = [...new Set(record.samples.map((s) => s.group))]
   for (const condition of record.options.conditions) {
     const rows = groups.map((group) => {
@@ -110,47 +123,37 @@ export function report(record, directory) {
       stats.forEach((s, i) => {
         if (s.time.n)
           detail.push(
-            `| ${condition} / ${group} | ${names[i]} | ${s.time.n} | ${(s.time.median / 1000).toFixed(3)}s | ${(s.time.min / 1000).toFixed(3)}–${(s.time.max / 1000).toFixed(3)}s | ${s.time.cv?.toFixed(1) ?? '—'}% | ${(s.rss.median / 1024 ** 2).toFixed(1)} MiB | ${s.rss.cv?.toFixed(1) ?? '—'}% |`,
+            `| ${condition} / ${group} | ${names[i]} | ${s.time.n} | ${(s.time.median / 1000).toFixed(2)}s | ${(s.time.min / 1000).toFixed(2)}–${(s.time.max / 1000).toFixed(2)}s | ${s.time.sd == null ? '—' : (s.time.sd / 1000).toFixed(2) + 's'} | ${s.time.cv?.toFixed(2) ?? '—'}% | ${(s.rss.median / 1024 ** 2).toFixed(2)} MiB | ${s.rss.cv?.toFixed(2) ?? '—'}% |`,
           )
       })
       return { group, sets, stats }
     })
     lines.push(`## ${condition} framework cache`, '')
     for (const metric of ['time', 'rss']) {
-      lines.push(
-        `### ${metric === 'time' ? 'Elapsed time' : 'RSS (MiB)'}`,
-        '',
-        `| Case | ${names.join(' | ')} | Notes |`,
-        `| --- | ${names.map(() => '---').join(' | ')} | --- |`,
-      )
+      const title = metric === 'time' ? 'Elapsed time' : 'RSS (MiB)'
+      const header = `| Case | ${names.join(' | ')} |`
+      const separator = `| --- | ${names.map(() => '---:').join(' | ')} |`
+      const main = [`**Main suite · ${condition} cache · ${metric === 'time' ? 'elapsed time' : title}**`, '', header, separator]
+      lines.push(`### ${title}`, '', header, separator)
       for (const { group, sets, stats } of rows) {
-        const baseIndex = Math.max(
-            0,
-            runners.indexOf(group.startsWith('browser/') ? 'vitest' : 'jest'),
-          ),
-          base = stats[baseIndex],
-          notes = []
         const ranked = [...new Set(
           stats.filter((s) => s.complete).map((s) => s[metric].median),
         )].sort((a, b) => a - b)
         const cells = stats.map((s, i) => {
           if (!sets[i].length) return '—'
           if (!s.complete) return 'INCOMPLETE'
-          if (s[metric].cv > 10) notes.push(names[i] + ' CV > 10%')
-          const value =
-            (['🥇 ', '🥈 '][ranked.indexOf(s[metric].median)] ?? '') +
+          return (['🥇 ', '🥈 '][ranked.indexOf(s[metric].median)] ?? '') +
             (metric === 'time'
-              ? `${(s.time.median / 1000).toFixed(3)}s`
-              : (s.rss.median / 1024 ** 2).toFixed(1))
-          if (i === baseIndex || !base.complete || !base[metric].median)
-            return value
-          const delta = (s[metric].median / base[metric].median - 1) * 100
-          return `${value} (${delta >= 0 ? '+' : ''}${delta.toFixed(1)}%)`
+              ? `${(s.time.median / 1000).toFixed(2)}s`
+              : (s.rss.median / 1024 ** 2).toFixed(2))
         })
-        lines.push(
-          `| ${group} | ${cells.join(' | ')} | ${notes.join('; ') || '—'} |`,
-        )
+        lines.push(`| ${group} | ${cells.join(' | ')} |`)
+        if (group.startsWith('main/')) {
+          const id = group.split('/')[1]
+          main.push(`| ${mainCaseNames[id] ?? id} | ${cells.join(' | ')} |`)
+        }
       }
+      if (main.length > 4) mainTables.push(main.join('\n'))
       lines.push('')
     }
   }
@@ -171,7 +174,7 @@ export function report(record, directory) {
         lines.push(`| ${condition} / ${group} | ${names[i]} | ${selected.length} | INCOMPLETE | INCOMPLETE | INCOMPLETE |`)
         continue
       }
-      const med = (values) => (statistics(values).median / 1000).toFixed(3)
+      const med = (values) => (statistics(values).median / 1000).toFixed(2)
       lines.push(`| ${condition} / ${group} | ${names[i]} | ${selected.length} | ${med(selected.map((s) => s.counts.duration.buildTime))} | ${med(selected.map((s) => s.counts.duration.testTime))} | ${med(selected.map((s) => s.wallMs))} |`)
     }
     lines.push('')
@@ -179,12 +182,15 @@ export function report(record, directory) {
   lines.push(
     '## Samples and provenance',
     '',
-    '[Full variability](variability.md). See [result.json](result.json) for all samples, warmups, counts, cache actions, commands, fixture/config hashes, resolved dependencies and coverage file inventories. ' +
-      (record.sourceRuns
+    '[Full variability](variability.md). See [result.json](result.json) for all samples, warmups, counts, cache actions, fixture/config hashes, resolved dependencies and coverage file inventories. ' +
+      (record.publication
+        ? 'Local commands, executable paths and log paths are omitted; cache paths are workspace-relative. publication.sourceSha256 identifies the original result. Full logs and source snapshots remain in the local run directory.'
+        : record.sourceRuns
         ? 'Logs, workspaces and harness snapshots remain in the source batch directories listed in the run history.'
         : 'Logs and final reporter output are under logs/. Workspaces and generated source are retained alongside this report.'),
     '',
   )
   writeFileSync(join(directory, 'report.md'), lines.join('\n'))
   writeFileSync(join(directory, 'variability.md'), detail.join('\n') + '\n')
+  return mainTables.join('\n\n')
 }

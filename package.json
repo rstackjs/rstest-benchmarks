@@ -19,6 +19,7 @@
     "use-version": "node scripts/set-version.mjs",
     "report:export": "node scripts/export-report-input.mjs",
     "compare": "node scripts/compare.mjs",
-    "compare:frameworks": "node frameworks/run.mjs"
+    "compare:frameworks": "node frameworks/run.mjs",
+    "report:frameworks": "node frameworks/refresh-report.mjs"
   }
 }

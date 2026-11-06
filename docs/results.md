@@ -60,9 +60,9 @@ Every successful test process must also produce a structured Markdown reporter s
 - `cv`: `100 × sd / mean`; unknown for `n < 2` or zero mean.
 - `mad`: unscaled median absolute deviation from the median.
 
-No sample or outlier is discarded. Empty series have null statistics. Combining batches pools their raw samples; it does not average medians. Reports flag CV above 10% and fewer than three samples. These flags are descriptive, not statistical significance claims or regression gates. Five runs are the default; rerun noisy workloads before drawing conclusions.
+No sample or outlier is discarded. Empty series have null statistics. Combining batches pools their raw samples; it does not average medians. Reports flag fewer than three samples. Detailed reports retain SD, range and CV; a high CV alone does not warrant a warning for a small absolute fluctuation. For substantial variation, wait for background load to settle, then rerun all compared versions with the same cache policy and balanced order. Retain the original batch and all rerun samples. Five runs are the default.
 
-Percentage change is `100 × (candidate median / baseline median - 1)`. Negative means less elapsed time. Missing, failed, incomplete or known-incompatible cells do not receive a percentage. Version comparisons allow lockfiles to differ intentionally; they do not prove that all transitive dependency changes are irrelevant.
+Times, RSS and percentages display two decimal places. Percentage changes appear in separate Δ columns and use unrounded medians: `100 × (candidate median / baseline median - 1)`. Negative means less elapsed time. Missing, failed, incomplete or known-incompatible cells do not receive a percentage. Version comparisons allow lockfiles to differ intentionally; they do not prove that all transitive dependency changes are irrelevant.
 
 ## Comparability and provenance
 

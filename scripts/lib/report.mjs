@@ -217,9 +217,6 @@ export function compare(base, candidate) {
     delta: (candidate.stats.median / base.stats.median - 1) * 100,
     note: [
       base.legacy || candidate.legacy ? 'legacy provenance incomplete' : '',
-      [base, candidate].some((row) => row.stats.cv > 10)
-        ? 'high variation (CV > 10%)'
-        : '',
       base.stats.n < 3 || candidate.stats.n < 3 ? 'fewer than 3 samples' : '',
     ]
       .filter(Boolean)
@@ -234,7 +231,8 @@ function spread(row) {
     seconds(stats.median),
     `${seconds(stats.min)}–${seconds(stats.max)}`,
     seconds(stats.mad),
-    stats.cv == null ? '—' : `${stats.cv.toFixed(1)}%`,
+    seconds(stats.sd),
+    stats.cv == null ? '—' : `${stats.cv.toFixed(2)}%`,
   ]
 }
 function cell(row) {
@@ -290,6 +288,7 @@ export function singleReport(document) {
         'Median',
         'Min–max',
         'MAD',
+        'SD',
         'CV',
         'MaxRSS median (MiB)',
       ],
@@ -303,7 +302,7 @@ export function singleReport(document) {
         ...spread(row),
         row.rssStats.median == null
           ? '—'
-          : (row.rssStats.median / 1024 ** 2).toFixed(1),
+          : (row.rssStats.median / 1024 ** 2).toFixed(2),
       ]),
     ),
     '',
@@ -327,11 +326,6 @@ export function singleReport(document) {
       ),
     '',
   ].join('\n')
-}
-
-function comparisonPercent(delta) {
-  const text = percent(delta)
-  return Number.parseFloat(text) < 0 ? `**${text}**` : text
 }
 
 export function comparisonReport(
@@ -390,9 +384,7 @@ export function comparisonReport(
     const notes = new Set()
     for (const value of values.slice(1)) {
       const comparison = compare(values[0], value)
-      cells.push(
-        `${cell(value)}${comparison.delta == null ? '' : ` (${comparisonPercent(comparison.delta)})`}`,
-      )
+      cells.push(cell(value), percent(comparison.delta))
       if (comparison.note) notes.add(comparison.note)
     }
     summaryRows.push([...cells, [...notes].join('; ') || '—'])
@@ -404,12 +396,12 @@ export function comparisonReport(
           ? 'incomplete'
           : row.status,
       }))
-      rssSummaryRows.push([name, ...memoryValues.map((row, index) => {
-        if (!row || !row.stats.n) return '—'
-        if (row.status !== 'passed') return row.status.toUpperCase()
-        const value = (row.stats.median / 1024 ** 2).toFixed(1)
+      rssSummaryRows.push([name, ...memoryValues.flatMap((row, index) => {
+        if (!row || !row.stats.n) return index === 0 ? ['—'] : ['—', '—']
+        if (row.status !== 'passed') return index === 0 ? [row.status.toUpperCase()] : [row.status.toUpperCase(), '—']
+        const value = (row.stats.median / 1024 ** 2).toFixed(2)
         const delta = index === 0 ? null : compare(memoryValues[0], row).delta
-        return `${value}${delta == null ? '' : ` (${comparisonPercent(delta)})`}`
+        return index === 0 ? [value] : [value, percent(delta)]
       })])
     }
     values.forEach((row, index) => {
@@ -428,15 +420,17 @@ export function comparisonReport(
           columns[index].label,
           row.status,
           row.rssStats.n,
-          (row.rssStats.median / 1024 ** 2).toFixed(1),
-          `${(row.rssStats.min / 1024 ** 2).toFixed(1)}–${(row.rssStats.max / 1024 ** 2).toFixed(1)}`,
-          row.rssStats.cv == null ? '—' : `${row.rssStats.cv.toFixed(1)}%`,
+          (row.rssStats.median / 1024 ** 2).toFixed(2),
+          `${(row.rssStats.min / 1024 ** 2).toFixed(2)}–${(row.rssStats.max / 1024 ** 2).toFixed(2)}`,
+          row.rssStats.cv == null ? '—' : `${row.rssStats.cv.toFixed(2)}%`,
         ])
     })
   }
+  const headers = ['Case', ...columns.flatMap((column, index) => index === 0 ? [column.label] : [column.label, 'Δ'])]
+  const hasNotes = summaryRows.some((row) => row.at(-1) !== '—')
   const summary = table(
-    ['Case', ...columns.map((column) => column.label), 'Notes'],
-    summaryRows,
+    hasNotes ? [...headers, 'Notes'] : headers,
+    hasNotes ? summaryRows : summaryRows.map((row) => row.slice(0, -1)),
   )
   const inputs = [
     ...new Map(
@@ -451,7 +445,7 @@ export function comparisonReport(
   return {
     summary,
     rssSummary: rssSummaryRows.length
-      ? table(['Case', ...columns.map((column) => column.label)], rssSummaryRows)
+      ? table(headers, rssSummaryRows)
       : '',
     provenanceNote: columns.some((column) =>
       [...column.rows.values()].some((row) => row.legacy),
@@ -464,13 +458,13 @@ export function comparisonReport(
       `# ${spec.title ?? 'Benchmark comparison'}`,
       '',
       ...(spec.context ? [spec.context, ''] : []),
-      'Generated from raw samples. Change = (candidate / baseline − 1) × 100%; negative means faster. The first column is the baseline. All repetitions are retained; combined batches use the median of pooled samples, not the median of batch medians.',
+      'Generated from raw samples. Change = (candidate / baseline − 1) × 100%; negative means faster. The first value column is the baseline; each Δ column shows the change relative to it. Values display two decimal places; changes use unrounded medians. All repetitions are retained; combined batches use the median of pooled samples, not the median of batch medians.',
       '',
       summary,
       '',
       '## Variability',
       '',
-      'MAD is unscaled. CV uses sample standard deviation (n − 1). CV > 10% is flagged as high variation, not as a significance test; small sample counts do not establish a regression. Failed or incomplete batches never receive a speedup percentage.',
+      'MAD is unscaled. CV uses sample standard deviation (n − 1). Evaluate CV together with absolute SD and range before deciding whether a fluctuation warrants a rerun. Small sample counts do not establish a regression. Failed or incomplete batches never receive a speedup percentage.',
       '',
       table(
         [
@@ -481,6 +475,7 @@ export function comparisonReport(
           'Median',
           'Min–max',
           'MAD',
+          'SD',
           'CV',
           'Files',
           'Tests',

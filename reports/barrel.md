@@ -6,35 +6,35 @@ Sources: baseline: **0.11.0** (npm); candidate: **0.12.6** (npm). Measured 2026-
 
 Sources run sequentially in rotating case/round order. For cases supported by all sources, each source occupies every order position equally often. Node compile cache is disabled. Rstest build and sequencing caches are cleared before each fixture's warmups and retained during measurement. Workload dependency graphs match. Background load and OS page cache are not controlled.
 
-Generated from raw samples. Change = (candidate / baseline − 1) × 100%; negative means faster. The first column is the baseline. All repetitions are retained; combined batches use the median of pooled samples, not the median of batch medians.
+Generated from raw samples. Change = (candidate / baseline − 1) × 100%; negative means faster. The first value column is the baseline; each Δ column shows the change relative to it. Values display two decimal places; changes use unrounded medians. All repetitions are retained; combined batches use the median of pooled samples, not the median of batch medians.
 
-| Case | baseline: 0.11.0 | candidate: 0.12.6 | Notes |
+| Case | baseline: 0.11.0 | candidate: 0.12.6 | Δ |
 | --- | --- | --- | --- |
-| barrel graph · small / default | 0.433s | 0.453s (+4.8%) | — |
-| barrel graph · small / lazy-barrel disabled | 0.441s | 0.469s (+6.4%) | — |
-| barrel graph · medium / default | 0.454s | 0.480s (+5.8%) | — |
-| barrel graph · medium / lazy-barrel disabled | 0.603s | 0.627s (+4.0%) | — |
-| barrel graph · large / default | 0.448s | 0.490s (+9.2%) | — |
-| barrel graph · large / lazy-barrel disabled | 1.115s | 1.226s (+9.9%) | — |
+| barrel graph · small / default | 0.43s | 0.45s | +4.75% |
+| barrel graph · small / lazy-barrel disabled | 0.44s | 0.47s | +6.35% |
+| barrel graph · medium / default | 0.45s | 0.48s | +5.84% |
+| barrel graph · medium / lazy-barrel disabled | 0.60s | 0.63s | +4.02% |
+| barrel graph · large / default | 0.45s | 0.49s | +9.22% |
+| barrel graph · large / lazy-barrel disabled | 1.12s | 1.23s | +9.93% |
 
 ## Variability
 
-MAD is unscaled. CV uses sample standard deviation (n − 1). CV > 10% is flagged as high variation, not as a significance test; small sample counts do not establish a regression. Failed or incomplete batches never receive a speedup percentage.
+MAD is unscaled. CV uses sample standard deviation (n − 1). Evaluate CV together with absolute SD and range before deciding whether a fluctuation warrants a rerun. Small sample counts do not establish a regression. Failed or incomplete batches never receive a speedup percentage.
 
-| Case | Column | Status | n | Median | Min–max | MAD | CV | Files | Tests |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| barrel graph · small / default | baseline: 0.11.0 | passed | 6 | 0.433s | 0.419s–0.437s | 0.002s | 1.5% | 20 | 40 |
-| barrel graph · small / default | candidate: 0.12.6 | passed | 6 | 0.453s | 0.442s–0.473s | 0.011s | 3.0% | 20 | 40 |
-| barrel graph · small / lazy-barrel disabled | baseline: 0.11.0 | passed | 6 | 0.441s | 0.428s–0.450s | 0.004s | 1.7% | 20 | 40 |
-| barrel graph · small / lazy-barrel disabled | candidate: 0.12.6 | passed | 6 | 0.469s | 0.449s–0.501s | 0.005s | 3.6% | 20 | 40 |
-| barrel graph · medium / default | baseline: 0.11.0 | passed | 6 | 0.454s | 0.420s–0.463s | 0.009s | 3.7% | 20 | 40 |
-| barrel graph · medium / default | candidate: 0.12.6 | passed | 6 | 0.480s | 0.433s–0.509s | 0.026s | 6.6% | 20 | 40 |
-| barrel graph · medium / lazy-barrel disabled | baseline: 0.11.0 | passed | 6 | 0.603s | 0.586s–0.641s | 0.016s | 4.0% | 20 | 40 |
-| barrel graph · medium / lazy-barrel disabled | candidate: 0.12.6 | passed | 6 | 0.627s | 0.611s–0.664s | 0.009s | 3.0% | 20 | 40 |
-| barrel graph · large / default | baseline: 0.11.0 | passed | 6 | 0.448s | 0.435s–0.499s | 0.011s | 5.2% | 20 | 40 |
-| barrel graph · large / default | candidate: 0.12.6 | passed | 6 | 0.490s | 0.465s–0.508s | 0.009s | 3.1% | 20 | 40 |
-| barrel graph · large / lazy-barrel disabled | baseline: 0.11.0 | passed | 6 | 1.115s | 1.049s–1.193s | 0.027s | 4.5% | 20 | 40 |
-| barrel graph · large / lazy-barrel disabled | candidate: 0.12.6 | passed | 6 | 1.226s | 1.145s–1.360s | 0.056s | 6.4% | 20 | 40 |
+| Case | Column | Status | n | Median | Min–max | MAD | SD | CV | Files | Tests |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| barrel graph · small / default | baseline: 0.11.0 | passed | 6 | 0.43s | 0.42s–0.44s | 0.00s | 0.01s | 1.51% | 20 | 40 |
+| barrel graph · small / default | candidate: 0.12.6 | passed | 6 | 0.45s | 0.44s–0.47s | 0.01s | 0.01s | 3.03% | 20 | 40 |
+| barrel graph · small / lazy-barrel disabled | baseline: 0.11.0 | passed | 6 | 0.44s | 0.43s–0.45s | 0.00s | 0.01s | 1.75% | 20 | 40 |
+| barrel graph · small / lazy-barrel disabled | candidate: 0.12.6 | passed | 6 | 0.47s | 0.45s–0.50s | 0.01s | 0.02s | 3.62% | 20 | 40 |
+| barrel graph · medium / default | baseline: 0.11.0 | passed | 6 | 0.45s | 0.42s–0.46s | 0.01s | 0.02s | 3.66% | 20 | 40 |
+| barrel graph · medium / default | candidate: 0.12.6 | passed | 6 | 0.48s | 0.43s–0.51s | 0.03s | 0.03s | 6.56% | 20 | 40 |
+| barrel graph · medium / lazy-barrel disabled | baseline: 0.11.0 | passed | 6 | 0.60s | 0.59s–0.64s | 0.02s | 0.02s | 3.96% | 20 | 40 |
+| barrel graph · medium / lazy-barrel disabled | candidate: 0.12.6 | passed | 6 | 0.63s | 0.61s–0.66s | 0.01s | 0.02s | 2.95% | 20 | 40 |
+| barrel graph · large / default | baseline: 0.11.0 | passed | 6 | 0.45s | 0.43s–0.50s | 0.01s | 0.02s | 5.16% | 20 | 40 |
+| barrel graph · large / default | candidate: 0.12.6 | passed | 6 | 0.49s | 0.46s–0.51s | 0.01s | 0.02s | 3.12% | 20 | 40 |
+| barrel graph · large / lazy-barrel disabled | baseline: 0.11.0 | passed | 6 | 1.12s | 1.05s–1.19s | 0.03s | 0.05s | 4.45% | 20 | 40 |
+| barrel graph · large / lazy-barrel disabled | candidate: 0.12.6 | passed | 6 | 1.23s | 1.14s–1.36s | 0.06s | 0.08s | 6.37% | 20 | 40 |
 
 ## Inputs and provenance
 

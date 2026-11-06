@@ -140,7 +140,7 @@ export function publishComparison(root, directory, record) {
             `- [${spec.title}](${spec.output.replace(/^reports\//, '')}): ${spec.columns.map((column) => column.files.map((file) => `[${column.label} samples](${relative('reports', file)})`).join(', ')).join('; ')}.`,
         )
         .join('\n') +
-      '\n\nPercentages compare each candidate with the first column. Skipped cases and high variation remain visible. Coverage RSS is OS maxrss, not a simultaneous process-tree peak.\n\nRegenerate with `pnpm report --readme`; verify with `pnpm report:check`. Published inputs are included under [data/](data/README.md); full logs and snapshots remain with the original comparison. See [measurement policy](../docs/results.md#measurement-policy).\n',
+      '\n\nPercentages compare each candidate with the first column. Skipped cases remain visible; detailed reports include absolute spread and CV. Coverage RSS is OS maxrss, not a simultaneous process-tree peak.\n\nRegenerate with `pnpm report --readme`; verify with `pnpm report:check`. Published inputs are included under [data/](data/README.md); full logs and snapshots remain with the original comparison. See [measurement policy](../docs/results.md#measurement-policy).\n',
   )
   const newInputs = new Set(
     manifest.reports.flatMap((spec) =>

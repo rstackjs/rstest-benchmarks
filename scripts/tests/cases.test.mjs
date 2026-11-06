@@ -184,5 +184,5 @@ test('scaling dimensions never merge; barrel config comparison is explicit', () 
     },
     () => barrel,
   )
-  assert.match(report.summary, /\+50.0%/)
+  assert.match(report.summary, /\+50\.00%/)
 })

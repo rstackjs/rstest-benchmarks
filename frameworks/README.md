@@ -53,63 +53,65 @@ Reproduce the complete matrix, including both tiny projects, coverage and browse
 pnpm compare:frameworks --suites main,coverage,browser --cases minimal-node,minimal-react,startup,many-files,module-graph,backend,barrel,react --frameworks jest,vitest,rstest,rstest-vmForks --runs 8
 ```
 
-Measured 2026-11-06 on Apple M4 Max with Node 24.11.1. Jest **30.5.2** + SWC **0.2.39**, Vitest **5.1.0**, Rstest **0.12.6**. Default concurrency; `rstest-vmForks` changes only the Rstest pool. Eight timed runs per supported case and cache condition; all **928 timed samples and 58 warmups passed**. Node compile cache is disabled. Cold and warm framework caches are reported separately; OS page cache and background load are uncontrolled. Percentages are relative to Jest; negative means less time or RSS. Browser mode compares Vitest against default Rstest only.
+Measured 2026-11-06 on Apple M4 Max with Node 24.11.1. Jest **30.5.2** + SWC **0.2.39**, Vitest **5.1.0**, Rstest **0.12.6**. Default concurrency; `rstest-vmForks` changes only the Rstest pool. Eight timed runs per supported case and cache condition; all **928 timed samples and 58 warmups passed**. Node compile cache is disabled. Cold and warm framework caches are reported separately; OS page cache and background load are uncontrolled. Browser mode compares Vitest against default Rstest only.
 
 🥇 and 🥈 mark the lowest and second-lowest distinct unrounded medians in each row; exact ties share the marker. They do not indicate statistical significance.
 
+<!-- framework-results:start -->
 **Main suite · cold cache · elapsed time**
 
 | Case | Jest + SWC | Vitest | Rstest | Rstest vmForks |
 | --- | ---: | ---: | ---: | ---: |
-| Node · single-file | 0.442s | 0.304s (-31.2%) | 🥇 0.241s (-45.6%) | 🥈 0.256s (-42.1%) |
-| React · single-file | 0.765s | 0.641s (-16.1%) | 🥇 0.506s (-33.8%) | 🥈 0.539s (-29.5%) |
-| Node startup | 0.651s | 0.344s (-47.2%) | 🥇 0.272s (-58.3%) | 🥈 0.297s (-54.3%) |
-| Many files | 🥈 3.204s | 7.062s (+120.4%) | 4.621s (+44.2%) | 🥇 1.110s (-65.3%) |
-| Module graph | 7.169s | 4.695s (-34.5%) | 🥈 1.010s (-85.9%) | 🥇 0.780s (-89.1%) |
-| Backend | 1.151s | 0.880s (-23.5%) | 🥇 0.628s (-45.4%) | 🥈 0.729s (-36.6%) |
-| Barrel | 21.992s | 9.939s (-54.8%) | 🥈 0.561s (-97.4%) | 🥇 0.468s (-97.9%) |
-| React + jsdom | 2.388s | 3.942s (+65.1%) | 🥈 1.742s (-27.1%) | 🥇 1.175s (-50.8%) |
-
-**Main suite · warm cache · elapsed time**
-
-| Case | Jest + SWC | Vitest | Rstest | Rstest vmForks |
-| --- | ---: | ---: | ---: | ---: |
-| Node · single-file | 🥇 0.206s | 0.270s (+31.0%) | 🥈 0.234s (+13.2%) | 0.268s (+30.0%) |
-| React · single-file | 🥈 0.524s | 0.576s (+10.0%) | 🥇 0.499s (-4.7%) | 0.528s (+0.8%) |
-| Node startup | 🥇 0.257s | 0.280s (+8.8%) | 🥈 0.266s (+3.4%) | 0.291s (+13.3%) |
-| Many files | 🥈 2.198s | 6.212s (+182.6%) | 4.470s (+103.4%) | 🥇 1.104s (-49.8%) |
-| Module graph | 2.377s | 3.095s (+30.2%) | 🥈 0.966s (-59.4%) | 🥇 0.750s (-68.4%) |
-| Backend | 0.796s | 0.760s (-4.5%) | 🥇 0.703s (-11.6%) | 🥈 0.729s (-8.4%) |
-| Barrel | 5.204s | 5.428s (+4.3%) | 🥈 0.480s (-90.8%) | 🥇 0.455s (-91.3%) |
-| React + jsdom | 2.258s | 4.040s (+78.9%) | 🥈 1.669s (-26.1%) | 🥇 1.126s (-50.1%) |
+| Node · single-file | 0.44s | 0.30s | 🥇 0.24s | 🥈 0.26s |
+| React · single-file | 0.76s | 0.64s | 🥇 0.51s | 🥈 0.54s |
+| Node startup | 0.65s | 0.34s | 🥇 0.27s | 🥈 0.30s |
+| Many files | 🥈 3.20s | 7.06s | 4.62s | 🥇 1.11s |
+| Module graph | 7.17s | 4.69s | 🥈 1.01s | 🥇 0.78s |
+| Backend | 1.15s | 0.88s | 🥇 0.63s | 🥈 0.73s |
+| Barrel | 21.99s | 9.94s | 🥈 0.56s | 🥇 0.47s |
+| React + jsdom | 2.39s | 3.94s | 🥈 1.74s | 🥇 1.18s |
 
 **Main suite · cold cache · RSS (MiB)**
 
 | Case | Jest + SWC | Vitest | Rstest | Rstest vmForks |
 | --- | ---: | ---: | ---: | ---: |
-| Node · single-file | 🥇 101.7 | 🥈 116.5 (+14.5%) | 129.6 (+27.4%) | 128.9 (+26.7%) |
-| React · single-file | 🥈 182.5 | 🥇 157.7 (-13.6%) | 262.3 (+43.8%) | 262.4 (+43.8%) |
-| Node startup | 🥇 93.2 | 🥈 122.8 (+31.8%) | 140.1 (+50.3%) | 139.5 (+49.7%) |
-| Many files | 🥇 202.2 | 🥈 217.2 (+7.5%) | 385.7 (+90.8%) | 286.7 (+41.8%) |
-| Module graph | 🥇 207.6 | 312.0 (+50.3%) | 372.6 (+79.5%) | 🥈 287.5 (+38.5%) |
-| Backend | 🥈 151.9 | 🥇 137.4 (-9.5%) | 154.9 (+2.0%) | 155.4 (+2.4%) |
-| Barrel | 363.3 | 429.6 (+18.3%) | 🥇 163.5 (-55.0%) | 🥈 163.7 (-54.9%) |
-| React + jsdom | 🥈 182.5 | 🥇 176.9 (-3.1%) | 444.2 (+143.3%) | 357.9 (+96.1%) |
+| Node · single-file | 🥇 101.73 | 🥈 116.45 | 129.59 | 128.85 |
+| React · single-file | 🥈 182.49 | 🥇 157.73 | 262.34 | 262.43 |
+| Node startup | 🥇 93.20 | 🥈 122.80 | 140.07 | 139.54 |
+| Many files | 🥇 202.16 | 🥈 217.23 | 385.74 | 286.70 |
+| Module graph | 🥇 207.59 | 311.98 | 372.55 | 🥈 287.53 |
+| Backend | 🥈 151.85 | 🥇 137.45 | 154.85 | 155.45 |
+| Barrel | 363.26 | 429.61 | 🥇 163.47 | 🥈 163.73 |
+| React + jsdom | 🥈 182.54 | 🥇 176.92 | 444.17 | 357.92 |
+
+**Main suite · warm cache · elapsed time**
+
+| Case | Jest + SWC | Vitest | Rstest | Rstest vmForks |
+| --- | ---: | ---: | ---: | ---: |
+| Node · single-file | 🥇 0.21s | 0.27s | 🥈 0.23s | 0.27s |
+| React · single-file | 🥈 0.52s | 0.58s | 🥇 0.50s | 0.53s |
+| Node startup | 🥇 0.26s | 0.28s | 🥈 0.27s | 0.29s |
+| Many files | 🥈 2.20s | 6.21s | 4.47s | 🥇 1.10s |
+| Module graph | 2.38s | 3.10s | 🥈 0.97s | 🥇 0.75s |
+| Backend | 0.80s | 0.76s | 🥇 0.70s | 🥈 0.73s |
+| Barrel | 5.20s | 5.43s | 🥈 0.48s | 🥇 0.45s |
+| React + jsdom | 2.26s | 4.04s | 🥈 1.67s | 🥇 1.13s |
 
 **Main suite · warm cache · RSS (MiB)**
 
 | Case | Jest + SWC | Vitest | Rstest | Rstest vmForks |
 | --- | ---: | ---: | ---: | ---: |
-| Node · single-file | 🥇 94.9 | 🥈 114.2 (+20.3%) | 129.0 (+36.0%) | 129.1 (+36.1%) |
-| React · single-file | 🥈 170.8 | 🥇 159.0 (-6.9%) | 268.6 (+57.3%) | 267.3 (+56.5%) |
-| Node startup | 🥇 107.7 | 🥈 116.7 (+8.4%) | 139.3 (+29.3%) | 138.6 (+28.8%) |
-| Many files | 🥇 195.0 | 🥈 200.8 (+3.0%) | 388.0 (+98.9%) | 288.2 (+47.8%) |
-| Module graph | 🥇 192.8 | 🥈 239.4 (+24.2%) | 390.2 (+102.5%) | 286.0 (+48.4%) |
-| Backend | 284.4 | 🥇 126.6 (-55.5%) | 🥈 154.7 (-45.6%) | 155.3 (-45.4%) |
-| Barrel | 277.6 | 398.3 (+43.5%) | 🥇 163.1 (-41.3%) | 🥈 164.1 (-40.9%) |
-| React + jsdom | 🥇 174.2 | 🥈 178.2 (+2.3%) | 436.4 (+150.5%) | 364.0 (+109.0%) |
+| Node · single-file | 🥇 94.88 | 🥈 114.16 | 129.01 | 129.13 |
+| React · single-file | 🥈 170.76 | 🥇 159.03 | 268.55 | 267.31 |
+| Node startup | 🥇 107.67 | 🥈 116.68 | 139.25 | 138.64 |
+| Many files | 🥇 195.02 | 🥈 200.84 | 387.97 | 288.22 |
+| Module graph | 🥇 192.76 | 🥈 239.39 | 390.24 | 286.01 |
+| Backend | 284.42 | 🥇 126.57 | 🥈 154.72 | 155.31 |
+| Barrel | 277.62 | 398.31 | 🥇 163.08 | 🥈 164.14 |
+| React + jsdom | 🥇 174.19 | 🥈 178.22 | 436.37 | 364.05 |
+<!-- framework-results:end -->
 
-RSS is OS maxrss, not total concurrent worker memory. CV flags and full coverage/browser comparisons are in the [complete report](reports/report.md), with [variability](reports/variability.md) and [all samples and provenance](reports/result.json). The tiny-project rows above are part of the same run and result set. Published reports use fixed paths in `reports/`; each update replaces the current report and samples. Previous results remain available in Git history.
+RSS is OS maxrss, not total concurrent worker memory. Full coverage/browser comparisons are in the [complete report](reports/report.md), with [variability](reports/variability.md) and [all samples and provenance](reports/result.json). The tiny-project rows above are part of the same run and result set. Published reports use fixed paths in `reports/`; each update replaces the current report and samples. Previous results remain available in Git history. Run `pnpm report:frameworks` to regenerate the reports and README tables from the published samples.
 
 See [workload design](../docs/framework-comparison.md) for performance questions and fixture details. The proposed scaling extensions are not part of the implemented default matrix.
 
@@ -133,7 +135,7 @@ With three frameworks, use a multiple of six runs to balance order. For four-fra
 - **Cold / warm:** cold clears framework caches before every invocation; warm retains them after one warmup. Every invocation starts a new process. Node compile cache is disabled; OS page caches and background load are uncontrolled.
 - **Concurrency:** each framework retains its default scheduling and isolation. Jest may choose in-band execution for small suites using cached test timings, so warm results include scheduling decisions as well as transform-cache reuse.
 - **RSS:** median OS maxrss from `/usr/bin/time`, not the simultaneous total of worker or browser memory. Thread and fork pools have different process layouts; their maxrss ratios are not total-memory ratios.
-- **Statistics:** report medians alongside variability and retain all samples. A lower median does not establish statistical significance, especially when differences are small or variation is high.
+- **Statistics:** medians and rankings use unrounded samples; tables display two decimal places. Detailed variability includes absolute standard deviation, range and CV. Evaluate both absolute and relative variation before rerunning a case. Rerun all compared runners for that case under the same cache conditions and balanced order, retaining the original batch; do not select only favorable samples.
 
 Test bodies and application sources are shared. Jest uses SWC with CommonJS output; Vitest and Rstest use their built-in pipelines. Vitest's filesystem module cache remains enabled and is scoped to each generated case. React uses the same jsdom 26.1.0 and one cleanup per test. Jest maps CSS to a minimal object because assertions do not inspect styling; browser/bundler configurations process CSS normally.
 

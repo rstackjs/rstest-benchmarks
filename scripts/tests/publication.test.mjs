@@ -110,10 +110,10 @@ test('publication updates selected tables, context and inputs, preserving other 
     assert(!readme.includes('Stale versions'))
     assert.match(readme, /3 timed runs/)
     assert.match(readme, /local abcdef12/)
-    assert.match(readme, /-10\.0%/)
-    assert.match(readme, /-20\.0%/)
+    assert.match(readme, /-10\.00%/)
+    assert.match(readme, /-20\.00%/)
     assert.match(readme, /### RSS comparison/)
-    assert.match(readme, /\| Example \| 200\.0 \| 150\.0 \(\*\*-25\.0%\*\*\) \| 100\.0 \(\*\*-50\.0%\*\*\) \|/)
+    assert.match(readme, /\| Example \| 200\.00 \| 150\.00 \| -25\.00% \| 100\.00 \| -50\.00% \|/)
     assert.match(readme, /Keep this text and data/)
     assert.equal(
       readFileSync(join(root, 'reports/coverage.md'), 'utf8'),

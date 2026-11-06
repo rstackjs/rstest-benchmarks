@@ -43,6 +43,6 @@ export function statistics(values) {
 }
 
 export const seconds = (value) =>
-  value == null ? '—' : `${(Math.round(value) / 1000).toFixed(3)}s`
+  value == null ? '—' : `${(value / 1000).toFixed(2)}s`
 export const percent = (value) =>
-  value == null ? '—' : `${value >= 0 ? '+' : ''}${value.toFixed(1)}%`
+  value == null ? '—' : `${value >= 0 ? '+' : ''}${value.toFixed(2)}%`

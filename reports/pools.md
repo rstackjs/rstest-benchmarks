@@ -6,53 +6,53 @@ Sources: baseline: **0.11.0** (npm); candidate: **0.12.6** (npm). Measured 2026-
 
 Sources run sequentially in rotating case/round order. For cases supported by all sources, each source occupies every order position equally often. Node compile cache is disabled. Rstest build and sequencing caches are cleared before each fixture's warmups and retained during measurement. Workload dependency graphs match. Background load and OS page cache are not controlled.
 
-Generated from raw samples. Change = (candidate / baseline − 1) × 100%; negative means faster. The first column is the baseline. All repetitions are retained; combined batches use the median of pooled samples, not the median of batch medians.
+Generated from raw samples. Change = (candidate / baseline − 1) × 100%; negative means faster. The first value column is the baseline; each Δ column shows the change relative to it. Values display two decimal places; changes use unrounded medians. All repetitions are retained; combined batches use the median of pooled samples, not the median of batch medians.
 
-| Case | baseline: 0.11.0 | candidate: 0.12.6 | Notes |
-| --- | --- | --- | --- |
-| small module graph / forks | 0.328s | 0.355s (+8.3%) | high variation (CV > 10%) |
-| small module graph / threads | 0.273s | 0.292s (+6.9%) | — |
-| small module graph / vmForks | SKIPPED | 0.378s | skipped / passed |
-| small module graph / vmThreads | SKIPPED | 0.323s | skipped / passed |
-| medium module graph / forks | 0.690s | 0.723s (+4.8%) | — |
-| medium module graph / threads | 0.532s | 0.564s (+6.1%) | high variation (CV > 10%) |
-| medium module graph / vmForks | SKIPPED | 0.498s | skipped / passed |
-| medium module graph / vmThreads | SKIPPED | 0.431s | skipped / passed |
-| large module graph / forks | 1.568s | 1.699s (+8.4%) | high variation (CV > 10%) |
-| large module graph / threads | 1.141s | 1.238s (+8.5%) | — |
-| large module graph / vmForks | SKIPPED | 0.735s | skipped / passed |
-| large module graph / vmThreads | SKIPPED | 0.643s | skipped / passed |
+| Case | baseline: 0.11.0 | candidate: 0.12.6 | Δ | Notes |
+| --- | --- | --- | --- | --- |
+| small module graph / forks | 0.33s | 0.35s | +8.28% | — |
+| small module graph / threads | 0.27s | 0.29s | +6.87% | — |
+| small module graph / vmForks | SKIPPED | 0.38s | — | skipped / passed |
+| small module graph / vmThreads | SKIPPED | 0.32s | — | skipped / passed |
+| medium module graph / forks | 0.69s | 0.72s | +4.77% | — |
+| medium module graph / threads | 0.53s | 0.56s | +6.12% | — |
+| medium module graph / vmForks | SKIPPED | 0.50s | — | skipped / passed |
+| medium module graph / vmThreads | SKIPPED | 0.43s | — | skipped / passed |
+| large module graph / forks | 1.57s | 1.70s | +8.39% | — |
+| large module graph / threads | 1.14s | 1.24s | +8.54% | — |
+| large module graph / vmForks | SKIPPED | 0.73s | — | skipped / passed |
+| large module graph / vmThreads | SKIPPED | 0.64s | — | skipped / passed |
 
 ## Variability
 
-MAD is unscaled. CV uses sample standard deviation (n − 1). CV > 10% is flagged as high variation, not as a significance test; small sample counts do not establish a regression. Failed or incomplete batches never receive a speedup percentage.
+MAD is unscaled. CV uses sample standard deviation (n − 1). Evaluate CV together with absolute SD and range before deciding whether a fluctuation warrants a rerun. Small sample counts do not establish a regression. Failed or incomplete batches never receive a speedup percentage.
 
-| Case | Column | Status | n | Median | Min–max | MAD | CV | Files | Tests |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| small module graph / forks | baseline: 0.11.0 | passed | 6 | 0.328s | 0.307s–0.387s | 0.019s | 9.0% | 10 | 29 |
-| small module graph / forks | candidate: 0.12.6 | passed | 6 | 0.355s | 0.323s–0.494s | 0.017s | 16.9% | 10 | 29 |
-| small module graph / threads | baseline: 0.11.0 | passed | 6 | 0.273s | 0.267s–0.289s | 0.004s | 3.1% | 10 | 29 |
-| small module graph / threads | candidate: 0.12.6 | passed | 6 | 0.292s | 0.278s–0.306s | 0.012s | 4.1% | 10 | 29 |
-| small module graph / vmForks | baseline: 0.11.0 | skipped | 0 | — | —–— | — | — | 10 | unknown |
-| small module graph / vmForks | candidate: 0.12.6 | passed | 6 | 0.378s | 0.358s–0.394s | 0.015s | 4.3% | 10 | 29 |
-| small module graph / vmThreads | baseline: 0.11.0 | skipped | 0 | — | —–— | — | — | 10 | unknown |
-| small module graph / vmThreads | candidate: 0.12.6 | passed | 6 | 0.323s | 0.309s–0.350s | 0.005s | 4.3% | 10 | 29 |
-| medium module graph / forks | baseline: 0.11.0 | passed | 6 | 0.690s | 0.663s–0.730s | 0.014s | 3.3% | 40 | 122 |
-| medium module graph / forks | candidate: 0.12.6 | passed | 6 | 0.723s | 0.665s–0.798s | 0.050s | 7.3% | 40 | 122 |
-| medium module graph / threads | baseline: 0.11.0 | passed | 6 | 0.532s | 0.496s–0.652s | 0.017s | 10.0% | 40 | 122 |
-| medium module graph / threads | candidate: 0.12.6 | passed | 6 | 0.564s | 0.521s–0.797s | 0.024s | 17.0% | 40 | 122 |
-| medium module graph / vmForks | baseline: 0.11.0 | skipped | 0 | — | —–— | — | — | 40 | unknown |
-| medium module graph / vmForks | candidate: 0.12.6 | passed | 6 | 0.498s | 0.475s–0.528s | 0.011s | 3.8% | 40 | 122 |
-| medium module graph / vmThreads | baseline: 0.11.0 | skipped | 0 | — | —–— | — | — | 40 | unknown |
-| medium module graph / vmThreads | candidate: 0.12.6 | passed | 6 | 0.431s | 0.420s–0.499s | 0.010s | 6.8% | 40 | 122 |
-| large module graph / forks | baseline: 0.11.0 | passed | 6 | 1.568s | 1.399s–1.731s | 0.076s | 7.4% | 120 | 366 |
-| large module graph / forks | candidate: 0.12.6 | passed | 6 | 1.699s | 1.479s–2.327s | 0.126s | 16.4% | 120 | 366 |
-| large module graph / threads | baseline: 0.11.0 | passed | 6 | 1.141s | 1.080s–1.207s | 0.012s | 3.6% | 120 | 366 |
-| large module graph / threads | candidate: 0.12.6 | passed | 6 | 1.238s | 1.110s–1.405s | 0.109s | 9.3% | 120 | 366 |
-| large module graph / vmForks | baseline: 0.11.0 | skipped | 0 | — | —–— | — | — | 120 | unknown |
-| large module graph / vmForks | candidate: 0.12.6 | passed | 6 | 0.735s | 0.716s–0.843s | 0.014s | 6.5% | 120 | 366 |
-| large module graph / vmThreads | baseline: 0.11.0 | skipped | 0 | — | —–— | — | — | 120 | unknown |
-| large module graph / vmThreads | candidate: 0.12.6 | passed | 6 | 0.643s | 0.632s–0.965s | 0.008s | 18.9% | 120 | 366 |
+| Case | Column | Status | n | Median | Min–max | MAD | SD | CV | Files | Tests |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| small module graph / forks | baseline: 0.11.0 | passed | 6 | 0.33s | 0.31s–0.39s | 0.02s | 0.03s | 8.97% | 10 | 29 |
+| small module graph / forks | candidate: 0.12.6 | passed | 6 | 0.35s | 0.32s–0.49s | 0.02s | 0.06s | 16.86% | 10 | 29 |
+| small module graph / threads | baseline: 0.11.0 | passed | 6 | 0.27s | 0.27s–0.29s | 0.00s | 0.01s | 3.06% | 10 | 29 |
+| small module graph / threads | candidate: 0.12.6 | passed | 6 | 0.29s | 0.28s–0.31s | 0.01s | 0.01s | 4.13% | 10 | 29 |
+| small module graph / vmForks | baseline: 0.11.0 | skipped | 0 | — | —–— | — | — | — | 10 | unknown |
+| small module graph / vmForks | candidate: 0.12.6 | passed | 6 | 0.38s | 0.36s–0.39s | 0.02s | 0.02s | 4.31% | 10 | 29 |
+| small module graph / vmThreads | baseline: 0.11.0 | skipped | 0 | — | —–— | — | — | — | 10 | unknown |
+| small module graph / vmThreads | candidate: 0.12.6 | passed | 6 | 0.32s | 0.31s–0.35s | 0.00s | 0.01s | 4.31% | 10 | 29 |
+| medium module graph / forks | baseline: 0.11.0 | passed | 6 | 0.69s | 0.66s–0.73s | 0.01s | 0.02s | 3.29% | 40 | 122 |
+| medium module graph / forks | candidate: 0.12.6 | passed | 6 | 0.72s | 0.66s–0.80s | 0.05s | 0.05s | 7.27% | 40 | 122 |
+| medium module graph / threads | baseline: 0.11.0 | passed | 6 | 0.53s | 0.50s–0.65s | 0.02s | 0.05s | 9.99% | 40 | 122 |
+| medium module graph / threads | candidate: 0.12.6 | passed | 6 | 0.56s | 0.52s–0.80s | 0.02s | 0.10s | 17.00% | 40 | 122 |
+| medium module graph / vmForks | baseline: 0.11.0 | skipped | 0 | — | —–— | — | — | — | 40 | unknown |
+| medium module graph / vmForks | candidate: 0.12.6 | passed | 6 | 0.50s | 0.48s–0.53s | 0.01s | 0.02s | 3.79% | 40 | 122 |
+| medium module graph / vmThreads | baseline: 0.11.0 | skipped | 0 | — | —–— | — | — | — | 40 | unknown |
+| medium module graph / vmThreads | candidate: 0.12.6 | passed | 6 | 0.43s | 0.42s–0.50s | 0.01s | 0.03s | 6.81% | 40 | 122 |
+| large module graph / forks | baseline: 0.11.0 | passed | 6 | 1.57s | 1.40s–1.73s | 0.08s | 0.12s | 7.39% | 120 | 366 |
+| large module graph / forks | candidate: 0.12.6 | passed | 6 | 1.70s | 1.48s–2.33s | 0.13s | 0.30s | 16.41% | 120 | 366 |
+| large module graph / threads | baseline: 0.11.0 | passed | 6 | 1.14s | 1.08s–1.21s | 0.01s | 0.04s | 3.60% | 120 | 366 |
+| large module graph / threads | candidate: 0.12.6 | passed | 6 | 1.24s | 1.11s–1.41s | 0.11s | 0.12s | 9.35% | 120 | 366 |
+| large module graph / vmForks | baseline: 0.11.0 | skipped | 0 | — | —–— | — | — | — | 120 | unknown |
+| large module graph / vmForks | candidate: 0.12.6 | passed | 6 | 0.73s | 0.72s–0.84s | 0.01s | 0.05s | 6.51% | 120 | 366 |
+| large module graph / vmThreads | baseline: 0.11.0 | skipped | 0 | — | —–— | — | — | — | 120 | unknown |
+| large module graph / vmThreads | candidate: 0.12.6 | passed | 6 | 0.64s | 0.63s–0.97s | 0.01s | 0.13s | 18.94% | 120 | 366 |
 
 ## Inputs and provenance
 

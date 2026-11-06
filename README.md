@@ -75,18 +75,18 @@ Sources: baseline: **0.11.0** (npm); candidate: **0.12.6** (npm). Measured 2026-
 
 Sources run sequentially in rotating case/round order. For cases supported by all sources, each source occupies every order position equally often. Node compile cache is disabled. Rstest build and sequencing caches are cleared before each fixture's warmups and retained during measurement. Workload dependency graphs match. Background load and OS page cache are not controlled.
 
-| Case | baseline: 0.11.0 | candidate: 0.12.6 | Notes |
-| --- | --- | --- | --- |
-| Node startup and utilities | 0.252s | 0.273s (+8.4%) | — |
-| Node module graph | 0.608s | 0.694s (+14.2%) | high variation (CV > 10%) |
-| Node dependencies and service logic | 0.532s | 0.561s (+5.5%) | — |
-| React + jsdom | 3.625s | 1.717s (**-52.6%**) | high variation (CV > 10%) |
-| React + happy-dom | 1.955s | 1.020s (**-47.8%**) | high variation (CV > 10%) |
-| React + browser mode | 1.382s | 1.422s (+2.9%) | high variation (CV > 10%) |
-| Vue + jsdom | 2.631s | 1.480s (**-43.7%**) | high variation (CV > 10%) |
-| Vue + happy-dom | 1.483s | 0.889s (**-40.1%**) | high variation (CV > 10%) |
-| Vue + browser mode | SKIPPED | 1.310s | skipped / passed |
-| barrel graph · medium | 0.439s | 0.475s (+8.0%) | — |
+| Case | baseline: 0.11.0 | candidate: 0.12.6 | Δ | Notes |
+| --- | --- | --- | --- | --- |
+| Node startup and utilities | 0.25s | 0.27s | +8.42% | — |
+| Node module graph | 0.61s | 0.69s | +14.18% | — |
+| Node dependencies and service logic | 0.53s | 0.56s | +5.55% | — |
+| React + jsdom | 3.62s | 1.72s | -52.62% | — |
+| React + happy-dom | 1.96s | 1.02s | -47.84% | — |
+| React + browser mode | 1.38s | 1.42s | +2.92% | — |
+| Vue + jsdom | 2.63s | 1.48s | -43.73% | — |
+| Vue + happy-dom | 1.48s | 0.89s | -40.08% | — |
+| Vue + browser mode | SKIPPED | 1.31s | — | skipped / passed |
+| barrel graph · medium | 0.44s | 0.47s | +8.04% | — |
 
 [Full report, variability and inputs](reports/versions.md). Generated from published samples and compatibility fingerprints; full logs and snapshots are stored separately.
 
@@ -104,45 +104,45 @@ Sources: baseline: **0.11.0** (npm); candidate: **0.12.6** (npm). Measured 2026-
 
 Sources run sequentially in rotating case/round order. For cases supported by all sources, each source occupies every order position equally often. Node compile cache is disabled. Rstest build and sequencing caches are cleared before each fixture's warmups and retained during measurement. Workload dependency graphs match. Background load and OS page cache are not controlled.
 
-| Case | baseline: 0.11.0 | candidate: 0.12.6 | Notes |
+| Case | baseline: 0.11.0 | candidate: 0.12.6 | Δ |
 | --- | --- | --- | --- |
-| Node module graph / none | 0.667s | 0.700s (+5.0%) | — |
-| Node module graph / v8 | 1.322s | 1.082s (**-18.1%**) | — |
-| Node module graph / istanbul | 0.991s | 0.864s (**-12.8%**) | — |
-| Node dependencies and service logic / none | 0.576s | 0.616s (+7.0%) | — |
-| Node dependencies and service logic / v8 | 0.824s | 0.789s (**-4.2%**) | — |
-| Node dependencies and service logic / istanbul | 0.690s | 0.652s (**-5.6%**) | high variation (CV > 10%) |
-| React + jsdom / none | 3.683s | 1.857s (**-49.6%**) | high variation (CV > 10%) |
-| React + jsdom / v8 | 4.184s | 2.270s (**-45.8%**) | — |
-| React + jsdom / istanbul | 4.041s | 1.991s (**-50.7%**) | high variation (CV > 10%) |
-| barrel graph · medium / none | 0.407s | 0.435s (+7.0%) | — |
-| barrel graph · medium / v8 | 0.631s | 0.620s (**-1.8%**) | high variation (CV > 10%) |
-| barrel graph · medium / istanbul | 0.531s | 0.497s (**-6.4%**) | high variation (CV > 10%) |
-| barrel graph · large / none | 0.439s | 0.446s (+1.6%) | — |
-| barrel graph · large / v8 | 0.637s | 0.612s (**-4.0%**) | high variation (CV > 10%) |
-| barrel graph · large / istanbul | 0.590s | 0.518s (**-12.3%**) | high variation (CV > 10%) |
+| Node module graph / none | 0.67s | 0.70s | +5.02% |
+| Node module graph / v8 | 1.32s | 1.08s | -18.13% |
+| Node module graph / istanbul | 0.99s | 0.86s | -12.82% |
+| Node dependencies and service logic / none | 0.58s | 0.62s | +7.02% |
+| Node dependencies and service logic / v8 | 0.82s | 0.79s | -4.18% |
+| Node dependencies and service logic / istanbul | 0.69s | 0.65s | -5.59% |
+| React + jsdom / none | 3.68s | 1.86s | -49.59% |
+| React + jsdom / v8 | 4.18s | 2.27s | -45.75% |
+| React + jsdom / istanbul | 4.04s | 1.99s | -50.72% |
+| barrel graph · medium / none | 0.41s | 0.43s | +6.97% |
+| barrel graph · medium / v8 | 0.63s | 0.62s | -1.82% |
+| barrel graph · medium / istanbul | 0.53s | 0.50s | -6.42% |
+| barrel graph · large / none | 0.44s | 0.45s | +1.60% |
+| barrel graph · large / v8 | 0.64s | 0.61s | -4.01% |
+| barrel graph · large / istanbul | 0.59s | 0.52s | -12.27% |
 
 ### RSS comparison
 
 Median maxrss in MiB; negative percentages mean less memory. This is OS maxrss, not the simultaneous total of all worker processes.
 
-| Case | baseline: 0.11.0 | candidate: 0.12.6 |
-| --- | --- | --- |
-| Node module graph / none | 202.4 | 211.6 (+4.6%) |
-| Node module graph / v8 | 422.5 | 345.4 (**-18.3%**) |
-| Node module graph / istanbul | 304.6 | 336.7 (+10.5%) |
-| Node dependencies and service logic / none | 169.9 | 179.9 (+5.9%) |
-| Node dependencies and service logic / v8 | 213.0 | 215.5 (+1.2%) |
-| Node dependencies and service logic / istanbul | 210.0 | 218.6 (+4.1%) |
-| React + jsdom / none | 538.5 | 535.9 (**-0.5%**) |
-| React + jsdom / v8 | 751.0 | 744.1 (**-0.9%**) |
-| React + jsdom / istanbul | 461.5 | 575.4 (+24.7%) |
-| barrel graph · medium / none | 173.4 | 181.2 (+4.5%) |
-| barrel graph · medium / v8 | 202.5 | 203.3 (+0.4%) |
-| barrel graph · medium / istanbul | 213.2 | 219.6 (+3.0%) |
-| barrel graph · large / none | 181.8 | 188.9 (+3.9%) |
-| barrel graph · large / v8 | 208.6 | 220.0 (+5.4%) |
-| barrel graph · large / istanbul | 220.1 | 231.3 (+5.1%) |
+| Case | baseline: 0.11.0 | candidate: 0.12.6 | Δ |
+| --- | --- | --- | --- |
+| Node module graph / none | 202.37 | 211.61 | +4.57% |
+| Node module graph / v8 | 422.49 | 345.38 | -18.25% |
+| Node module graph / istanbul | 304.63 | 336.74 | +10.54% |
+| Node dependencies and service logic / none | 169.91 | 179.90 | +5.88% |
+| Node dependencies and service logic / v8 | 213.02 | 215.48 | +1.15% |
+| Node dependencies and service logic / istanbul | 209.96 | 218.64 | +4.13% |
+| React + jsdom / none | 538.51 | 535.93 | -0.48% |
+| React + jsdom / v8 | 751.02 | 744.12 | -0.92% |
+| React + jsdom / istanbul | 461.52 | 575.39 | +24.67% |
+| barrel graph · medium / none | 173.40 | 181.17 | +4.48% |
+| barrel graph · medium / v8 | 202.46 | 203.30 | +0.42% |
+| barrel graph · medium / istanbul | 213.21 | 219.60 | +3.00% |
+| barrel graph · large / none | 181.84 | 188.88 | +3.87% |
+| barrel graph · large / v8 | 208.60 | 219.97 | +5.45% |
+| barrel graph · large / istanbul | 220.05 | 231.27 | +5.09% |
 
 [Full report, variability and inputs](reports/coverage.md). Generated from published samples and compatibility fingerprints; full logs and snapshots are stored separately.
 

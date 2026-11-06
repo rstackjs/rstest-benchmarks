@@ -37,7 +37,7 @@ test('real report CLI creates comparison and detects stale output without rewrit
       ]).status,
       0,
     )
-    assert.match(readFileSync(output, 'utf8'), /-50.0%/)
+    assert.match(readFileSync(output, 'utf8'), /-50\.00%/)
     writeFileSync(
       config,
       JSON.stringify({
@@ -92,10 +92,11 @@ test('README selects two columns and recalculates notes without changing the ful
   const full = comparisonReport(spec, load)
   const block = readmeBlock(spec, full, load)
   assert.match(full.summary, /0\.12\.5/)
-  assert.match(full.summary, /high variation/)
+  assert.doesNotMatch(full.summary, /high variation/)
+  assert.match(full.markdown, /\| SD \|/)
   assert.doesNotMatch(block, /0\.12\.5|high variation|Full three-version context/)
-  assert.match(block, /\| Case \| 0\.11\.0 \| 0\.12\.6 \| Notes \|/)
-  assert.match(block, /\*\*-50\.0%\*\*/)
+  assert.match(block, /\| Case \| 0\.11\.0 \| 0\.12\.6 \| Δ \| Notes \|/)
+  assert.match(block, /\| -50\.00% \|/)
   assert.match(block, /Selected two-version view/)
   assert.equal(spec.columns.length, 3)
   for (const columns of [[1, 2], [0, 0], [0, 3], [0]])
@@ -124,8 +125,8 @@ test('README projects compact RSS medians and changes onto selected versions', a
   const full = comparisonReport(spec, load)
   const block = readmeBlock(spec, full, load)
   assert.match(block, /### RSS comparison/)
-  assert.match(block, /\| Case \| 0\.11\.0 \| 0\.12\.6 \|\n/)
-  assert.match(block, /\| Example \/ v8 \| 100\.0 \| 75\.0 \(\*\*-25\.0%\*\*\) \|/)
+  assert.match(block, /\| Case \| 0\.11\.0 \| 0\.12\.6 \| Δ \|\n/)
+  assert.match(block, /\| Example \/ v8 \| 100\.00 \| 75\.00 \| -25\.00% \|/)
   assert.doesNotMatch(block, /0\.12\.5|## Variability|## Memory|Median MiB|Min–max|\| Column \|/)
   assert.match(full.markdown, /## Memory/)
   assert.match(full.rssSummary, /0\.12\.5/)
