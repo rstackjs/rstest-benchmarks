@@ -1,0 +1,10 @@
+packages: []
+allowBuilds:
+  '@parcel/watcher': true
+  '@swc/core': true
+minimumReleaseAgeExclude:
+  - '@rspack/binding-linux-x64-gnu@2.3.1'
+  - '@rstest/browser@0.12.6'
+  - '@rstest/core@0.12.6'
+  - '@rstest/coverage-istanbul@0.12.6'
+  - '@rstest/coverage-v8@0.12.6'

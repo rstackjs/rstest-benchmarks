@@ -36,13 +36,21 @@ pnpm compare --baseline 0.12.5 --candidate 0.12.6 --suites all --runs 6 --update
 
 Repeat `--candidate` to mix npm and local sources. With N total sources, use a multiple of N timed runs to balance order positions. See [all options and publication behavior](docs/running.md#compare-versions).
 
+## Compare frameworks
+
+```sh
+pnpm compare:frameworks --install --runs 6
+```
+
+Compare pinned Jest + SWC, Vitest, and Rstest releases on shared Node and React workloads, plus coverage and browser mode. Cold and warm framework caches are measured separately; the generated report includes elapsed time and RSS. This command does not change the release comparisons below. See [options and measurement details](frameworks/README.md).
+
 ## Suites
 
 | Command | Measures | Results |
 | --- | --- | --- |
 | `pnpm bench` | Node workloads; React and Vue in jsdom, happy-dom, and browser mode (Chromium); a medium barrel graph | [Main](reports/versions.md) |
 | `pnpm bench:scaling` | File count and module graph size, varied independently | [Scaling](reports/scaling.md) |
-| `pnpm bench:pools` | Forks, threads, vmForks, and vmThreads across three suite sizes | [Pools](reports/pools.md) |
+| `pnpm bench:pools` | Node worker pool modes across three suite sizes | [Pools](reports/pools.md) |
 | `pnpm bench:barrel` | Lazy-barrel eligibility across three graph sizes | [Barrels](reports/barrel.md) |
 | `pnpm bench:coverage` | No coverage, V8, and Istanbul overhead, including RSS | [Coverage](reports/coverage.md) |
 
