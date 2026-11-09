@@ -21,8 +21,8 @@ export function frameworkFamily(framework) {
   return framework
 }
 export const cases = [
-  { id: 'minimal-node', fixture: true, optional: true, files: 1, tests: 1 },
-  { id: 'minimal-react', fixture: true, optional: true, files: 1, tests: 1 },
+  { id: 'minimal-node', fixture: true, optional: true, files: 2, tests: 2 },
+  { id: 'minimal-react', fixture: true, optional: true, files: 2, tests: 2 },
   { id: 'startup', app: 'micro-utils', files: 5, tests: 18 },
   { id: 'many-files', leaves: 126, files: 400, tests: 800 },
   { id: 'module-graph', leaves: 999, files: 40, tests: 80 },

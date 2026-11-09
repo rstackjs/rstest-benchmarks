@@ -44,8 +44,8 @@ The updater checks the complete matrix and samples, then updates the tables, ver
 | Case | Test files / tests | Workload |
 | --- | ---: | --- |
 | `startup` | 5 / 18 | Small Node utility package with 8 source modules |
-| `minimal-node` | 1 / 1 | Tiny Node project: one source module and one test |
-| `minimal-react` | 1 / 1 | Tiny React project: one component test using jsdom and Testing Library |
+| `minimal-node` | 2 / 2 | Tiny Node project: two test files sharing one source module |
+| `minimal-react` | 2 / 2 | Tiny React project: two component test files using jsdom and Testing Library |
 | `many-files` | 400 / 800 | Many isolated test files sharing 127 source modules |
 | `module-graph` | 40 / 80 | Eager loading of a 1,000-module graph |
 | `backend` | 16 / 45 | Dependency loading and in-memory service operations |
@@ -58,11 +58,13 @@ Optional cross-framework coverage measurements are available locally with `--sui
 pnpm compare:frameworks --suites main --cases minimal-node,minimal-react --frameworks jest,vitest,vitest-vmForks,rstest,rstest-vmForks --runs 5
 ```
 
-Each has one source file, one test file and one test. [Node](frameworks/fixtures/minimal-node/tests/add.test.ts) exercises an addition function; [React](frameworks/fixtures/minimal-react/tests/Counter.test.tsx) renders a counter in jsdom and clicks it once. They measure tiny-project startup overhead, not throughput on larger projects.
+Each has one source file and two test files, with one test per file. [Node](frameworks/fixtures/minimal-node/tests/add.test.ts) exercises an addition function; [React](frameworks/fixtures/minimal-react/tests/Counter.test.tsx) renders a counter in jsdom. They measure tiny-project startup and file scheduling overhead. Framework defaults determine whether tests execute in workers or in the runner process; observed worker counts are recorded in the report.
 
 ## Results
 
 🥇 and 🥈 mark the lowest and second-lowest distinct unrounded medians in each row; exact ties share the marker. They do not indicate statistical significance.
+
+The published single-file rows below predate the two-file minimal workloads. Their recorded measurements remain unchanged; new runs report the two-file workloads separately.
 
 <!-- framework-results:start -->
 

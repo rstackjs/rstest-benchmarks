@@ -27,6 +27,10 @@ function validate(record) {
   for (const group of record.plan) {
     assert.deepEqual(group.frameworks, selectedFor(group, runners), 'Missing framework in benchmark plan')
     const item = cases.find((item) => item.id === group.item.id)
+    // Published single-file inputs remain reproducible after the minimal fixtures grow.
+    const historicalMinimal = record.publication && item.fixture &&
+      group.item.files === 1 && group.item.tests === 1
+    if (historicalMinimal) continue
     assert.equal(group.item.files, item.files, 'Workload file count differs from this checkout')
     assert.equal(group.item.tests, item.tests, 'Workload test count differs from this checkout')
   }

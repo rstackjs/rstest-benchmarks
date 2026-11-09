@@ -102,14 +102,18 @@ export function renderReport(record) {
   ]
   const mainTables = []
   const mainCaseNames = {
-    'minimal-node': 'Node · single-file',
-    'minimal-react': 'React · single-file',
+    'minimal-node': 'Node',
+    'minimal-react': 'React',
     startup: 'Node startup',
     'many-files': 'Many files',
     'module-graph': 'Module graph',
     backend: 'Backend',
     barrel: 'Barrel',
     react: 'React + jsdom',
+  }
+  for (const id of ['minimal-node', 'minimal-react']) {
+    const count = record.fixtures?.[id]?.files ?? 1
+    mainCaseNames[id] += count === 1 ? ' · single-file' : ` · ${count} files`
   }
   const groups = [...new Set(record.samples.map((s) => s.group))]
   lines.push(

@@ -5,6 +5,8 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { createHash } from 'node:crypto'
 import { refreshReport, publishedInput } from '../../frameworks/publication.mjs'
+import { cases } from '../../frameworks/fixtures.mjs'
+import { renderReport } from '../../frameworks/report.mjs'
 import { ciContext, ciResultDirectory } from '../lib/ci.mjs'
 
 const samples = readFileSync(new URL('../../frameworks/reports/result.json', import.meta.url), 'utf8')
@@ -19,6 +21,13 @@ function fixture(t) {
   record.host.logicalCpuCount = 8
   record.host.parallelism = 2
   delete record.publication
+  for (const item of cases.filter((item) => item.fixture)) {
+    Object.assign(record.fixtures[item.id], { files: item.files, tests: item.tests })
+    for (const group of record.plan.filter((group) => group.item.id === item.id))
+      Object.assign(group.item, { files: item.files, tests: item.tests })
+    for (const sample of record.samples.filter((sample) => sample.group === `main/${item.id}/none`))
+      Object.assign(sample.counts, { files: item.files, tests: item.tests, passed: item.tests })
+  }
   record.ci = {
     url: 'https://github.com/example/benchmarks/actions/runs/123',
     sha: 'abc123', attempt: 2, runner: 'test runner', image: 'test image',
@@ -39,7 +48,8 @@ test('framework publication updates tables and provenance together, with repeata
   assert(readme.includes(`${measured} timed samples and ${warmups} warmups`))
   assert.match(readme, /Before\n<!-- framework-results:start -->/)
   assert.match(readme, /<!-- framework-results:end -->\nAfter/)
-  assert.match(readme, /\| Node · single-file \|/)
+  assert.match(readme, /\| Node · 2 files \|/)
+  assert.match(readme, /\| React · 2 files \|/)
   assert.doesNotMatch(readme, /\| Δ \|/)
   assert.equal(readFileSync(join(root, 'versions/README.md'), 'utf8'), 'Keep version results')
   const exported = readFileSync(join(root, 'frameworks/reports/result.json'), 'utf8')
@@ -53,6 +63,14 @@ test('framework publication updates tables and provenance together, with repeata
   writeFileSync(join(root, 'README.md'), readme.replace(`${measured} timed samples`, 'invalid timed samples'))
   assert.throws(() => refreshReport({ root, check: true }), /Stale framework report/)
   assert.match(readFileSync(join(root, 'README.md'), 'utf8'), /invalid timed samples/)
+})
+
+test('published single-file history retains its original workload labels and counts', () => {
+  const record = publishedInput(samples)
+  assert.equal(record.fixtures['minimal-node'].files, 1)
+  assert.equal(record.fixtures['minimal-react'].tests, 1)
+  assert.match(renderReport(record).tables, /\| Node · single-file \|/)
+  assert.match(renderReport(record).tables, /\| React · single-file \|/)
 })
 
 test('main and browser CI results publish without coverage; missing browser still fails', (t) => {
