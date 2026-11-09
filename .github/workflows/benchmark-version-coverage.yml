@@ -6,8 +6,8 @@ on:
       runner:
         description: Runner OS (results from different hosts must not be pooled)
         type: choice
-        options: [ubuntu-24.04, macos-15]
-        default: ubuntu-24.04
+        options: [macos-15, ubuntu-24.04]
+        default: macos-15
       runs:
         description: Timed runs per case (use a multiple of the number of versions)
         type: string
@@ -37,7 +37,7 @@ concurrency:
 jobs:
   benchmark:
     name: Benchmark
-    runs-on: ${{ inputs.runner || 'ubuntu-24.04' }}
+    runs-on: ${{ inputs.runner || 'macos-15' }}
     timeout-minutes: 90
     env:
       NODE_DISABLE_COMPILE_CACHE: '1'

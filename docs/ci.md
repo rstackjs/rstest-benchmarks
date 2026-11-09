@@ -16,7 +16,7 @@ Markdown and published-result-only changes do not trigger push/PR framework benc
 
 | Input | Framework workflow | Both Rstest version workflows |
 | --- | --- | --- |
-| `runner` | `ubuntu-24.04` or `macos-15`; defaults to Linux | Same |
+| `runner` | `macos-15` (default) or `ubuntu-24.04` | Same |
 | `runs` | Defaults to `5`; `10` is optional for forward/reverse and browser order balancing | Defaults to `6`; use a multiple of the number of versions |
 | `suites` | Fixed main/browser | Performance defaults to `main`; optionally select `scaling,barrel,pools`. Coverage stays separate |
 | `cases` | Optional comma-separated case IDs; empty selects all eight | App names or full case IDs; empty selects all cases in the workflow |
