@@ -20,8 +20,13 @@ const sampler = fork(new URL('./sampler.mjs', import.meta.url).pathname, ['/tmp/
 await new Promise((r) => sampler.once('message', r))
 const peak0 = Number(readFileSync(cg + 'memory.peak', 'utf8'))
 const start = Date.now()
-const child = spawn('/usr/bin/time', ['-v', '-o', '/tmp/m/time.txt', ...cmd], { cwd, env, stdio: ['ignore', 'ignore', 'ignore'] })
+import { openSync } from 'node:fs'
+const logFd = openSync('/tmp/m/out.txt', 'w')
+const child = spawn('/usr/bin/time', ['-v', '-o', '/tmp/m/time.txt', ...cmd], { cwd, env, stdio: ['ignore', logFd, logFd], detached: true })
+let timedOut = false
+const killer = setTimeout(() => { timedOut = true; try { process.kill(-child.pid, 'SIGKILL') } catch {} }, 150000)
 const code = await new Promise((r) => child.on('exit', (c) => r(c)))
+clearTimeout(killer)
 const wallMs = Date.now() - start
 const peakAfter = Number(readFileSync(cg + 'memory.peak', 'utf8'))
 const statAfter = readFileSync(cg + 'memory.stat', 'utf8')
@@ -36,8 +41,9 @@ let counts = null; try { counts = JSON.parse(readFileSync('/tmp/m/counts.json', 
 let workers = null
 try { const ids = readdirSync('/tmp/m/workers').map((f) => JSON.parse(readFileSync('/tmp/m/workers/' + f, 'utf8'))); workers = { slots: new Set(ids.map((w) => w.slotId)).size, processes: new Set(ids.map((w) => w.pid)).size } } catch {}
 const stat = Object.fromEntries(statAfter.trim().split('\n').map((l) => l.split(' ')).map(([k, v]) => [k, Number(v)]))
+const tail = (code === 0 && !timedOut) ? undefined : (existsSync('/tmp/m/out.txt') ? readFileSync('/tmp/m/out.txt', 'utf8').slice(-800) : '')
 console.log(JSON.stringify({
-  exit: code, wallMs,
+  timedOut, tail, exit: code, wallMs,
   peakMiB: peakAfter / MiB, peakBeforeMiB: peak0 / MiB,
   sampledPeakMiB: maxCur / MiB, sampledPeakAnonMiB: maxAnon / MiB, anonAtPeakMiB: atPeak ? atPeak.anon / MiB : null, fileAtPeakMiB: atPeak ? atPeak.file / MiB : null, shmemAtPeakMiB: atPeak ? (atPeak.shmem ?? 0) / MiB : null,
   endAnonMiB: stat.anon / MiB, endFileMiB: stat.file / MiB, samples: rows.length,
