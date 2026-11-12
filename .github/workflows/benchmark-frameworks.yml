@@ -29,12 +29,14 @@ concurrency:
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
-  benchmark:
-    name: Benchmark
+  # One matrix job per case keeps each job short and isolates failures: a lost
+  # runner or a browser problem costs one case, not the whole run.
+  setup:
+    name: Plan matrix
     runs-on: macos-15
-    timeout-minutes: 90
-    env:
-      NODE_DISABLE_COMPILE_CACHE: '1'
+    timeout-minutes: 15
+    outputs:
+      matrix: ${{ steps.plan.outputs.matrix }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
@@ -46,21 +48,50 @@ jobs:
         run: npm install --global "$(node -p 'require("./package.json").packageManager')"
       - name: Test harness
         run: pnpm test
-      - name: Install benchmark dependencies and Chromium
-        run: |
-          pnpm --dir frameworks install --frozen-lockfile
-          pnpm --dir frameworks exec playwright install --with-deps chromium
+      - name: Plan matrix
+        id: plan
+        env:
+          BENCH_EXCLUDE_CASES: ${{ inputs.exclude_cases }}
+          BENCH_CASES: ${{ inputs.cases || 'minimal-node,minimal-react,startup,many-files,module-graph,backend,barrel,react' }}
+        run: node scripts/ci-matrix.mjs frameworks --cases "$BENCH_CASES" --exclude-cases "$BENCH_EXCLUDE_CASES"
+
+  benchmark:
+    name: Benchmark (${{ matrix.name }})
+    needs: setup
+    runs-on: macos-15
+    # The slowest case (barrel) is estimated at about 35 minutes on this runner
+    # with 5 runs; 60 minutes leaves headroom without hiding a hung job.
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJSON(needs.setup.outputs.matrix) }}
+    env:
+      NODE_DISABLE_COMPILE_CACHE: '1'
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+        with:
+          node-version: 24.11.1
+      - name: Install pinned pnpm
+        run: npm install --global "$(node -p 'require("./package.json").packageManager')"
+      - name: Install benchmark dependencies
+        run: pnpm --dir frameworks install --frozen-lockfile
+      - name: Install Chromium
+        if: matrix.suite == 'browser'
+        run: pnpm --dir frameworks exec playwright install --with-deps chromium
       # Keep all compared frameworks on one host, running sequentially.
       # Do not restore transform, build or sequencing caches across CI jobs.
       - name: Run benchmarks
         id: benchmark
         env:
           BENCH_RUNS: ${{ inputs.runs || '5' }}
-          BENCH_EXCLUDE_CASES: ${{ inputs.exclude_cases }}
-          BENCH_CASES: ${{ inputs.cases || 'minimal-node,minimal-react,startup,many-files,module-graph,backend,barrel,react' }}
+          BENCH_SUITE: ${{ matrix.suite }}
+          BENCH_CASE: ${{ matrix.cases }}
         shell: bash
         run: |
-          pnpm compare:frameworks --suites main,browser --frameworks jest,vitest,vitest-vmForks,rstest,rstest-vmForks --cases "$BENCH_CASES" --exclude-cases "$BENCH_EXCLUDE_CASES" --runs "$BENCH_RUNS" --label ci-frameworks
+          pnpm compare:frameworks --suites "$BENCH_SUITE" --frameworks jest,vitest,vitest-vmForks,rstest,rstest-vmForks --cases "$BENCH_CASE" --runs "$BENCH_RUNS" --label ci-frameworks
       - name: Publish job summary
         if: always()
         env:
@@ -74,11 +105,56 @@ jobs:
         if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
-          name: benchmark-frameworks-${{ runner.os }}-${{ github.run_id }}-${{ github.run_attempt }}
+          name: benchmark-frameworks-case-${{ matrix.name }}-${{ github.run_id }}-${{ github.run_attempt }}
           path: |
             results/
             !results/**/node_modules/**
             !results/**/.cache/**
+          include-hidden-files: true
+          if-no-files-found: warn
+          retention-days: 30
+
+  merge:
+    name: Merge results
+    needs: [setup, benchmark]
+    if: ${{ always() && needs.setup.result == 'success' }}
+    runs-on: macos-15
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+        with:
+          node-version: 24.11.1
+      - name: Install pinned pnpm
+        run: npm install --global "$(node -p 'require("./package.json").packageManager')"
+      - name: Download case artifacts
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          path: case-results
+          pattern: benchmark-frameworks-case-*-${{ github.run_id }}-${{ github.run_attempt }}
+      # Refuses inputs whose lockfile, harness, dependencies or versions differ,
+      # then runs the repository's verification on the merged record.
+      - name: Merge case results
+        id: merge
+        shell: bash
+        run: node frameworks/merge-results.mjs --output "results/ci-frameworks-merged-${GITHUB_RUN_ID}" case-results/*
+      - name: Publish job summary
+        if: always()
+        env:
+          RESULT_DIR: ${{ steps.merge.outputs.result-directory }}
+        shell: bash
+        run: |
+          if [[ -n "$RESULT_DIR" && -f "$RESULT_DIR/summary.md" ]]; then
+            cat "$RESULT_DIR/summary.md" >> "$GITHUB_STEP_SUMMARY"
+          fi
+      - name: Upload merged samples and reports
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: benchmark-frameworks-merged-${{ runner.os }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: results/
           include-hidden-files: true
           if-no-files-found: warn
           retention-days: 30

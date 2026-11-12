@@ -28,9 +28,9 @@ pnpm compare:frameworks --suites main --conditions warm --runs 6
 
 ## Run in CI
 
-The [Frameworks benchmark workflow](.github/workflows/benchmark-frameworks.yml) runs main and browser suites on pull requests and pushes to `main`. Use **Actions → Frameworks benchmark → Run workflow** to choose the runner OS, repetition count or cases. Rstest release comparisons have separate manual workflows for [performance](.github/workflows/benchmark-versions.yml) and [coverage](.github/workflows/benchmark-version-coverage.yml). All compared runners execute sequentially on the same host; CI uploads reports and raw execution artifacts without committing results.
+The [Frameworks benchmark workflow](.github/workflows/benchmark-frameworks.yml) runs main and browser suites on pull requests and pushes to `main`. Use **Actions → Frameworks benchmark → Run workflow** to choose the repetition count or cases. Each case runs in its own matrix job and a final job merges the per-case results into one verified result. Rstest release comparisons have separate manual workflows for [performance](.github/workflows/benchmark-versions.yml) and [coverage](.github/workflows/benchmark-version-coverage.yml) (also one job per app, merged). Within a job, all compared runners execute sequentially on the same host; CI uploads reports and raw execution artifacts without committing results.
 
-To update this page from a successful framework run with all eight cases and browser mode, download its artifact and extract it under `results/`, preserving the run directory:
+To update this page from a successful framework run with all eight cases and browser mode, download its merged artifact (`benchmark-frameworks-merged-...`) and extract it under `results/`, preserving the run directory:
 
 ```sh
 pnpm report:frameworks --input results/<run>/result.json

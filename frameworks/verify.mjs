@@ -97,14 +97,17 @@ export function verifySamples(record, source = 'result.json') {
     }
   assert.equal(record.samples.length, expectedSamples, 'Unexpected or missing samples')
   assert.equal(record.memorySamples.length, expectedSamples - record.samples.filter((s) => s.phase === 'warmup').length, 'Unexpected or missing memory samples')
-  const samples = [...record.samples, ...record.memorySamples]
-    .slice()
-    .sort((a, b) => a.startedAt.localeCompare(b.startedAt))
-  for (let i = 1; i < samples.length; i++)
-    assert(
-      samples[i].startedAt >= samples[i - 1].endedAt,
-      'Overlapping benchmark processes',
-    )
+  // Merged CI results come from parallel jobs on different hosts: processes only
+  // have to be sequential within one source run.
+  const bySource = Map.groupBy([...record.samples, ...record.memorySamples], (s) => s.mergeSource ?? '')
+  for (const group of bySource.values()) {
+    const samples = group.sort((a, b) => a.startedAt.localeCompare(b.startedAt))
+    for (let i = 1; i < samples.length; i++)
+      assert(
+        samples[i].startedAt >= samples[i - 1].endedAt,
+        'Overlapping benchmark processes',
+      )
+  }
   return {
     groups: record.plan.length,
     measured: record.samples.filter((s) => s.phase === 'timed').length,
