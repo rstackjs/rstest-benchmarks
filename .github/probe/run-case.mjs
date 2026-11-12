@@ -1,7 +1,7 @@
 // Usage: node run-case.mjs CASE RUNS OUT.jsonl
 // For one case: every framework x worker setting, RUNS interleaved rounds (cell order rotated per round),
 // drop_caches before each measurement, each measurement in its own transient systemd scope.
-import { spawnSync } from 'node:child_process'
+import { spawn, spawnSync } from 'node:child_process'
 import { appendFileSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { pathToFileURL } from 'node:url'
@@ -27,15 +27,27 @@ const cmdFor = (fw, setting) => {
 }
 const cells = fws.flatMap((framework) => settings.map((setting) => ({ framework, setting })))
 const dropCaches = () => spawnSync('sudo', ['sh', '-c', 'sync; echo 3 > /proc/sys/vm/drop_caches'])
-const scope = (args) => spawnSync('sudo', ['systemd-run', '--scope', '--quiet', '-p', 'MemoryAccounting=yes',
-  `--uid=${process.getuid()}`, `--gid=${process.getgid()}`, `--setenv=PATH=${process.env.PATH}`, `--setenv=HOME=${process.env.HOME}`, '--', ...args], { encoding: 'utf8' })
+let unitSeq = 0
+// Runs args in a transient scope; as soon as measure.mjs prints its JSON line, kills any stray processes left in the scope
+// (some workers outlive the framework CLI and would keep the scope, and spawnSync, alive forever).
+const scope = (args) => new Promise((resolve) => {
+  const unit = `probe-${process.pid}-${unitSeq++}`
+  const p = spawn('sudo', ['systemd-run', '--scope', '--quiet', `--unit=${unit}`, '-p', 'MemoryAccounting=yes',
+    `--uid=${process.getuid()}`, `--gid=${process.getgid()}`, `--setenv=PATH=${process.env.PATH}`, `--setenv=HOME=${process.env.HOME}`, '--', ...args], { stdio: ['ignore', 'pipe', 'pipe'] })
+  let stdout = '', stderr = '', killed = false
+  const kill = () => { if (killed) return; killed = true; spawnSync('sudo', ['systemctl', 'kill', '-s', 'KILL', `${unit}.scope`]) }
+  const hard = setTimeout(kill, 240000)
+  p.stdout.on('data', (d) => { stdout += d; if (/\}\s*$/.test(stdout.trim()) && stdout.trim().split('\n').pop().startsWith('{')) kill() })
+  p.stderr.on('data', (d) => { stderr += d })
+  p.on('close', () => { clearTimeout(hard); resolve({ stdout, stderr }) })
+})
 const parse = (r) => { try { return JSON.parse(r.stdout.trim().split('\n').pop()) } catch { return { error: (r.stderr || r.stdout || '').slice(0, 400) } } }
 const host = { cpus: os.cpus().length, cpu: os.cpus()[0]?.model, totalMemMiB: os.totalmem() / 1048576, node: process.version, kernel: os.release(), load: os.loadavg() }
 const emit = (row) => { appendFileSync(out, JSON.stringify({ case: caseId, host, ...row }) + '\n'); return row }
 const probe = join(root, '.github/probe/measure.mjs')
 for (let i = 0; i < runs; i++) {
   dropCaches()
-  const j = parse(scope(['node', probe, '--', 'sleep', '1']))
+  const j = parse(await scope(['node', probe, '--', 'sleep', '1']))
   emit({ kind: 'idle', run: i, ...j })
 }
 for (let run = 0; run < runs; run++) {
@@ -44,7 +56,7 @@ for (let run = 0; run < runs; run++) {
     const cwd = join(WS, framework, caseId)
     dropCaches()
     const t0 = Date.now()
-    const j = parse(scope(['node', probe, '--cwd', cwd, '--cold', '1', '--slot-var', slot[family(framework)], '--', ...cmdFor(framework, setting)]))
+    const j = parse(await scope(['node', probe, '--cwd', cwd, '--cold', '1', '--slot-var', slot[family(framework)], '--', ...cmdFor(framework, setting)]))
     const c = j.counts
     const ok = j.exit === 0 && c && c.files === item.files && c.tests === item.tests && c.passed === item.tests && c.failed === 0 && !c.skipped && !c.errors
     emit({ kind: 'run', framework, setting, run, ok: !!ok, ...j })

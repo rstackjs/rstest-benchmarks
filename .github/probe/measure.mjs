@@ -28,6 +28,7 @@ const killer = setTimeout(() => { timedOut = true; try { process.kill(-child.pid
 const code = await new Promise((r) => child.on('exit', (c) => r(c)))
 clearTimeout(killer)
 const wallMs = Date.now() - start
+const procsAtEnd = readFileSync(cg + 'cgroup.procs', 'utf8').trim().split('\n').length
 const peakAfter = Number(readFileSync(cg + 'memory.peak', 'utf8'))
 const statAfter = readFileSync(cg + 'memory.stat', 'utf8')
 sampler.kill('SIGTERM')
@@ -43,7 +44,7 @@ try { const ids = readdirSync('/tmp/m/workers').map((f) => JSON.parse(readFileSy
 const stat = Object.fromEntries(statAfter.trim().split('\n').map((l) => l.split(' ')).map(([k, v]) => [k, Number(v)]))
 const tail = (code === 0 && !timedOut) ? undefined : (existsSync('/tmp/m/out.txt') ? readFileSync('/tmp/m/out.txt', 'utf8').slice(-800) : '')
 console.log(JSON.stringify({
-  timedOut, tail, exit: code, wallMs,
+  timedOut, tail, procsAtEnd, exit: code, wallMs,
   peakMiB: peakAfter / MiB, peakBeforeMiB: peak0 / MiB,
   sampledPeakMiB: maxCur / MiB, sampledPeakAnonMiB: maxAnon / MiB, anonAtPeakMiB: atPeak ? atPeak.anon / MiB : null, fileAtPeakMiB: atPeak ? atPeak.file / MiB : null, shmemAtPeakMiB: atPeak ? (atPeak.shmem ?? 0) / MiB : null,
   endAnonMiB: stat.anon / MiB, endFileMiB: stat.file / MiB, samples: rows.length,
