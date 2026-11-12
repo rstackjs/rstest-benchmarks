@@ -8,9 +8,9 @@ import { renderReport } from './report.mjs'
 import { verifySamples } from './verify.mjs'
 import { formatCpu } from '../scripts/lib/host.mjs'
 
-function validate(record) {
+function validate(record, source) {
   assert.equal(record.schemaVersion, 1, 'Unsupported framework result schema')
-  const summary = verifySamples(record)
+  const summary = verifySamples(record, source)
   assert(!record.independentBatches && !record.sourceRuns, 'Publish one complete run, not merged batches')
   const runners = record.options.frameworks
   for (const name of ['jest', 'vitest', 'rstest'])
@@ -37,9 +37,9 @@ function validate(record) {
   return summary
 }
 
-export function publishedInput(source) {
+export function publishedInput(source, name = 'framework result') {
   const record = JSON.parse(source)
-  validate(record)
+  validate(record, name)
   if (record.publication) return record
   record.publication = {
     format: 1,
@@ -74,8 +74,8 @@ function context(record) {
 
 export function refreshReport({ root, input = join(root, 'frameworks/reports/result.json'), check = false }) {
   const source = readFileSync(input, 'utf8')
-  const record = publishedInput(source)
-  const rendered = renderReport(record)
+  const record = publishedInput(source, input)
+  const rendered = renderReport(record, input)
   const readme = readFileSync(join(root, 'README.md'), 'utf8')
   const startMarker = '<!-- framework-results:start -->'
   const endMarker = '<!-- framework-results:end -->'

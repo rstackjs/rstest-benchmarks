@@ -189,3 +189,25 @@ test('framework publication restores the homepage if a later file write fails', 
     syncBuiltinESMExports()
   }
 })
+
+test('legacy maxrss framework results are rejected with a clear error', () => {
+  const legacy = {
+    status: 'completed',
+    plan: [{ suite: 'main', item: { id: 'x' }, provider: 'none' }],
+    options: { runs: 1, conditions: ['cold'] },
+    samples: [{ group: 'main/x/none', rssBytes: 1024 }],
+  }
+  assert.throws(
+    () => publishedInput(JSON.stringify({ schemaVersion: 1, ...legacy }), 'result.json'),
+    /result\.json: legacy maxrss data \(rssBytes\); republish with the footprint sampler/,
+  )
+  const noMemory = { ...legacy, samples: [{ group: 'main/x/none' }] }
+  assert.throws(
+    () => publishedInput(JSON.stringify({ schemaVersion: 1, ...noMemory }), 'result.json'),
+    /result\.json: legacy maxrss data \(missing memorySamples\)/,
+  )
+  assert.throws(
+    () => renderReport(legacy, 'result.json'),
+    /legacy maxrss data \(rssBytes\)/,
+  )
+})

@@ -3,6 +3,7 @@ import { formatCpu } from '../scripts/lib/host.mjs'
 import { writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { workerLabel } from './workers.mjs'
+import { assertNoLegacyMemory } from '../scripts/lib/legacy.mjs'
 
 function caseName(group) {
   const [suite, name, provider] = group.split('/')
@@ -13,7 +14,8 @@ function caseName(group) {
   return group
 }
 
-export function renderReport(record) {
+export function renderReport(record, source = 'framework result') {
+  assertNoLegacyMemory(source, record, true)
   const runners = record.options.frameworks ?? Object.keys(record.versions)
   const names = runners.map(
     (f) =>
@@ -142,7 +144,7 @@ export function renderReport(record) {
             s.phase === 'timed',
         )
       const sets = runners.map((f) => timedFor(record.samples, f))
-      const memorySets = runners.map((f) => timedFor(record.memorySamples ?? [], f))
+      const memorySets = runners.map((f) => timedFor(record.memorySamples, f))
       const stats = sets.map((ss, i) => ({
         time: statistics(
           ss.filter((s) => s.status === 'passed').map((s) => s.wallMs),

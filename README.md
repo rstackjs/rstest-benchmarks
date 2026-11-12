@@ -62,9 +62,7 @@ Each has one source file and two test files, with one test per file. [Node](fram
 
 ## Results
 
-Data from GitHub Actions run <id> (<date>, commit <sha>). <!-- TODO: fill in from the published CI run; do not publish memory numbers without it. -->
-
-> The tables below predate the footprint metric: their memory columns are OS maxrss from `/usr/bin/time` and are replaced by process-tree footprint numbers on the next published CI run.
+> The tables below still use the previous memory metric (OS maxrss from `/usr/bin/time`). They will be replaced by process-tree footprint numbers in the next publication; old and new memory values are not comparable.
 
 🥇 and 🥈 mark the lowest and second-lowest distinct unrounded medians in each row; exact ties share the marker. They do not indicate statistical significance.
 
@@ -95,7 +93,7 @@ pnpm compare:frameworks --suites main,coverage,browser --cases minimal-node,mini
 | Barrel | 21.99s | 9.94s | 🥈 0.56s | 🥇 0.47s |
 | React + jsdom | 2.39s | 3.94s | 🥈 1.74s | 🥇 1.18s |
 
-**Main suite · cold cache · Memory (MiB, process-tree footprint peak)**
+**Main suite · cold cache · RSS (MiB)**
 
 | Case | Jest + SWC | Vitest | Rstest | Rstest vmForks |
 | --- | ---: | ---: | ---: | ---: |
@@ -121,7 +119,7 @@ pnpm compare:frameworks --suites main,coverage,browser --cases minimal-node,mini
 | Barrel | 5.20s | 5.43s | 🥈 0.48s | 🥇 0.45s |
 | React + jsdom | 2.26s | 4.04s | 🥈 1.67s | 🥇 1.13s |
 
-**Main suite · warm cache · Memory (MiB, process-tree footprint peak)**
+**Main suite · warm cache · RSS (MiB)**
 
 | Case | Jest + SWC | Vitest | Rstest | Rstest vmForks |
 | --- | ---: | ---: | ---: | ---: |
@@ -136,7 +134,7 @@ pnpm compare:frameworks --suites main,coverage,browser --cases minimal-node,mini
 
 <!-- framework-results:end -->
 
-Memory is the median across runs of the peak summed process-tree footprint (see [Memory methodology](#memory-methodology)). Full coverage/browser comparisons are in the [complete report](frameworks/reports/report.md), with [variability](frameworks/reports/variability.md) and [all samples and provenance](frameworks/reports/result.json). The tiny-project rows above are part of the same run and result set. Published framework reports use fixed paths in `frameworks/reports/`; each update replaces the current report and samples. Previous results remain available in Git history. Run `pnpm report:frameworks` to regenerate the reports and README tables from the published samples.
+RSS is OS maxrss, not total concurrent worker memory. Full coverage/browser comparisons are in the [complete report](frameworks/reports/report.md), with [variability](frameworks/reports/variability.md) and [all samples and provenance](frameworks/reports/result.json). The tiny-project rows above are part of the same run and result set. Published framework reports use fixed paths in `frameworks/reports/`; each update replaces the current report and samples. Previous results remain available in Git history. Run `pnpm report:frameworks` to regenerate the reports and README tables from the published samples.
 
 See [workload design](docs/framework-comparison.md) for performance questions and fixture details. The proposed scaling extensions are not part of the implemented default matrix.
 

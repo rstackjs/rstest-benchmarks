@@ -41,7 +41,7 @@ Repeat `--candidate` to mix npm and local sources. With N total sources, use a m
 
 ## Run in CI
 
-In **Actions**, choose [Rstest version benchmark](../.github/workflows/benchmark-versions.yml) for the main comparison shown below (scaling, barrel and pools are opt-in through `suites`), or [Rstest coverage benchmark](../.github/workflows/benchmark-version-coverage.yml) for coverage and RSS. Both workflows accept baseline/candidate npm versions, a runner OS and the repetition count, defaulting to six timed runs per case. Coverage includes fresh no-coverage controls on the same host. To publish either successful run after extracting its artifact under `results/`:
+In **Actions**, choose [Rstest version benchmark](../.github/workflows/benchmark-versions.yml) for the main comparison shown below (scaling, barrel and pools are opt-in through `suites`), or [Rstest coverage benchmark](../.github/workflows/benchmark-version-coverage.yml) for coverage and memory. Both workflows accept baseline/candidate npm versions, and the repetition count (both run on macOS), defaulting to six timed runs per case. Coverage includes fresh no-coverage controls on the same host. To publish either successful run after extracting its artifact under `results/`:
 
 ```sh
 pnpm report:versions --input results/<comparison>/comparison.json
@@ -72,6 +72,8 @@ All commands accept `--list` and `--runs`. See [workload design](../docs/workloa
 See [measurement details and result format](../docs/results.md) for cache policy, comparison checks, and statistics.
 
 ## Selected results
+
+> The tables below still use the previous memory metric (OS maxrss from `/usr/bin/time`). They will be replaced by process-tree footprint numbers in the next publication; old and new memory values are not comparable.
 
 <!-- benchmark:versions:start -->
 
@@ -128,9 +130,9 @@ Sources run sequentially in rotating case/round order. For cases supported by al
 | barrel graph · large / v8 | 0.64s | 0.61s | -4.01% |
 | barrel graph · large / istanbul | 0.59s | 0.52s | -12.27% |
 
-### Memory comparison
+### RSS comparison
 
-Median of the per-run peak process-tree physical footprint in MiB; negative percentages mean less memory.
+Median maxrss in MiB; negative percentages mean less memory. This is OS maxrss, not the simultaneous total of all worker processes.
 
 | Case | baseline: 0.11.0 | candidate: 0.12.6 | Δ |
 | --- | --- | --- | --- |

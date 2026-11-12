@@ -4,10 +4,12 @@ import { resolve, join } from 'node:path'
 import { pathToFileURL } from 'node:url'
 import { fingerprint } from './fixtures.mjs'
 import { sameRunOutcome } from '../scripts/lib/process.mjs'
+import { assertNoLegacyMemory } from '../scripts/lib/legacy.mjs'
 
 // Counters a memory run must reproduce from its timing run.
 export const countKeys = ['files', 'tests', 'passed', 'failed', 'skipped', 'errors']
-export function verifySamples(record) {
+export function verifySamples(record, source = 'result.json') {
+  assertNoLegacyMemory(source, record, true)
   assert.equal(record.status, 'completed')
   assert(record.plan?.length > 0, 'Missing benchmark plan')
   assert(Number.isSafeInteger(record.options.runs) && record.options.runs > 0)
@@ -109,8 +111,8 @@ export function verifySamples(record) {
     warmups: record.samples.filter((s) => s.phase === 'warmup').length,
   }
 }
-export function verify(record, directory) {
-  const summary = verifySamples(record)
+export function verify(record, directory, source = join(directory, 'result.json')) {
+  const summary = verifySamples(record, source)
   for (const group of record.plan)
     for (const framework of group.frameworks ?? (group.suite === 'browser' ? ['vitest', 'rstest'] : ['jest', 'vitest', 'rstest']))
       assert.equal(

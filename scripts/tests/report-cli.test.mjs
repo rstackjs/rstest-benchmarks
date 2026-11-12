@@ -47,7 +47,7 @@ test('CI summary shares README tables and retains CPU metadata without variabili
   assert.match(report.markdown, /## Memory/)
   const noMemory = comparisonReport(spec, (file) => {
     const data = load(file)
-    delete data.results[0].memorySamples
+    data.results[0].memorySamples = []
     return data
   })
   assert.doesNotMatch(noMemory.jobSummary, /### Memory comparison/)
@@ -191,7 +191,7 @@ test('README projects compact memory medians and changes onto selected versions'
   assert.match(readmeBlock({ ...spec, readme: undefined }, full), /### Memory comparison/)
   const withoutMemory = (file) => {
     const doc = load(file)
-    delete doc.results[0].memorySamples
+    doc.results[0].memorySamples = []
     return doc
   }
   assert.doesNotMatch(readmeBlock(spec, full, withoutMemory), /### Memory comparison/)
@@ -220,4 +220,20 @@ test('memory comparisons suppress percentages for incomplete or incompatible inp
     if (scenario === 'incomplete') assert.match(report.memorySummary, /INCOMPLETE/)
     if (scenario === 'failed') assert.match(report.memorySummary, /FAILED/)
   }
+})
+
+test('legacy coverage data fails report generation instead of dropping memory', async () => {
+  const { normalize } = await import('../lib/report.mjs')
+  const sample = { phase: 'timed', status: 'passed', wallMs: 100 }
+  const row = { provider: 'v8', app: 'a', name: 'n', status: 'passed', samples: [{ ...sample, rssBytes: 1024 }] }
+  const meta = { runs: 1, options: { runs: 1 } }
+  assert.throws(
+    () => normalize({ schemaVersion: 2, suite: 'coverage', meta, results: [row] }, 'coverage.json'),
+    /coverage\.json: legacy maxrss data \(rssBytes\); republish with the footprint sampler/,
+  )
+  const bare = { ...row, samples: [sample] }
+  assert.throws(
+    () => normalize({ schemaVersion: 2, suite: 'coverage', meta, results: [bare] }, 'coverage.json'),
+    /coverage\.json: legacy maxrss data \(missing memorySamples\)/,
+  )
 })

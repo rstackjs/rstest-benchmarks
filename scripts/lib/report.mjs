@@ -1,4 +1,5 @@
 import { readFileSync } from 'node:fs'
+import { assertNoLegacyMemory } from './legacy.mjs'
 import { createHash } from 'node:crypto'
 import { dirname, relative } from 'node:path'
 import { statistics, seconds, percent } from './stats.mjs'
@@ -24,6 +25,7 @@ export function normalize(document, source = 'memory') {
   return document.results.map((row) => {
     const suite =
       document.suite ?? (row.provider ? 'coverage' : row.app ? 'main' : 'pools')
+    assertNoLegacyMemory(source, row, suite === 'coverage' && row.status === 'passed')
     const timed = legacy
       ? row.samples
       : row.samples
