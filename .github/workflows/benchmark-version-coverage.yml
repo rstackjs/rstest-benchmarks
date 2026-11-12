@@ -45,10 +45,8 @@ jobs:
           node-version: 24.11.1
       - name: Install pinned pnpm
         run: npm install --global "$(node -p 'require("./package.json").packageManager')"
-      - name: Check harness and published reports
-        run: |
-          pnpm test
-          pnpm report:check
+      - name: Test harness
+        run: pnpm test
       # Compared versions run sequentially on one host with runner-managed caches.
       - name: Run benchmarks
         id: benchmark
@@ -82,3 +80,6 @@ jobs:
           include-hidden-files: true
           if-no-files-found: warn
           retention-days: 30
+      - name: Check published reports
+        if: always()
+        run: pnpm report:check
