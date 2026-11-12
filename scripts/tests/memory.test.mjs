@@ -3,15 +3,35 @@ import assert from 'node:assert/strict'
 import { mkdtempSync, readFileSync, rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { assertMemorySupported } from '../lib/memory.mjs'
+import { assertMemorySupported, assertPublishableMemory, memoryDescription, memoryKind, memoryKinds, sharedMemoryKind } from '../lib/memory.mjs'
 import { execute } from '../lib/process.mjs'
 
 const MiB = 1024 ** 2
 
-test('memory measurement refuses to run off macOS instead of falling back to RSS', () => {
-  assert.throws(() => assertMemorySupported('linux'), /requires macOS.*no RSS fallback/)
-  assert.throws(() => assertMemorySupported('win32'), /requires macOS/)
+test('memory measurement supports macOS and Linux only and never falls back to RSS', () => {
   assert.doesNotThrow(() => assertMemorySupported('darwin'))
+  assert.doesNotThrow(() => assertMemorySupported('linux'))
+  assert.throws(() => assertMemorySupported('win32'), /macOS.*Linux.*no RSS fallback/)
+})
+
+test('each platform records its own memory kind', () => {
+  assert.equal(memoryKind('darwin'), 'macOS phys_footprint tree sum')
+  assert.equal(memoryKind('linux'), 'Linux cgroup v2 anon+shmem peak')
+  assert.throws(() => memoryKind('freebsd'), /no RSS fallback/)
+  assert.match(memoryDescription(memoryKinds.linux), /anon.*shmem.*cgroupPeakBytes/)
+  assert.match(memoryDescription(memoryKinds.darwin), /phys_footprint/)
+})
+
+test('records of different memory kinds are never mixed', () => {
+  assert.equal(sharedMemoryKind([memoryKinds.darwin, null, memoryKinds.darwin]), memoryKinds.darwin)
+  assert.equal(sharedMemoryKind([null]), null)
+  assert.throws(() => sharedMemoryKind([memoryKinds.darwin, memoryKinds.linux], 'merge'), /merge: cannot mix memory kinds.*not comparable across platforms/)
+})
+
+test('only macOS memory data can be published', () => {
+  assert.doesNotThrow(() => assertPublishableMemory(memoryKinds.darwin, 'result.json'))
+  assert.throws(() => assertPublishableMemory(memoryKinds.linux, 'result.json'), /result\.json: cannot publish memory data of kind "Linux cgroup v2 anon\+shmem peak".*job summaries and artifacts only/)
+  assert.throws(() => assertPublishableMemory(undefined, 'result.json'), /kind "unknown"/)
 })
 
 const macos = { skip: process.platform !== 'darwin' && 'requires macOS' }

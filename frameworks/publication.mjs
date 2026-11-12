@@ -6,11 +6,13 @@ import { cases } from './fixtures.mjs'
 import { selectedFor } from './order.mjs'
 import { renderReport } from './report.mjs'
 import { verifySamples } from './verify.mjs'
+import { assertPublishableMemory } from '../scripts/lib/memory.mjs'
 import { formatCpu } from '../scripts/lib/host.mjs'
 
 function validate(record, source) {
   assert.equal(record.schemaVersion, 1, 'Unsupported framework result schema')
   const summary = verifySamples(record, source)
+  assertPublishableMemory(record.measurement?.memory, source)
   assert(!record.independentBatches && !record.sourceRuns, 'Publish one complete run, not merged batches')
   const runners = record.options.frameworks
   for (const name of ['jest', 'vitest', 'rstest'])

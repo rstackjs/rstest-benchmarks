@@ -14,6 +14,11 @@ on:
         description: Timed runs per case/cache condition (10 is optional for fuller order balancing)
         type: string
         default: '5'
+      runner:
+        description: Runner for the benchmark jobs. macos-15 measures process-tree phys_footprint; ubuntu-24.04 measures cgroup v2 anon+shmem. Values are not comparable across platforms, and only macOS results can be published.
+        type: choice
+        options: [macos-15, ubuntu-24.04]
+        default: macos-15
       cases:
         description: Framework case IDs, comma-separated (empty runs all eight)
         type: string
@@ -33,7 +38,8 @@ jobs:
   # runner or a browser problem costs one case, not the whole run.
   setup:
     name: Plan matrix
-    runs-on: macos-15
+    # Only runs node scripts (no measurement), so it uses the cheapest runner.
+    runs-on: ubuntu-latest
     timeout-minutes: 15
     outputs:
       matrix: ${{ steps.plan.outputs.matrix }}
@@ -53,12 +59,14 @@ jobs:
         env:
           BENCH_EXCLUDE_CASES: ${{ inputs.exclude_cases }}
           BENCH_CASES: ${{ inputs.cases || 'minimal-node,minimal-react,startup,many-files,module-graph,backend,barrel,react' }}
-        run: node scripts/ci-matrix.mjs frameworks --cases "$BENCH_CASES" --exclude-cases "$BENCH_EXCLUDE_CASES"
+          BENCH_RUNNER: ${{ inputs.runner }}
+        run: node scripts/ci-matrix.mjs frameworks --cases "$BENCH_CASES" --exclude-cases "$BENCH_EXCLUDE_CASES" --runner "$BENCH_RUNNER"
 
   benchmark:
     name: Benchmark (${{ matrix.name }})
     needs: setup
-    runs-on: macos-15
+    # macos-15 unless a manual dispatch selects ubuntu-24.04.
+    runs-on: ${{ matrix.runner }}
     # The slowest case (barrel) is estimated at about 35 minutes on this runner
     # with 5 runs; 60 minutes leaves headroom without hiding a hung job.
     timeout-minutes: 60
@@ -105,7 +113,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
-          name: benchmark-frameworks-case-${{ matrix.name }}-${{ github.run_id }}-${{ github.run_attempt }}
+          name: benchmark-frameworks-case-${{ matrix.name }}-${{ runner.os }}-${{ github.run_id }}-${{ github.run_attempt }}
           path: |
             results/
             !results/**/node_modules/**
@@ -118,7 +126,8 @@ jobs:
     name: Merge results
     needs: [setup, benchmark]
     if: ${{ always() && needs.setup.result == 'success' }}
-    runs-on: macos-15
+    # Only runs node scripts (no measurement), so it uses the cheapest runner.
+    runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
@@ -153,7 +162,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
-          name: benchmark-frameworks-merged-${{ runner.os }}-${{ github.run_id }}-${{ github.run_attempt }}
+          name: benchmark-frameworks-merged-${{ inputs.runner || 'macos-15' }}-${{ github.run_id }}-${{ github.run_attempt }}
           path: results/
           include-hidden-files: true
           if-no-files-found: warn

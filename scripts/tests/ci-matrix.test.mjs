@@ -10,7 +10,7 @@ test('framework matrix has one unit per case and keeps browser react separate', 
   assert.deepEqual(names(units), [...allCases.split(','), 'react-browser'])
   assert.deepEqual(units.at(-1), { name: 'react-browser', suite: 'browser', cases: 'browser/react/none' })
   assert.deepEqual(units.find((unit) => unit.name === 'react'), { name: 'react', suite: 'main', cases: 'main/react/none' })
-  assert.deepEqual(matrixFor('frameworks', { cases: allCases }), { include: units })
+  assert.deepEqual(matrixFor('frameworks', { cases: allCases }), { include: units.map((unit) => ({ ...unit, runner: 'macos-15' })) })
 })
 
 test('framework matrix honours cases and exclude_cases like the CLI', () => {
@@ -33,4 +33,15 @@ test('coverage matrix has one unit per app with its provider controls', () => {
   assert.deepEqual(names(coverageUnits({ excludeCases: 'react-spa' })), ['node-library', 'node-backend', 'barrel-clean'])
   const noIstanbul = coverageUnits({ cases: 'node-backend', excludeCases: 'coverage:node-backend:default:default:node:forks:istanbul:default' })
   assert.equal(noIstanbul[0].cases.split(',').length, 2)
+})
+
+test('matrix units carry the selected runner and refuse unknown ones', () => {
+  const linux = matrixFor('frameworks', { cases: allCases, runner: 'ubuntu-24.04' })
+  assert.equal(linux.include.length, 9)
+  assert(linux.include.every((unit) => unit.runner === 'ubuntu-24.04'))
+  assert.deepEqual(linux.include.at(-1), { name: 'react-browser', suite: 'browser', cases: 'browser/react/none', runner: 'ubuntu-24.04' })
+  assert(matrixFor('coverage', { runner: 'ubuntu-24.04' }).include.every((unit) => unit.runner === 'ubuntu-24.04'))
+  // An empty runner (non-dispatch events) selects the macOS default.
+  assert(matrixFor('frameworks', { cases: allCases, runner: '' }).include.every((unit) => unit.runner === 'macos-15'))
+  assert.throws(() => matrixFor('frameworks', { cases: allCases, runner: 'windows-latest' }), /Unknown runner/)
 })

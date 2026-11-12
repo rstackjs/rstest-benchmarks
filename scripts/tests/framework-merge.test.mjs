@@ -8,11 +8,13 @@ import { mergeResults, writeMerged } from '../../frameworks/merge.mjs'
 import { publishedInput } from '../../frameworks/publication.mjs'
 import { verifySamples } from '../../frameworks/verify.mjs'
 import { cases } from '../../frameworks/fixtures.mjs'
+import { memoryKinds } from '../lib/memory.mjs'
 
 // Build a complete record from the committed published samples (relabelled to the
 // current two-pass schema), then split it by case the way the matrix does.
 const full = JSON.parse(readFileSync(new URL('../../frameworks/reports/result.json', import.meta.url), 'utf8'))
 full.memorySamples = []
+full.measurement = { memory: memoryKinds.darwin }
 for (const sample of full.samples) {
   if (sample.phase === 'timed') full.memorySamples.push({ ...sample, startedAt: sample.endedAt, wallMs: undefined, memoryBytes: sample.rssBytes })
   delete sample.rssBytes
@@ -122,6 +124,8 @@ test('merging refuses inputs with different identity, duplicates or failed runs'
   assert.throws(attempt((parts) => { parts[1].record.options.runs = 7 }), /options\.runs differs/)
   assert.throws(attempt((parts) => { parts[1].record.status = 'failed' }), /failed, not completed/)
   assert.throws(attempt((parts) => { parts[1].record.ci.sha = 'other' }), /ci\.sha differs/)
+  // A Linux cgroup record never merges with a macOS footprint record.
+  assert.throws(attempt((parts) => { parts[1].record.measurement = { memory: memoryKinds.linux } }), /measurement differs/)
   assert.throws(attempt((parts) => { parts[1] = { name: 'duplicate', record: structuredClone(parts[0].record) } }), /Duplicate case/)
   assert.throws(() => mergeResults([]), /No results/)
 })

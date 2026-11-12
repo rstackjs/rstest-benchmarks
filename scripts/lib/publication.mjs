@@ -12,6 +12,7 @@ import { randomUUID } from 'node:crypto'
 import { reportInput } from './publish.mjs'
 import { comparisonReport, readmeBlock } from './report.mjs'
 import { formatCpu } from './host.mjs'
+import { assertPublishableMemory } from './memory.mjs'
 
 const outputs = {
   main: 'versions',
@@ -47,6 +48,7 @@ export function publishComparison(root, directory, record) {
         throw new Error(`Incomplete run: ${side}/${suite}`)
       const raw = readFileSync(resolve(root, run.file), 'utf8')
       const doc = JSON.parse(raw)
+      if (doc.suite === 'coverage') assertPublishableMemory(doc.meta.measurement?.memory, run.file)
       if (
         doc.status !== 'completed' ||
         doc.suite !== suite ||

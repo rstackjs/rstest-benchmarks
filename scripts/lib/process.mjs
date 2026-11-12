@@ -2,6 +2,24 @@ import { spawn } from 'node:child_process'
 import { openSync, closeSync } from 'node:fs'
 import { getMemorySampler } from './memory.mjs'
 
+function launchPlain({ command, cwd, env, stdio }) {
+  const child = spawn(command[0], command.slice(1), {
+    cwd,
+    env,
+    detached: process.platform !== 'win32',
+    stdio,
+  })
+  const exit = new Promise((resolve) => {
+    child.on('close', (exitCode, signal) => resolve({ exitCode, signal }))
+  })
+  return {
+    child,
+    exit,
+    kill: (signal) => process.kill(-child.pid, signal),
+    stop: async () => ({}),
+  }
+}
+
 export async function execute({
   command,
   cwd,
@@ -12,7 +30,7 @@ export async function execute({
   graceful = false,
   memory = false,
 }) {
-  // Compile the footprint helper before the clock starts; fail early off macOS.
+  // Prepare the platform sampler before the clock starts; fail early if unsupported.
   const sampler = memory ? await getMemorySampler() : null
   const startedAt = new Date().toISOString()
   const start = performance.now()
@@ -24,17 +42,18 @@ export async function execute({
   let interrupted = false
   let error = null
   let killTimer
-  const child = spawn(command[0], command.slice(1), {
-    cwd,
-    env,
-    detached: process.platform !== 'win32',
-    stdio: ['ignore', stdout, stderr],
-  })
+  const stdio = ['ignore', stdout, stderr]
+  // Timing runs are plain spawns; memory runs go through the platform sampler
+  // (macOS process-tree monitor, Linux cgroup). The child leads its own process
+  // group (macOS/plain) or cgroup (Linux), so the driver is never measured.
+  const run = sampler
+    ? sampler.launch({ command, cwd, env, stdio })
+    : launchPlain({ command, cwd, env, stdio })
   const stop = () => {
     const kill = (signal) => {
       try {
-        if (process.platform === 'win32') child.kill(signal)
-        else process.kill(-child.pid, signal)
+        if (process.platform === 'win32') run.child.kill(signal)
+        else run.kill(signal)
       } catch (cause) {
         if (cause.code !== 'ESRCH') error = cause.message
       }
@@ -52,28 +71,20 @@ export async function execute({
   }, timeoutMs)
   signal?.addEventListener('abort', abort, { once: true })
   if (signal?.aborted) abort()
-  // The child leads its own process group, so the driver is excluded.
-  const monitor = sampler && child.pid ? sampler.start(child.pid) : null
-  const result = await new Promise((resolve) => {
-    child.on('error', (cause) => {
-      error = cause.message
-    })
-    child.on('close', (exitCode, exitSignal) =>
-      resolve({ exitCode, signal: exitSignal }),
-    )
+  run.child.on('error', (cause) => {
+    error = cause.message
   })
+  const result = await run.exit
   // Capture timing before waiting for the sampler's last in-flight snapshot.
   const endedAt = new Date().toISOString()
   const wallMs = performance.now() - start
   clearTimeout(timer)
   clearTimeout(killTimer)
-  let memoryBytes = null
-  if (monitor) {
-    try {
-      memoryBytes = await monitor.stop()
-    } catch (cause) {
-      error ??= `Memory sampler failed: ${cause.message}`
-    }
+  let measured = { memoryBytes: null }
+  try {
+    measured = await run.stop()
+  } catch (cause) {
+    error ??= `Memory sampler failed: ${cause.message}`
   }
   signal?.removeEventListener('abort', abort)
   closeSync(stdout)
@@ -83,7 +94,7 @@ export async function execute({
     endedAt,
     wallMs,
     ...result,
-    ...(memory ? { memoryBytes } : {}),
+    ...(memory ? measured : {}),
     timedOut,
     interrupted,
     error,

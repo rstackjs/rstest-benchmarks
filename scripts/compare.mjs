@@ -18,7 +18,7 @@ import { parseArgs } from 'node:util'
 import { randomUUID } from 'node:crypto'
 import { spawnSync } from 'node:child_process'
 import { execute } from './lib/process.mjs'
-import { assertMemorySupported } from './lib/memory.mjs'
+import { getMemorySampler, memoryKind } from './lib/memory.mjs'
 import { parseOptions, environment, suiteSteps } from './runner.mjs'
 import { runPaired } from './lib/paired.mjs'
 import { casesFor } from './lib/cases.mjs'
@@ -117,7 +117,7 @@ async function compareSources() {
     if (!matrix[suite].length) delete matrix[suite]
   }
   selected = Object.keys(matrix)
-  if (selected.includes('coverage')) assertMemorySupported()
+  if (selected.includes('coverage')) memoryKind()
   if (values['dry-run']) {
     console.log(
       JSON.stringify(

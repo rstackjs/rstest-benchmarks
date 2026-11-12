@@ -5,11 +5,15 @@ import { pathToFileURL } from 'node:url'
 import { fingerprint } from './fixtures.mjs'
 import { sameRunOutcome } from '../scripts/lib/process.mjs'
 import { assertNoLegacyMemory } from '../scripts/lib/legacy.mjs'
+import { memoryKinds } from '../scripts/lib/memory.mjs'
 
 // Counters a memory run must reproduce from its timing run.
 export const countKeys = ['files', 'tests', 'passed', 'failed', 'skipped', 'errors']
 export function verifySamples(record, source = 'result.json') {
   assertNoLegacyMemory(source, record, true)
+  // The record names its memory metric, and it must belong to the recorded platform.
+  const platform = record.host?.platform?.split(' ')[0]
+  assert.equal(record.measurement?.memory, memoryKinds[platform], `Memory kind ${record.measurement?.memory} does not match platform ${platform}`)
   assert.equal(record.status, 'completed')
   assert(record.plan?.length > 0, 'Missing benchmark plan')
   assert(Number.isSafeInteger(record.options.runs) && record.options.runs > 0)
@@ -59,6 +63,7 @@ export function verifySamples(record, source = 'result.json') {
           assert.equal(m.exitCode, 0)
           assert(!m.timedOut && !m.interrupted && !m.error)
           assert(Number.isFinite(m.memoryBytes) && m.memoryBytes > 0)
+          if (platform === 'linux') assert('cgroupPeakBytes' in m, 'Linux memory samples record cgroupPeakBytes')
           assert(sameRunOutcome(m, timing, countKeys), 'Memory run differs from its timing run')
         }
         for (const s of samples) {

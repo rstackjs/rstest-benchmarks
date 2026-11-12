@@ -1,5 +1,6 @@
 import { readFileSync } from 'node:fs'
 import { assertNoLegacyMemory } from './legacy.mjs'
+import { memoryDescription, sharedMemoryKind } from './memory.mjs'
 import { createHash } from 'node:crypto'
 import { dirname, relative } from 'node:path'
 import { statistics, seconds, percent } from './stats.mjs'
@@ -86,6 +87,7 @@ export function normalize(document, source = 'memory') {
       dependencies: row.dependencies ?? null,
       samples: timed,
       memorySamples: memory,
+      memoryKind: memory.length ? (document.meta.measurement?.memory ?? null) : null,
       stats: statistics(timed),
       memoryStats: statistics(memory),
     }
@@ -188,6 +190,7 @@ export function mergeRows(rows, axis = null) {
           sources: group.map((row) => row.source),
           samples,
           memorySamples,
+          memoryKind: sharedMemoryKind(group.map((row) => row.memoryKind), `case ${id}`),
           stats: statistics(samples),
           memoryStats: statistics(memorySamples),
           status: differences.length
@@ -249,6 +252,7 @@ function cell(row) {
 
 export function singleReport(document) {
   const rows = normalize(document)
+  const kind = sharedMemoryKind(rows.map((row) => row.memoryKind), 'report')
   const axis =
     document.suite === 'pools'
       ? 'pool'
@@ -295,7 +299,7 @@ export function singleReport(document) {
         'MAD',
         'SD',
         'CV',
-        'Memory median (MiB, process-tree footprint peak)',
+        `Memory median (MiB, ${kind ?? 'memory'})`,
       ],
       rows.map((row) => [
         row.name,
@@ -321,7 +325,7 @@ export function singleReport(document) {
           '',
         ]
       : []),
-    'Memory is the peak of the summed macOS physical footprint over the command process tree (sampled every ~50 ms, benchmark driver excluded); the table shows the median across runs. Raw samples, warmups, commands, counts and provenance are in [result.json](result.json); stdout/stderr and source snapshots accompany it.',
+    `Memory is ${memoryDescription(kind)}; the table shows the median across runs. Raw samples, warmups, commands, counts and provenance are in [result.json](result.json); stdout/stderr and source snapshots accompany it.`,
     '',
     ...rows
       .filter((row) => row.status !== 'passed')
@@ -368,6 +372,8 @@ export function comparisonReport(
     if (!rows.length) throw new Error(`Empty report column: ${column.label}`)
     return { ...column, rows: mergeRows(rows, spec.axis) }
   })
+  // Baseline and candidate must carry the same memory metric; never mix platforms.
+  const kind = sharedMemoryKind(columns.flatMap((column) => [...column.rows.values()].map((row) => row.memoryKind)), 'comparison')
   const ids = [...new Set(columns.flatMap((column) => [...column.rows.keys()]))]
   const summaryRows = [],
     detailRows = [],
@@ -451,6 +457,7 @@ export function comparisonReport(
   return {
     summary,
     memorySummary,
+    memoryKind: kind,
     jobSummary: [
       `# ${spec.title ?? 'Benchmark comparison'}`,
       '',
@@ -465,7 +472,7 @@ export function comparisonReport(
       ...(spec.context ? [spec.context, ''] : []),
       'Each Δ is relative to the baseline; negative means less elapsed time or memory. Values display two decimal places; changes use unrounded medians.',
       '',
-      compactTables({ summary, memorySummary }),
+      compactTables({ summary, memorySummary, memoryKind: kind }),
       '',
       'Full reports, variability, samples and execution details are available in the workflow artifact.',
       '',
@@ -508,9 +515,9 @@ export function comparisonReport(
       '',
       ...(memoryRows.length
         ? [
-            '## Memory',
+            `## Memory${kind ? ` (${kind})` : ''}`,
             '',
-            'Peak process-tree physical footprint in MiB (macOS `phys_footprint`, summed every ~50 ms).',
+            `Memory in MiB: ${memoryDescription(kind)}.`,
             '',
             table(
               [
@@ -557,7 +564,7 @@ export function comparisonReport(
 
 function compactTables(report) {
   const memory = report.memorySummary
-    ? `\n\n### Memory comparison\n\nMedian of the per-run peak process-tree physical footprint in MiB; negative percentages mean less memory.\n\n${report.memorySummary}`
+    ? `\n\n### Memory comparison${report.memoryKind ? ` (${report.memoryKind})` : ''}\n\nMedian of the per-run peak memory in MiB; negative percentages mean less memory.\n\n${report.memorySummary}`
     : ''
   return `${report.summary}${memory}`
 }

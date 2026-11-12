@@ -35,6 +35,13 @@ export function coverageUnits({ cases, excludeCases } = {}) {
   return [...byApp].map(([app, ids]) => ({ name: app, cases: ids.join(',') }))
 }
 
-export const matrixFor = (kind, options) => ({
-  include: kind === 'frameworks' ? frameworkUnits(options) : coverageUnits(options),
-})
+// Runners the benchmark jobs may use; pull requests and pushes always use the default.
+export const runners = ['macos-15', 'ubuntu-24.04']
+
+export function matrixFor(kind, { runner, ...options } = {}) {
+  const selected = runner || runners[0]
+  if (!runners.includes(selected))
+    throw new Error(`Unknown runner: ${selected} (use ${runners.join(' or ')})`)
+  const units = kind === 'frameworks' ? frameworkUnits(options) : coverageUnits(options)
+  return { include: units.map((unit) => ({ ...unit, runner: selected })) }
+}

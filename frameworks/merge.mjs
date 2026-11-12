@@ -4,7 +4,8 @@ import assert from 'node:assert/strict'
 import { cpSync, existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 
-const identityKeys = ['schemaVersion', 'lockHash', 'harnessHash', 'dependencies', 'versions']
+// `measurement` carries the memory kind: records of different kinds are never mixed.
+const identityKeys = ['schemaVersion', 'lockHash', 'harnessHash', 'dependencies', 'versions', 'measurement']
 const hostKeys = ['node', 'cpu', 'logicalCpuCount', 'platform', 'os', 'parallelism']
 const optionKeys = ['runs', 'conditions', 'frameworks']
 

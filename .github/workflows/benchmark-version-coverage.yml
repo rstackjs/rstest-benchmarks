@@ -15,6 +15,11 @@ on:
         description: Rstest candidate npm version(s), comma-separated
         type: string
         default: '0.12.6'
+      runner:
+        description: Runner for the benchmark jobs. macos-15 measures process-tree phys_footprint; ubuntu-24.04 measures cgroup v2 anon+shmem. Values are not comparable across platforms, and only macOS results can be published.
+        type: choice
+        options: [macos-15, ubuntu-24.04]
+        default: macos-15
       cases:
         description: App names or full case IDs, comma-separated (empty runs all)
         type: string
@@ -34,7 +39,8 @@ jobs:
   # runs both versions and the none/V8/Istanbul controls of its app on one host.
   setup:
     name: Plan matrix
-    runs-on: macos-15
+    # Only runs node scripts (no measurement), so it uses the cheapest runner.
+    runs-on: ubuntu-latest
     timeout-minutes: 15
     outputs:
       matrix: ${{ steps.plan.outputs.matrix }}
@@ -54,12 +60,14 @@ jobs:
         env:
           BENCH_CASES: ${{ inputs.cases }}
           BENCH_EXCLUDE_CASES: ${{ inputs.exclude_cases }}
-        run: node scripts/ci-matrix.mjs coverage --cases "$BENCH_CASES" --exclude-cases "$BENCH_EXCLUDE_CASES"
+          BENCH_RUNNER: ${{ inputs.runner }}
+        run: node scripts/ci-matrix.mjs coverage --cases "$BENCH_CASES" --exclude-cases "$BENCH_EXCLUDE_CASES" --runner "$BENCH_RUNNER"
 
   benchmark:
     name: Benchmark (${{ matrix.name }})
     needs: setup
-    runs-on: macos-15
+    # macos-15 unless a manual dispatch selects ubuntu-24.04.
+    runs-on: ${{ matrix.runner }}
     # The whole coverage suite took 34 minutes in one job; the largest app is
     # well under half of it. 45 minutes covers installation and a slower runner.
     timeout-minutes: 45
@@ -101,7 +109,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
-          name: benchmark-version-coverage-case-${{ matrix.name }}-${{ github.run_id }}-${{ github.run_attempt }}
+          name: benchmark-version-coverage-case-${{ matrix.name }}-${{ runner.os }}-${{ github.run_id }}-${{ github.run_attempt }}
           path: |
             results/
             !results/**/node_modules/**
@@ -114,7 +122,8 @@ jobs:
     name: Merge results
     needs: [setup, benchmark]
     if: ${{ always() && needs.setup.result == 'success' }}
-    runs-on: macos-15
+    # Only runs node scripts (no measurement), so it uses the cheapest runner.
+    runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
@@ -148,7 +157,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
-          name: benchmark-version-coverage-merged-${{ runner.os }}-${{ github.run_id }}-${{ github.run_attempt }}
+          name: benchmark-version-coverage-merged-${{ inputs.runner || 'macos-15' }}-${{ github.run_id }}-${{ github.run_attempt }}
           path: results/
           include-hidden-files: true
           if-no-files-found: warn

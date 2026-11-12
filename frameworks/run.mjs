@@ -21,7 +21,7 @@ import { createHash } from 'node:crypto'
 import { spawnSync } from 'node:child_process'
 import { createRequire } from 'node:module'
 import { execute, sameRunOutcome } from '../scripts/lib/process.mjs'
-import { assertMemorySupported } from '../scripts/lib/memory.mjs'
+import { getMemorySampler, memoryKind } from '../scripts/lib/memory.mjs'
 import { environment } from '../scripts/runner.mjs'
 import {
   generate,
@@ -75,7 +75,8 @@ if (
   throw Error('conditions must be cold,warm')
 if (suites.some((x) => !['main', 'coverage', 'browser'].includes(x)))
   throw Error('unknown suite')
-assertMemorySupported()
+// Fail before any preparation if this platform has no memory mechanism.
+memoryKind()
 const planned = selectCases(
   [
     ...(suites.includes('main')
@@ -109,6 +110,8 @@ if (values['dry-run']) {
   console.log(JSON.stringify({ groups }, null, 2))
   process.exit(0)
 }
+// Detect the cgroup/compile the helper now rather than at the first memory pass.
+await getMemorySampler()
 const host = {
   node: process.version,
   cpu: cpus()[0]?.model ?? 'unknown',
@@ -177,6 +180,7 @@ const record = {
     frameworks: requested,
   },
   host,
+  measurement: { memory: memoryKind() },
   versions: {
     ...Object.fromEntries(
       requested.map((f) => [

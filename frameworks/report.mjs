@@ -4,6 +4,7 @@ import { writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { workerLabel } from './workers.mjs'
 import { assertNoLegacyMemory } from '../scripts/lib/legacy.mjs'
+import { memoryDescription, memoryKinds } from '../scripts/lib/memory.mjs'
 
 function caseName(group) {
   const [suite, name, provider] = group.split('/')
@@ -16,6 +17,8 @@ function caseName(group) {
 
 export function renderReport(record, source = 'framework result') {
   assertNoLegacyMemory(source, record, true)
+  const kind = record.measurement?.memory
+  if (!Object.values(memoryKinds).includes(kind)) throw new Error(`${source}: missing or unknown memory kind (${kind})`)
   const runners = record.options.frameworks ?? Object.keys(record.versions)
   const names = runners.map(
     (f) =>
@@ -43,7 +46,7 @@ export function renderReport(record, source = 'framework result') {
     '',
     `${record.options.runs} measured runs per framework/case/cache condition; medians. Each sample is a fresh process. Warm cache: one warmup after clearing caches; cold cache: cleared before every measured run. Node compile cache disabled; OS page cache and background load uncontrolled. Framework defaults, except explicitly named variants.`,
     '',
-    'Memory is the peak of the summed macOS physical footprint (`phys_footprint`) over the benchmarked command\'s process tree, sampled every ~50 ms and excluding the benchmark driver; the table shows the median across runs in MiB. Elapsed time comes from a timing pass with no sampler running; memory comes from a separate pass that reruns the same command under the sampler with the same cache preparation. Installations and generation are outside timing. All samples retained.',
+    `Memory is ${memoryDescription(kind)}; the table shows the median across runs in MiB. Elapsed time comes from a timing pass with no sampler running; memory comes from a separate pass that reruns the same command under the sampler with the same cache preparation. Installations and generation are outside timing. All samples retained.`,
     '',
     '🥇 and 🥈 mark the lowest and second-lowest distinct unrounded medians among complete results in each row; exact ties share the marker. They do not indicate statistical significance.',
     '',
@@ -168,7 +171,7 @@ export function renderReport(record, source = 'framework result') {
     })
     lines.push(`## ${condition === 'warm' ? 'Warm' : 'Cold'} framework cache`, '')
     for (const metric of ['time', 'memory']) {
-      const title = metric === 'time' ? 'Elapsed time' : 'Memory (MiB, process-tree footprint peak)'
+      const title = metric === 'time' ? 'Elapsed time' : `Memory (MiB, ${kind})`
       const header = `| Case | ${names.join(' | ')} |`
       const separator = `| --- | ${names.map(() => '---:').join(' | ')} |`
       const main = [`**Main suite · ${condition} cache · ${metric === 'time' ? 'elapsed time' : title}**`, '', header, separator]

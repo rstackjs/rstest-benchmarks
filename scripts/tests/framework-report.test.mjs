@@ -4,6 +4,7 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { test } from 'node:test'
 import { report } from '../../frameworks/report.mjs'
+import { memoryKinds } from '../lib/memory.mjs'
 
 function render(t, samples, host = { node: 'v24', cpu: 'fixture', platform: 'test' }) {
   const directory = mkdtempSync(join(tmpdir(), 'framework-report-'))
@@ -13,6 +14,7 @@ function render(t, samples, host = { node: 'v24', cpu: 'fixture', platform: 'tes
       status: 'completed',
       startedAt: '2026-11-04T00:00:00Z',
       host,
+      measurement: { memory: memoryKinds.darwin },
       versions: { jest: 'test', vitest: 'test', rstest: 'test' },
       options: { runs: 2, conditions: ['warm'] },
       // Memory comes from the separate memory pass, elapsed time from timing.
@@ -29,7 +31,7 @@ function render(t, samples, host = { node: 'v24', cpu: 'fixture', platform: 'tes
   const summary = readFileSync(join(directory, 'summary.md'), 'utf8')
   assert.doesNotMatch(summary, /## Rstest phase timings|\| Build \| Runtime \|/)
   assert.match(summary, /### Elapsed time/)
-  assert.match(summary, /### Memory \(MiB, process-tree footprint peak\)/)
+  assert.match(summary, /### Memory \(MiB, macOS phys_footprint tree sum\)/)
   assert.match(summary, /logical CPUs:/)
   assert.match(summary, /## Observed test workers/)
   assert.doesNotMatch(text, /CV > 10%|high variation|\| Notes \||Δ|%/)

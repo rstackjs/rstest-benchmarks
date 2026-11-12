@@ -4,6 +4,8 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { test } from 'node:test'
 import { mergeComparisons } from '../lib/merge-comparison.mjs'
+import { memoryKinds } from '../lib/memory.mjs'
+import { publishComparison } from '../lib/publication.mjs'
 
 const MiB = 1024 ** 2
 const sample = (phase, wallMs) => ({ phase, status: 'passed', wallMs, exitCode: 0, order: 0, counts: { tests: 2 } })
@@ -20,7 +22,7 @@ const meta = (app, side) => ({
   packageManager: '11.6.0', git: { commit: 'abc', status: '' }, lockfileSha256: 'lock', runner: { sha256: 'runner' },
   source: { kind: 'npm', version: side === 'baseline' ? '0.11.0' : '0.12.6', label: side, workloadDependencies: { [app]: `deps-${app}` } },
   options: { runs: 2, warmup: 1, cases: [`coverage:${app}:default:default:node:forks:none:default`] },
-  measurement: { clock: 'wall', warmup: 1, runs: 2 },
+  measurement: { clock: 'wall', warmup: 1, runs: 2, memory: memoryKinds.darwin },
 })
 
 // Writes one per-app comparison directory the way an uploaded artifact lays it out.
@@ -95,8 +97,25 @@ test('comparison merging refuses mismatched identity, duplicates and failed inpu
   assert.throws(edit((input) => rewrite(input.file, (c) => { c.host.cpu = 'other' })), /host\.cpu differs/)
   assert.throws(edit((input) => rewrite(candidateDoc(input), (d) => { d.meta.lockfileSha256 = 'other' })), /lockfileSha256 differs/)
   assert.throws(edit((input) => rewrite(candidateDoc(input), (d) => { d.meta.runner.sha256 = 'other' })), /runner harness differs/)
+  // Memory kinds (and platforms) are never mixed in one comparison.
+  assert.throws(edit((input) => rewrite(candidateDoc(input), (d) => { d.meta.measurement.memory = memoryKinds.linux })), /meta\.measurement differs/)
   assert.throws(edit((input) => rewrite(candidateDoc(input), (d) => { d.results[0].id = 'coverage:a:default:default:node:forks:none:default' })), /Duplicate case/)
   assert.throws(edit((input) => rewrite(candidateDoc(input), (d) => { d.status = 'failed' })), /not completed/)
   assert.throws(() => mergeComparisons(root, [], join(root, 'results', 'out')), /No comparisons/)
   assert.throws(() => readFileSync(join(root, 'results', 'out', 'comparison.json')), /ENOENT/)
+})
+
+test('publishing refuses a comparison measured with the Linux memory metric', (t) => {
+  const root = scratch(t)
+  const inputs = [writeInput(root, 'a')]
+  for (const side of ['baseline', 'candidate']) {
+    const file = join(inputs[0].dir, `workspaces/${side}/results/a-${side}/result.json`)
+    const doc = JSON.parse(readFileSync(file, 'utf8'))
+    doc.meta.measurement.memory = memoryKinds.linux
+    writeFileSync(file, JSON.stringify(doc))
+  }
+  const out = join(root, 'results', 'merged')
+  const comparison = mergeComparisons(root, inputs, out)
+  writeFileSync(join(root, 'reports.config.json'), JSON.stringify({ reports: [] }))
+  assert.throws(() => publishComparison(root, out, comparison), /cannot publish memory data of kind "Linux cgroup v2 anon\+shmem peak".*job summaries and artifacts only/)
 })

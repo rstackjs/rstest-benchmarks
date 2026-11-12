@@ -7,13 +7,16 @@ import { createHash } from 'node:crypto'
 import { refreshReport, publishedInput } from '../../frameworks/publication.mjs'
 import { cases } from '../../frameworks/fixtures.mjs'
 import { renderReport } from '../../frameworks/report.mjs'
+import { verifySamples } from '../../frameworks/verify.mjs'
 import { ciContext, ciResultDirectory } from '../lib/ci.mjs'
+import { memoryKinds } from '../lib/memory.mjs'
 
 // The committed published samples predate the footprint metric and carry the old
 // maxrss field. Relabel them so these fixtures match the current schema; the
 // values are only placeholders for report structure, not footprint data.
 const record0 = JSON.parse(readFileSync(new URL('../../frameworks/reports/result.json', import.meta.url), 'utf8'))
 record0.memorySamples = []
+record0.measurement = { memory: memoryKinds.darwin }
 for (const sample of record0.samples) {
   // Build the separate memory pass from the old single-pass samples.
   if (sample.phase === 'timed')
@@ -210,4 +213,31 @@ test('legacy maxrss framework results are rejected with a clear error', () => {
     () => renderReport(legacy, 'result.json'),
     /legacy maxrss data \(rssBytes\)/,
   )
+})
+
+test('Linux cgroup results verify and render with their memory kind but cannot be published', () => {
+  const record = JSON.parse(samples)
+  record.measurement = { memory: memoryKinds.linux }
+  record.host = { ...record.host, platform: 'linux x64' }
+  for (const sample of record.memorySamples) sample.cgroupPeakBytes = sample.memoryBytes * 1.5
+  for (const item of cases.filter((item) => item.fixture)) {
+    Object.assign(record.fixtures[item.id], { files: item.files, tests: item.tests })
+    for (const group of record.plan.filter((group) => group.item.id === item.id)) Object.assign(group.item, { files: item.files, tests: item.tests })
+    for (const sample of [...record.samples, ...record.memorySamples].filter((sample) => sample.group === `main/${item.id}/none`))
+      Object.assign(sample.counts, { files: item.files, tests: item.tests, passed: item.tests })
+  }
+  delete record.publication
+  // The kind is recorded, printed in every memory heading, and checked against the platform.
+  const rendered = renderReport(record)
+  assert.match(rendered.markdown, /### Memory \(MiB, Linux cgroup v2 anon\+shmem peak\)/)
+  assert.match(rendered.summary, /### Memory \(MiB, Linux cgroup v2 anon\+shmem peak\)/)
+  assert.match(rendered.markdown, /cgroup v2 `anon` \+ `shmem`.*cgroupPeakBytes/)
+  assert.doesNotThrow(() => verifySamples(record))
+  const missingPeak = structuredClone(record)
+  delete missingPeak.memorySamples[0].cgroupPeakBytes
+  assert.throws(() => verifySamples(missingPeak), /cgroupPeakBytes/)
+  const wrongPlatform = structuredClone(record)
+  wrongPlatform.host.platform = 'darwin arm64'
+  assert.throws(() => verifySamples(wrongPlatform), /does not match platform darwin/)
+  assert.throws(() => publishedInput(JSON.stringify({ ...record, schemaVersion: 1 }), 'result.json'), /result\.json: cannot publish memory data of kind "Linux cgroup v2 anon\+shmem peak".*job summaries and artifacts only/)
 })

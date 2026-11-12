@@ -22,7 +22,7 @@ import {
 } from './lib/cases.mjs'
 import { statistics, seconds } from './lib/stats.mjs'
 import { execute, reportCounts, sameRunOutcome } from './lib/process.mjs'
-import { assertMemorySupported } from './lib/memory.mjs'
+import { getMemorySampler, memoryKind } from './lib/memory.mjs'
 import {
   machine,
   dependencies,
@@ -158,7 +158,10 @@ export async function* suiteSteps(
     )
     return
   }
-  if (suite === 'coverage') assertMemorySupported()
+  if (suite === 'coverage') {
+    memoryKind()
+    await getMemorySampler()
+  }
   const items = casesFor(suite, options).filter((item) => !caseIds || caseIds.includes(item.id))
   if (!items.length) throw new Error('No benchmark cases selected')
   if (caseIds) options.cases = caseIds
@@ -242,10 +245,7 @@ export async function* suiteSteps(
           cache:
             'Node compile cache disabled via NODE_DISABLE_COMPILE_CACHE=1; clear Rstest build and sequencing caches once per fixture before warmups; retain across variants and timed rounds',
           maxWorkers: 'Rstest default (unset)',
-          memory:
-            suite === 'coverage'
-              ? 'macOS phys_footprint summed over the command process tree every ~50 ms, excluding the benchmark driver; peak per run'
-              : null,
+          memory: suite === 'coverage' ? memoryKind() : null,
           environment:
             'Inherited environment; BENCH_*, scale and Node compile-cache overrides cleared, then NODE_DISABLE_COMPILE_CACHE=1 enforced. Only documented non-secret controls saved.',
         },
@@ -465,7 +465,7 @@ export async function* suiteSteps(
           item.tests = sample.counts.passedTests
           if (measurement === 'memory') {
             if (!Number.isFinite(sample.memoryBytes))
-              throw new Error('No process-tree memory samples were collected')
+              throw new Error('No memory samples were collected')
             if (!sameRunOutcome(sample, reference, countKeys))
               throw new Error(
                 `Memory run differs from its timing run: exit ${sample.exitCode} vs ${reference.exitCode}; counts ${JSON.stringify(sample.counts)} vs ${JSON.stringify(reference.counts)}`,
