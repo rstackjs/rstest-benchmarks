@@ -10,13 +10,12 @@ The comparisons have separate workflows, inputs and concurrency groups:
 | --- | --- | --- |
 | [Frameworks benchmark](../.github/workflows/benchmark-frameworks.yml) | Pull requests, pushes to `main`, merge queue, or manual dispatch | Jest + SWC, Vitest, Vitest vmForks, Rstest and Rstest vmForks; all eight main cases and browser mode; 5 timed runs per runner/case/cache condition, cold and warm caches |
 | [Rstest version benchmark](../.github/workflows/benchmark-versions.yml) | Manual dispatch | Rstest 0.11.0 vs 0.12.6; main (the README comparison); 1 warmup and 6 timed runs per supported case |
-| [Rstest coverage benchmark](../.github/workflows/benchmark-version-coverage.yml) | Manual dispatch | Rstest 0.11.0 vs 0.12.6; coverage only, with none/V8/Istanbul controls and RSS; 1 warmup and 6 timed runs per case |
+| [Rstest coverage benchmark](../.github/workflows/benchmark-version-coverage.yml) | Manual dispatch | Rstest 0.11.0 vs 0.12.6; coverage only, with none/V8/Istanbul controls and process-tree memory; 1 warmup and 6 timed runs per case |
 
-Markdown and published-result-only changes do not trigger push/PR framework benchmarks. Choose the workflow under **Actions**, then **Run workflow**:
+Markdown and published-result-only changes do not trigger push/PR framework benchmarks. All workflows run on `macos-15` only; memory is measured with the macOS physical-footprint sampler (see [Memory methodology](../README.md#memory-methodology)). Choose the workflow under **Actions**, then **Run workflow**:
 
 | Input | Framework workflow | Both Rstest version workflows |
 | --- | --- | --- |
-| `runner` | `macos-15` (default) or `ubuntu-24.04` | Same |
 | `runs` | Defaults to `5`; `10` is optional for forward/reverse and browser order balancing | Defaults to `6`; use a multiple of the number of versions |
 | `suites` | Fixed main/browser | Performance defaults to `main`; optionally select `scaling,barrel,pools`. Coverage stays separate |
 | `cases` | Optional comma-separated case IDs; empty selects all eight | App names or full case IDs; empty selects all cases in the workflow |
@@ -49,7 +48,7 @@ Five rounds let each of the five Node/DOM runners occupy each order position onc
 
 Local checkout comparison remains available through the local CLI; the version workflow inputs are for npm releases.
 
-Node is pinned to 24.11.1 and pnpm comes from `package.json`. The framework workflow installs its frozen lockfile and Chromium before measurement. The version performance workflow installs Chromium’s Linux system dependencies, then lets `compare` install each Rstest version and Chromium in its isolated workspace. The coverage workflow installs only the selected Rstest versions and workload dependencies. Neither version workflow installs the framework-comparison dependency set.
+Node is pinned to 24.11.1 and pnpm comes from `package.json`. The framework workflow installs its frozen lockfile and Chromium before measurement. The version performance workflow lets `compare` install each Rstest version and Chromium in its isolated workspace. The coverage workflow installs only the selected Rstest versions and workload dependencies. Neither version workflow installs the framework-comparison dependency set.
 
 Node compile cache is disabled. All compared tools/versions run sequentially in one job on one host, with their default concurrency. CI does not restore framework transformation, build or sequencing caches. Cache resets, warmups and rotating order remain controlled by the existing runners.
 
@@ -63,7 +62,7 @@ Before measurement, runners print the planned execution count, split into timed 
 
 ## Inspect results
 
-The framework job summary shows environment information and elapsed-time/RSS comparisons. Rstest phase timings remain in the artifact’s full `report.md`; `summary.md` omits those diagnostic tables. Version jobs use the same compact elapsed-time and RSS tables as the README, with environment information and repetition counts. Their `summary.md` excludes Variability and detailed Memory tables; complete reports remain under `reports/` in the artifact. The artifact is named `benchmark-frameworks-<OS>-<run ID>-<attempt>`, `benchmark-version-coverage-<OS>-<run ID>-<attempt>` or `benchmark-versions-<OS>-<run ID>-<attempt>` and is retained for 30 days. It includes result JSON, reports, logs, generated source/configs, dependency lockfiles and harness snapshots. Installed `node_modules` and framework caches are excluded. Hidden configuration files are included.
+The framework job summary shows environment information and elapsed-time/memory comparisons. Rstest phase timings remain in the artifact’s full `report.md`; `summary.md` omits those diagnostic tables. Version jobs use the same compact elapsed-time and memory tables as the README, with environment information and repetition counts. Their `summary.md` excludes Variability and detailed Memory tables; complete reports remain under `reports/` in the artifact. The artifact is named `benchmark-frameworks-<OS>-<run ID>-<attempt>`, `benchmark-version-coverage-<OS>-<run ID>-<attempt>` or `benchmark-versions-<OS>-<run ID>-<attempt>` and is retained for 30 days. It includes result JSON, reports, logs, generated source/configs, dependency lockfiles and harness snapshots. Installed `node_modules` and framework caches are excluded. Hidden configuration files are included.
 
 Artifacts are uploaded even after failure when a result directory exists. Failed or partial runs are diagnostic evidence, not publishable benchmark results. Full raw samples retain the run URL, commit, attempt and runner information. Download artifacts you need before retention expires.
 
@@ -78,7 +77,7 @@ pnpm report:frameworks --input results/ci-frameworks-<timestamp>/result.json
 pnpm report:frameworks:check
 ```
 
-This verifies every planned sample, repetition, test count and RSS value; it requires the complete main/browser matrix, both cache conditions and Jest/Vitest/Rstest. Historical full runs that also contain coverage remain supported; any selected coverage matrix must be complete. Partial case selections remain useful CI diagnostics but cannot replace the full homepage. Different batches cannot be combined for publication.
+This verifies every planned sample, repetition, test count and memory value; it requires the complete main/browser matrix, both cache conditions and Jest/Vitest/Rstest. Historical full runs that also contain coverage remain supported; any selected coverage matrix must be complete. Partial case selections remain useful CI diagnostics but cannot replace the full homepage. Different batches cannot be combined for publication.
 
 The updater regenerates the result block in the root README, including the measurement date, machine, actual versions, sample counts and GitHub Actions source link. It replaces the fixed files under `frameworks/reports/`. The published JSON retains samples and comparison evidence while removing local executable, command and log paths. Its SHA-256 identifies the original artifact input. No benchmark rerun is needed, and the Rstest version page is not changed.
 

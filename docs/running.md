@@ -20,7 +20,7 @@ pnpm compare --baseline 0.12.5 --candidate 0.12.6 --candidate local:../rstest --
 # Opt in to updating selected published reports and README tables
 pnpm compare --baseline 0.12.5 --candidate 0.12.6 --suites all --runs 6 --update-readme
 
-# Node workload plus coverage/RSS
+# Node workload plus coverage/memory
 pnpm compare --baseline 0.12.6 --candidate local:../rstest \
   --suites main,coverage --apps node-backend --runs 5
 
@@ -152,7 +152,7 @@ Generated sources under `apps/*/src` and `apps/*/tests`, benchmark output under 
 Every invocation creates `results/<label>-<timestamp>-<id>/`, containing:
 
 - `result.json`: schema v2 metadata, warmups, individual samples, test counts, status and statistics.
-- `report.md`: a generated summary with median, min/max, MAD, CV and coverage RSS.
+- `report.md`: a generated summary with median, min/max, MAD, CV and coverage memory.
 - `logs/`: complete stdout and stderr for generators, warmups and timed runs.
 - `snapshot/`: runner sources, generated fixtures, configs, package manifests and the lockfile.
 

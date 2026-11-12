@@ -1,12 +1,12 @@
 # Rstest benchmarks
 
-Compare Jest + SWC, Vitest, and Rstest on shared Node and React workloads. The optional `vitest-vmForks` and `rstest-vmForks` runners add VM forks pools to the comparison. Each run reports whole-process elapsed time and RSS for cold and warm framework caches.
+Compare Jest + SWC, Vitest, and Rstest on shared Node and React workloads. The optional `vitest-vmForks` and `rstest-vmForks` runners add VM forks pools to the comparison. Each run reports whole-process elapsed time and process-tree memory for cold and warm framework caches.
 
 For comparisons between Rstest releases or a local checkout, see [Rstest version benchmark](versions/README.md).
 
 ## Quick start
 
-Use Node.js 24, the pnpm version pinned in this repository, and macOS or Linux for RSS collection. Run from the repository root:
+Use Node.js 24, the pnpm version pinned in this repository, and macOS for memory collection (Xcode Command Line Tools must provide `cc`; Linux is not supported for memory measurement). Run from the repository root:
 
 ```sh
 pnpm --dir frameworks install --frozen-lockfile
@@ -62,6 +62,10 @@ Each has one source file and two test files, with one test per file. [Node](fram
 
 ## Results
 
+Data from GitHub Actions run <id> (<date>, commit <sha>). <!-- TODO: fill in from the published CI run; do not publish memory numbers without it. -->
+
+> The tables below predate the footprint metric: their memory columns are OS maxrss from `/usr/bin/time` and are replaced by process-tree footprint numbers on the next published CI run.
+
 🥇 and 🥈 mark the lowest and second-lowest distinct unrounded medians in each row; exact ties share the marker. They do not indicate statistical significance.
 
 The published single-file rows below predate the two-file minimal workloads. Their recorded measurements remain unchanged; new runs report the two-file workloads separately.
@@ -91,7 +95,7 @@ pnpm compare:frameworks --suites main,coverage,browser --cases minimal-node,mini
 | Barrel | 21.99s | 9.94s | 🥈 0.56s | 🥇 0.47s |
 | React + jsdom | 2.39s | 3.94s | 🥈 1.74s | 🥇 1.18s |
 
-**Main suite · cold cache · RSS (MiB)**
+**Main suite · cold cache · Memory (MiB, process-tree footprint peak)**
 
 | Case | Jest + SWC | Vitest | Rstest | Rstest vmForks |
 | --- | ---: | ---: | ---: | ---: |
@@ -117,7 +121,7 @@ pnpm compare:frameworks --suites main,coverage,browser --cases minimal-node,mini
 | Barrel | 5.20s | 5.43s | 🥈 0.48s | 🥇 0.45s |
 | React + jsdom | 2.26s | 4.04s | 🥈 1.67s | 🥇 1.13s |
 
-**Main suite · warm cache · RSS (MiB)**
+**Main suite · warm cache · Memory (MiB, process-tree footprint peak)**
 
 | Case | Jest + SWC | Vitest | Rstest | Rstest vmForks |
 | --- | ---: | ---: | ---: | ---: |
@@ -132,7 +136,7 @@ pnpm compare:frameworks --suites main,coverage,browser --cases minimal-node,mini
 
 <!-- framework-results:end -->
 
-RSS is OS maxrss, not total concurrent worker memory. Full coverage/browser comparisons are in the [complete report](frameworks/reports/report.md), with [variability](frameworks/reports/variability.md) and [all samples and provenance](frameworks/reports/result.json). The tiny-project rows above are part of the same run and result set. Published framework reports use fixed paths in `frameworks/reports/`; each update replaces the current report and samples. Previous results remain available in Git history. Run `pnpm report:frameworks` to regenerate the reports and README tables from the published samples.
+Memory is the median across runs of the peak summed process-tree footprint (see [Memory methodology](#memory-methodology)). Full coverage/browser comparisons are in the [complete report](frameworks/reports/report.md), with [variability](frameworks/reports/variability.md) and [all samples and provenance](frameworks/reports/result.json). The tiny-project rows above are part of the same run and result set. Published framework reports use fixed paths in `frameworks/reports/`; each update replaces the current report and samples. Previous results remain available in Git history. Run `pnpm report:frameworks` to regenerate the reports and README tables from the published samples.
 
 See [workload design](docs/framework-comparison.md) for performance questions and fixture details. The proposed scaling extensions are not part of the implemented default matrix.
 
@@ -158,7 +162,7 @@ With three frameworks, use a multiple of six runs to balance order. For four-fra
 - **Cold / warm:** cold clears framework caches before every invocation; warm retains them after one warmup. Every invocation starts a new process. Node compile cache is disabled; OS page caches and background load are uncontrolled.
 - **Concurrency:** each framework retains its default scheduling and isolation. Jest may choose in-band execution for small suites using cached test timings, so warm results include scheduling decisions as well as transform-cache reuse.
 - **Observed workers:** reports and CI summaries show the distinct worker slots that executed test setup, collected from Jest, Vitest and Rstest runtime IDs. Counts are not inferred from CPU counts or configured limits. Recycled processes do not add slots; browser mode is marked separately. The shared probe writes once per process/thread per invocation, and its overhead is included in elapsed time. Raw samples retain slot IDs, process IDs and thread IDs.
-- **RSS:** median OS maxrss from `/usr/bin/time`, not the simultaneous total of worker or browser memory. Thread and fork pools have different process layouts; their maxrss ratios are not total-memory ratios.
+- **Memory:** see [Memory methodology](#memory-methodology). The metric is the peak process-tree physical footprint.
 - **Statistics:** medians and rankings use unrounded samples; tables display two decimal places. Detailed variability includes absolute standard deviation, range and CV. Evaluate both absolute and relative variation before rerunning a case. Rerun all compared runners for that case under the same cache conditions and balanced order, retaining the original batch; do not select only favorable samples.
 
 Test bodies and application sources are shared. Jest uses SWC with CommonJS output; Vitest and Rstest use their built-in pipelines. Vitest's filesystem module cache remains enabled and is scoped to each generated case. React uses the same jsdom 26.1.0 and one cleanup per test. Jest maps CSS to a minimal object because assertions do not inspect styling; browser/bundler configurations process CSS normally.
@@ -166,3 +170,13 @@ Test bodies and application sources are shared. Jest uses SWC with CommonJS outp
 Coverage verifies matching executable source-file sets. Type declarations and React barrels containing only re-exports are excluded. Matching files do not prove identical statement or branch instrumentation. These are comparisons of runnable test stacks, including their module-loading strategies.
 
 Each result retains installed versions, the lockfile, generated sources, adapted tests, config fingerprints and a measurement-harness snapshot. Unsupported combinations remain explicit in the report.
+
+## Memory methodology
+
+- Sample the benchmarked command's process tree every ~50 ms, excluding the benchmark driver itself, and sum each process's macOS **physical footprint** (`ri_phys_footprint` from `proc_pid_rusage`). Footprint counts private dirty and compressed memory; shared clean pages and the page cache are not counted, so per-process values can be summed across workers.
+- Timing and memory are measured in **separate passes**, as in build-tools-performance. The timing pass runs with no sampler. A memory pass then reruns the same command under the sampler with the same preparation (cold clears the framework caches again; warm reuses the warmed caches). Elapsed time comes only from the timing pass and memory only from the memory pass. A memory run must match its timing run's exit code and test counts or the sample fails. There is one memory run per timed run (warmups get none).
+- The sampler is a small C helper compiled once per run with `cc` (Xcode Command Line Tools required). On other platforms memory measurement fails with an error; there is no RSS fallback.
+- Report the **peak** of the summed footprint for each memory run, and the **median across runs** in MiB.
+- Measured on GitHub Actions `macos-15`; hardware may vary between runs. Published numbers come from the named CI run and commit stated in [Results](#results).
+- The sampling interval is fixed at 50 ms. **Known limitation:** very short runs (about 0.3 s, such as the `minimal-*` workloads) can miss a brief peak in a short-lived worker, so their memory values are noisy and can read low. Compare medians over several runs rather than single samples.
+- The sampler is adapted from [rstackjs/build-tools-performance](https://github.com/rstackjs/build-tools-performance) (MIT, Copyright (c) 2023 farm-fe).

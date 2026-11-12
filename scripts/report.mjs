@@ -52,7 +52,7 @@ const generated = config.reports.map((spec) => ({
 }))
 const readmePath = config.readmePath ?? 'README.md'
 let readme = readFileSync(resolve(root, readmePath), 'utf8')
-for (const { spec, markdown, summary, rssSummary, provenanceNote } of generated) {
+for (const { spec, markdown, summary, memorySummary, provenanceNote } of generated) {
   const output = resolve(root, spec.output)
   if (values.check) {
     if (readFileSync(output, 'utf8') !== markdown)
@@ -71,7 +71,7 @@ for (const { spec, markdown, summary, rssSummary, provenanceNote } of generated)
       to = readme.indexOf(end, from)
     const body = readmeBlock(
       spec,
-      { summary, rssSummary, provenanceNote },
+      { summary, memorySummary, provenanceNote },
       (file) => JSON.parse(readFileSync(resolve(root, file), 'utf8')),
       readmePath,
     )

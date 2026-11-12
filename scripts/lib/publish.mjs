@@ -27,14 +27,14 @@ export function reportInput(source) {
   }
 
   for (const row of document.results) {
-    for (const key of ['cwd', 'stats', 'rssStats']) delete row[key]
+    for (const key of ['cwd', 'stats', 'memoryStats']) delete row[key]
     for (const key of ['fixture', 'configs']) {
       if (row[key]) delete row[key].files
     }
     for (const dependency of Object.values(row.dependencies ?? {}))
       delete dependency.path
     if (row.browser) delete row.browser.executablePath
-    for (const sample of row.samples) {
+    for (const sample of [...row.samples, ...(row.memorySamples ?? [])]) {
       for (const key of ['command', 'stdoutPath', 'stderrPath']) delete sample[key]
     }
   }

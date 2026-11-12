@@ -3,6 +3,10 @@ import { readFileSync } from 'node:fs'
 import { resolve, join } from 'node:path'
 import { pathToFileURL } from 'node:url'
 import { fingerprint } from './fixtures.mjs'
+import { sameRunOutcome } from '../scripts/lib/process.mjs'
+
+// Counters a memory run must reproduce from its timing run.
+export const countKeys = ['files', 'tests', 'passed', 'failed', 'skipped', 'errors']
 export function verifySamples(record) {
   assert.equal(record.status, 'completed')
   assert(record.plan?.length > 0, 'Missing benchmark plan')
@@ -36,16 +40,36 @@ export function verifySamples(record) {
           timed.map((s) => s.round),
           Array.from({ length: record.options.runs }, (_, i) => i),
         )
+        const memory = record.memorySamples.filter(
+          (s) =>
+            s.group === id &&
+            s.condition === condition &&
+            s.framework === framework,
+        )
+        assert.equal(memory.length, record.options.runs, `memory ${id}/${framework}/${condition}`)
+        assert.deepEqual(
+          memory.map((s) => s.round),
+          Array.from({ length: record.options.runs }, (_, i) => i),
+        )
+        for (const m of memory) {
+          const timing = timed.find((s) => s.round === m.round)
+          assert.equal(m.status, 'passed')
+          assert.equal(m.exitCode, 0)
+          assert(!m.timedOut && !m.interrupted && !m.error)
+          assert(Number.isFinite(m.memoryBytes) && m.memoryBytes > 0)
+          assert(sameRunOutcome(m, timing, countKeys), 'Memory run differs from its timing run')
+        }
         for (const s of samples) {
           assert.equal(s.status, 'passed')
           assert.equal(s.exitCode, 0)
           assert(!s.timedOut && !s.interrupted && !s.error)
-          assert(Number.isFinite(s.rssBytes) && Number.isFinite(s.wallMs))
+          assert(s.memoryBytes === undefined, 'Timing samples must not carry memory')
+          assert(Number.isFinite(s.wallMs))
           assert.equal(s.counts.files, group.item.files)
           assert.equal(s.counts.tests, group.item.tests)
           assert.equal(s.counts.passed, group.item.tests)
           assert.equal(s.counts.failed + s.counts.skipped + s.counts.errors, 0)
-          assert(s.rssBytes > 0 && s.wallMs > 0)
+          assert(s.wallMs > 0)
           assert.equal(s.environment.NODE_DISABLE_COMPILE_CACHE, '1')
           assert.equal(s.environment.NODE_COMPILE_CACHE, null)
           if (group.provider !== 'none') assert(s.coveredFiles.length > 0)
@@ -70,7 +94,8 @@ export function verifySamples(record) {
       }
     }
   assert.equal(record.samples.length, expectedSamples, 'Unexpected or missing samples')
-  const samples = record.samples
+  assert.equal(record.memorySamples.length, expectedSamples - record.samples.filter((s) => s.phase === 'warmup').length, 'Unexpected or missing memory samples')
+  const samples = [...record.samples, ...record.memorySamples]
     .slice()
     .sort((a, b) => a.startedAt.localeCompare(b.startedAt))
   for (let i = 1; i < samples.length; i++)

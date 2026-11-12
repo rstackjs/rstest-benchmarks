@@ -9,7 +9,18 @@ import { cases } from '../../frameworks/fixtures.mjs'
 import { renderReport } from '../../frameworks/report.mjs'
 import { ciContext, ciResultDirectory } from '../lib/ci.mjs'
 
-const samples = readFileSync(new URL('../../frameworks/reports/result.json', import.meta.url), 'utf8')
+// The committed published samples predate the footprint metric and carry the old
+// maxrss field. Relabel them so these fixtures match the current schema; the
+// values are only placeholders for report structure, not footprint data.
+const record0 = JSON.parse(readFileSync(new URL('../../frameworks/reports/result.json', import.meta.url), 'utf8'))
+record0.memorySamples = []
+for (const sample of record0.samples) {
+  // Build the separate memory pass from the old single-pass samples.
+  if (sample.phase === 'timed')
+    record0.memorySamples.push({ ...sample, startedAt: sample.endedAt, wallMs: undefined, memoryBytes: sample.rssBytes })
+  delete sample.rssBytes
+}
+const samples = JSON.stringify(record0)
 function fixture(t) {
   const root = mkdtempSync(join(tmpdir(), 'framework-publication-'))
   t.after(() => rmSync(root, { recursive: true, force: true }))
@@ -25,7 +36,7 @@ function fixture(t) {
     Object.assign(record.fixtures[item.id], { files: item.files, tests: item.tests })
     for (const group of record.plan.filter((group) => group.item.id === item.id))
       Object.assign(group.item, { files: item.files, tests: item.tests })
-    for (const sample of record.samples.filter((sample) => sample.group === `main/${item.id}/none`))
+    for (const sample of [...record.samples, ...record.memorySamples].filter((sample) => sample.group === `main/${item.id}/none`))
       Object.assign(sample.counts, { files: item.files, tests: item.tests, passed: item.tests })
   }
   record.ci = {
@@ -78,6 +89,7 @@ test('main and browser CI results publish without coverage; missing browser stil
   record.options.suites = ['main', 'browser']
   record.plan = record.plan.filter((group) => group.suite !== 'coverage')
   record.samples = record.samples.filter((sample) => !sample.group.startsWith('coverage/'))
+  record.memorySamples = record.memorySamples.filter((sample) => !sample.group.startsWith('coverage/'))
   writeFileSync(input, JSON.stringify(record))
   refreshReport({ root, input })
   refreshReport({ root, check: true })
@@ -85,6 +97,7 @@ test('main and browser CI results publish without coverage; missing browser stil
   assert.match(readme, /--suites main,browser/)
   record.plan = record.plan.filter((group) => group.suite !== 'browser')
   record.samples = record.samples.filter((sample) => !sample.group.startsWith('browser/'))
+  record.memorySamples = record.memorySamples.filter((sample) => !sample.group.startsWith('browser/'))
   writeFileSync(input, JSON.stringify(record))
   assert.throws(() => refreshReport({ root, input }), /complete main and browser/)
   assert.equal(readFileSync(join(root, 'README.md'), 'utf8'), readme)
@@ -97,13 +110,17 @@ test('framework publication rejects incomplete, failed, partial or invalid sampl
     (r) => { r.status = 'failed' },
     (r) => { r.samples.pop() },
     (r) => { r.samples[0].status = 'failed' },
-    (r) => { r.samples[0].rssBytes = null },
+    (r) => { r.memorySamples[0].memoryBytes = null },
+    (r) => { r.memorySamples.pop() },
+    (r) => { r.memorySamples[0].counts.passed = 0 },
+    (r) => { r.samples[0].memoryBytes = 1 },
     (r) => { r.samples[0].counts.passed = 0 },
     (r) => { r.samples[0].round = 99 },
     (r) => { r.independentBatches = true },
     (r) => {
       r.plan = r.plan.filter((g) => g.item.id === 'minimal-node')
       r.samples = r.samples.filter((s) => s.group === 'main/minimal-node/none')
+      r.memorySamples = r.memorySamples.filter((s) => s.group === 'main/minimal-node/none')
     },
   ]) {
     const bad = structuredClone(record)

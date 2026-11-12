@@ -10,13 +10,8 @@ on:
   merge_group:
   workflow_dispatch:
     inputs:
-      runner:
-        description: Runner OS (results from different hosts must not be pooled)
-        type: choice
-        options: [macos-15, ubuntu-24.04]
-        default: macos-15
       runs:
-        description: Timed runs per runner/case/cache condition (10 is optional for fuller order balancing)
+        description: Timed runs per case/cache condition (10 is optional for fuller order balancing)
         type: string
         default: '5'
       cases:
@@ -36,7 +31,7 @@ concurrency:
 jobs:
   benchmark:
     name: Benchmark
-    runs-on: ${{ inputs.runner || 'macos-15' }}
+    runs-on: macos-15
     timeout-minutes: 90
     env:
       NODE_DISABLE_COMPILE_CACHE: '1'

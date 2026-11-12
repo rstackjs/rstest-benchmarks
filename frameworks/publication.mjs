@@ -46,7 +46,7 @@ export function publishedInput(source) {
     sourceSha256: createHash('sha256').update(source).digest('hex'),
   }
   if (record.browser) delete record.browser.executable
-  for (const sample of record.samples) {
+  for (const sample of [...record.samples, ...(record.memorySamples ?? [])]) {
     const cwd = sample.cwd
     // Reporter data may contain a framework cache path nested inside counts.
     if (cwd && sample.counts)

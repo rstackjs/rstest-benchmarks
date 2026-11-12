@@ -24,7 +24,7 @@ By default, it runs the **main suite**, with **1 warmup + 5 timed runs per case*
 | --- | --- |
 | `--cases node-backend` | Compare one workload across selected suites |
 | `--exclude-cases vue-spa` | Skip all Vue cases; full case IDs can target individual variants |
-| `--suites all` | Include scaling, barrels, worker pools, and coverage/RSS |
+| `--suites all` | Include scaling, barrels, worker pools, and coverage/memory |
 | `--runs 10` | Collect more samples |
 
 `compare` leaves this page unchanged by default. Add `--update-readme` to publish the selected suites, including their samples, reports, and measurement notes. Failed comparisons do not publish.
@@ -58,7 +58,7 @@ This updates only the selected suites on this page and in the version reports. I
 | `pnpm bench:scaling` | File count and module graph size, varied independently | [Scaling](../reports/scaling.md) |
 | `pnpm bench:pools` | Node worker pool modes across three suite sizes | [Pools](../reports/pools.md) |
 | `pnpm bench:barrel` | Lazy-barrel eligibility across three graph sizes | [Barrels](../reports/barrel.md) |
-| `pnpm bench:coverage` | No coverage, V8, and Istanbul overhead, including RSS | [Coverage](../reports/coverage.md) |
+| `pnpm bench:coverage` | No coverage, V8, and Istanbul overhead, including memory | [Coverage](../reports/coverage.md) |
 
 All commands accept `--list` and `--runs`. See [workload design](../docs/workloads.md) for fixture sizes and controlled variables.
 
@@ -66,7 +66,7 @@ All commands accept `--list` and `--runs`. See [workload design](../docs/workloa
 
 - Whole-process elapsed time, including CLI, build, workers/browser, tests, and reporting. By default, one warmup precedes five timed runs; the median is reported.
 - Node compile cache is disabled. Rstest caches are retained between timed runs, so these results do not represent a fresh CI job with no history.
-- Default worker concurrency and `forks + isolate:true` for Node/DOM, except in the pool suite. Coverage RSS is OS maxrss, not a simultaneous sum of all worker memory.
+- Default worker concurrency and `forks + isolate:true` for Node/DOM, except in the pool suite. Coverage memory is the peak process-tree physical footprint on macOS (see [Memory methodology](../README.md#memory-methodology)).
 - All samples are retained. Reports include variability and unsupported cases; small differences and results from different machines or workloads need separate verification.
 
 See [measurement details and result format](../docs/results.md) for cache policy, comparison checks, and statistics.
@@ -128,9 +128,9 @@ Sources run sequentially in rotating case/round order. For cases supported by al
 | barrel graph · large / v8 | 0.64s | 0.61s | -4.01% |
 | barrel graph · large / istanbul | 0.59s | 0.52s | -12.27% |
 
-### RSS comparison
+### Memory comparison
 
-Median maxrss in MiB; negative percentages mean less memory. This is OS maxrss, not the simultaneous total of all worker processes.
+Median of the per-run peak process-tree physical footprint in MiB; negative percentages mean less memory.
 
 | Case | baseline: 0.11.0 | candidate: 0.12.6 | Δ |
 | --- | --- | --- | --- |

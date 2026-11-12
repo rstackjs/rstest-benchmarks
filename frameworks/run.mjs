@@ -20,7 +20,8 @@ import {
 import { createHash } from 'node:crypto'
 import { spawnSync } from 'node:child_process'
 import { createRequire } from 'node:module'
-import { execute, readRss } from '../scripts/lib/process.mjs'
+import { execute, sameRunOutcome } from '../scripts/lib/process.mjs'
+import { assertMemorySupported } from '../scripts/lib/memory.mjs'
 import { environment } from '../scripts/runner.mjs'
 import {
   generate,
@@ -34,7 +35,7 @@ import {
 } from './fixtures.mjs'
 import { configure } from './configs.mjs'
 import { report } from './report.mjs'
-import { verify } from './verify.mjs'
+import { verify, countKeys } from './verify.mjs'
 import { ciContext, ciResultDirectory } from '../scripts/lib/ci.mjs'
 import { selectedFor, orderFor } from './order.mjs'
 import { formatCpu } from '../scripts/lib/host.mjs'
@@ -74,8 +75,7 @@ if (
   throw Error('conditions must be cold,warm')
 if (suites.some((x) => !['main', 'coverage', 'browser'].includes(x)))
   throw Error('unknown suite')
-if (!['darwin', 'linux'].includes(platform()))
-  throw Error('RSS requires macOS or Linux')
+assertMemorySupported()
 const planned = selectCases(
   [
     ...(suites.includes('main')
@@ -193,6 +193,7 @@ const record = {
     .digest('hex'),
   harnessHash: fingerprint(join(root, 'frameworks/reporters')),
   samples: [],
+  memorySamples: [],
   cacheActions: [],
 }
 const save = () => {
@@ -285,15 +286,18 @@ try {
   }
   record.status = 'running'
   save()
-  async function sample(group, condition, framework, round, phase) {
+  let logId = 0
+  // measurement 'timing' runs with no sampler; 'memory' reruns the same command
+  // under the sampler. Elapsed time is taken only from timing samples and memory
+  // only from memory samples.
+  async function sample(group, condition, framework, round, phase, measurement = 'timing', reference) {
     if (controller.signal.aborted) throw Error('Interrupted')
     const cwd = join(directory, 'workspaces', framework, group.item.id)
     if (condition === 'cold') clear(cwd)
     rmSync(join(cwd, 'coverage'), { recursive: true, force: true })
-    const id = record.samples.length,
+    const id = logId++,
       prefix = join(directory, 'logs', String(id)),
-      countPath = prefix + '.json',
-      rssPath = prefix + '.rss'
+      countPath = prefix + '.json'
     const env = {
       ...environment(),
       FRAMEWORK_REPORT: countPath,
@@ -317,10 +321,6 @@ try {
         ? pkgJson.bin
         : pkgJson.bin[frameworkFamily(framework)]
     const command = [
-      '/usr/bin/time',
-      ...(platform() === 'darwin' ? ['-l'] : ['-v']),
-      '-o',
-      rssPath,
       process.execPath,
       resolve(pkgPath, '..', bin),
       ...(frameworkFamily(framework) === 'jest'
@@ -329,7 +329,7 @@ try {
     ]
     const startLoad = loadavg()
     const finish = progress.start(
-      `${phase} ${phase === 'warmup' ? 1 : round + 1} ${condition} ${group.suite}/${group.item.id}/${group.provider} ${framework}`,
+      `${measurement} ${phase} ${phase === 'warmup' ? 1 : round + 1} ${condition} ${group.suite}/${group.item.id}/${group.provider} ${framework}`,
     )
     const r = await execute({
       command,
@@ -339,6 +339,7 @@ try {
       timeoutMs: 180000,
       signal: controller.signal,
       graceful: true,
+      memory: measurement === 'memory',
     })
     const counts = existsSync(countPath)
       ? JSON.parse(readFileSync(countPath))
@@ -346,6 +347,7 @@ try {
     const passed =
       r.exitCode === 0 &&
       !r.timedOut &&
+      (measurement === 'timing' || Number.isFinite(r.memoryBytes)) &&
       counts &&
       counts.files === group.item.files &&
       counts.tests === group.item.tests &&
@@ -407,15 +409,27 @@ try {
       ...r,
       counts,
       coveredFiles,
-      rssBytes: existsSync(rssPath) ? readRss(rssPath, platform()) : null,
     }
-    record.samples.push(s)
+    if (reference) {
+      // A memory run must behave exactly like its timing run.
+      if (!sameRunOutcome({ exitCode: r.exitCode, counts }, reference, countKeys)) {
+        s.status = 'failed'
+        s.consistencyError = `Memory run differs from its timing run: exit ${r.exitCode} vs ${reference.exitCode}; counts ${JSON.stringify(counts)} vs ${JSON.stringify(reference.counts)}`
+      }
+    }
+    ;(measurement === 'memory' ? record.memorySamples : record.samples).push(s)
     save()
-    finish(`${(r.wallMs / 1000).toFixed(3)}s ${s.status}`)
+    finish(
+      measurement === 'memory'
+        ? `${(s.memoryBytes / 1048576).toFixed(1)} MiB ${s.status}`
+        : `${(r.wallMs / 1000).toFixed(3)}s ${s.status}`,
+    )
+    if (s.consistencyError) throw Error(s.consistencyError)
     if (coverageError) throw Error(coverageError)
     if (workerError) throw Error(workerError)
     if (!passed)
       throw Error(`Failed sample: ${prefix}; counts ${JSON.stringify(counts)}`)
+    return s
   }
   for (const group of groups)
     for (const condition of conditions) {
@@ -427,8 +441,12 @@ try {
           await sample(group, condition, framework, -1, 'warmup')
       for (let round = 0; round < runs; round++) {
         const order = orderFor(selected, round)
-        for (const framework of order)
-          await sample(group, condition, framework, round, 'timed')
+        for (const framework of order) {
+          // Timing pass first (no sampler), then the memory pass with the same
+          // cold/warm preparation, as in build-tools-performance.
+          const timing = await sample(group, condition, framework, round, 'timed')
+          await sample(group, condition, framework, round, 'timed', 'memory', timing)
+        }
       }
     }
   record.status = 'completed'

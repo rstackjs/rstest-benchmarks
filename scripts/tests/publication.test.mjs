@@ -86,9 +86,14 @@ function fixture() {
               round,
               status: 'passed',
               wallMs: 100 - index * 10,
-              rssBytes: (200 - index * 50) * 1024 ** 2,
             })),
           ],
+          memorySamples: [0, 1, 2].map((round) => ({
+            phase: 'timed',
+            round,
+            status: 'passed',
+            memoryBytes: (200 - index * 50) * 1024 ** 2,
+          })),
         },
       ],
     })
@@ -119,7 +124,7 @@ test('publication updates selected tables, context and inputs, preserving other 
     assert.match(readme, /local abcdef12/)
     assert.match(readme, /-10\.00%/)
     assert.match(readme, /-20\.00%/)
-    assert.match(readme, /### RSS comparison/)
+    assert.match(readme, /### Memory comparison/)
     assert.match(readme, /\| Example \| 200\.00 \| 150\.00 \| -25\.00% \| 100\.00 \| -50\.00% \|/)
     assert.match(readme, /Keep this text and data/)
     assert.equal(

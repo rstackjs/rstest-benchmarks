@@ -29,28 +29,28 @@ test('CI summary shares README tables and retains CPU metadata without variabili
     results: [{
       app: 'a', case: 'fixture',
       samples: file === 'base' ? [10, 20, 30] : [5, 10, 15],
-      rssSamples: [90, 100, 110].map((n) => n * 1024 ** 2),
+      memorySamples: [90, 100, 110].map((n) => n * 1024 ** 2),
     }],
   })
   const report = comparisonReport(spec, load)
   const readme = readmeBlock(spec, report, load)
-  for (const table of [report.summary, report.rssSummary]) {
+  for (const table of [report.summary, report.memorySummary]) {
     assert(table.length > 0)
     assert(report.jobSummary.includes(table))
     assert(readme.includes(table))
   }
   assert.match(report.jobSummary, /logical CPUs: 4; available parallelism: 2/)
   assert.match(report.jobSummary, /1 warmup\(s\), 3 timed runs/)
-  assert.match(report.jobSummary, /### RSS comparison/)
-  assert.doesNotMatch(report.jobSummary, /## Variability|## Memory|Min–max|\| CV \|/)
+  assert.match(report.jobSummary, /### Memory comparison/)
+  assert.doesNotMatch(report.jobSummary, /## Variability|^## Memory|Min–max|\| CV \|/m)
   assert.match(report.markdown, /## Variability/)
   assert.match(report.markdown, /## Memory/)
-  const noRss = comparisonReport(spec, (file) => {
+  const noMemory = comparisonReport(spec, (file) => {
     const data = load(file)
-    delete data.results[0].rssSamples
+    delete data.results[0].memorySamples
     return data
   })
-  assert.doesNotMatch(noRss.jobSummary, /### RSS comparison/)
+  assert.doesNotMatch(noMemory.jobSummary, /### Memory comparison/)
 })
 
 test('real report CLI updates a nested README and detects stale output without rewriting it', () => {
@@ -160,7 +160,7 @@ test('README selects two columns and recalculates notes without changing the ful
     assert.throws(() => readmeBlock({ ...spec, readme: { columns } }, full, load), /README columns/)
 })
 
-test('README projects compact RSS medians and changes onto selected versions', async () => {
+test('README projects compact memory medians and changes onto selected versions', async () => {
   const { comparisonReport, readmeBlock } = await import('../lib/report.mjs')
   const spec = {
     output: 'reports/coverage.md',
@@ -176,28 +176,28 @@ test('README projects compact RSS medians and changes onto selected versions', a
     results: [{
       app: 'example', name: 'Example', provider: 'v8',
       samples: [100, 100, 100],
-      rssSamples: (file === 'base' ? [90, 100, 110] : file === 'last' ? [70, 75, 80] : [200, 200, 200]).map(value => value * 1024 ** 2),
+      memorySamples: (file === 'base' ? [90, 100, 110] : file === 'last' ? [70, 75, 80] : [200, 200, 200]).map(value => value * 1024 ** 2),
     }],
   })
   const full = comparisonReport(spec, load)
   const block = readmeBlock(spec, full, load)
-  assert.match(block, /### RSS comparison/)
+  assert.match(block, /### Memory comparison/)
   assert.match(block, /\| Case \| 0\.11\.0 \| 0\.12\.6 \| Δ \|\n/)
   assert.match(block, /\| Example \/ v8 \| 100\.00 \| 75\.00 \| -25\.00% \|/)
-  assert.doesNotMatch(block, /0\.12\.5|## Variability|## Memory|Median MiB|Min–max|\| Column \|/)
+  assert.doesNotMatch(block, /0\.12\.5|## Variability|^## Memory|Median MiB|Min–max|\| Column \|/m)
   assert.match(full.markdown, /## Memory/)
-  assert.match(full.rssSummary, /0\.12\.5/)
+  assert.match(full.memorySummary, /0\.12\.5/)
   // Publication also passes the complete report directly without a README projection.
-  assert.match(readmeBlock({ ...spec, readme: undefined }, full), /### RSS comparison/)
+  assert.match(readmeBlock({ ...spec, readme: undefined }, full), /### Memory comparison/)
   const withoutMemory = (file) => {
     const doc = load(file)
-    delete doc.results[0].rssSamples
+    delete doc.results[0].memorySamples
     return doc
   }
-  assert.doesNotMatch(readmeBlock(spec, full, withoutMemory), /### RSS comparison/)
+  assert.doesNotMatch(readmeBlock(spec, full, withoutMemory), /### Memory comparison/)
 })
 
-test('RSS comparisons suppress percentages for incomplete or incompatible inputs', async () => {
+test('memory comparisons suppress percentages for incomplete or incompatible inputs', async () => {
   const { comparisonReport } = await import('../lib/report.mjs')
   const spec = {
     columns: [
@@ -211,13 +211,13 @@ test('RSS comparisons suppress percentages for incomplete or incompatible inputs
       results: [{
         app: 'example', name: 'Example', provider: 'v8', samples: [100, 100, 100],
         ...(scenario === 'failed' && file === 'candidate' ? { error: 'failed run' } : {}),
-        rssSamples: file === 'base'
+        memorySamples: file === 'base'
           ? Array(3).fill(scenario === 'zero' ? 0 : 100 * 1024 ** 2)
           : Array(scenario === 'missing' ? 0 : scenario === 'incomplete' ? 2 : 3).fill(50 * 1024 ** 2),
       }],
     }))
-    assert.doesNotMatch(report.rssSummary, /%/, scenario)
-    if (scenario === 'incomplete') assert.match(report.rssSummary, /INCOMPLETE/)
-    if (scenario === 'failed') assert.match(report.rssSummary, /FAILED/)
+    assert.doesNotMatch(report.memorySummary, /%/, scenario)
+    if (scenario === 'incomplete') assert.match(report.memorySummary, /INCOMPLETE/)
+    if (scenario === 'failed') assert.match(report.memorySummary, /FAILED/)
   }
 })
