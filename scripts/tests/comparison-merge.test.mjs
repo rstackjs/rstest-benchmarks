@@ -78,6 +78,18 @@ test('per-app comparisons merge into one comparison the publisher accepts', (t) 
   assert.match(readFileSync(join(out, 'summary.md'), 'utf8'), /Memory/)
 })
 
+test('comparison merging accepts different hosts per input and records each one', (t) => {
+  const root = scratch(t)
+  const inputs = [writeInput(root, 'a'), writeInput(root, 'b')]
+  const value = JSON.parse(readFileSync(inputs[1].file, 'utf8'))
+  value.host.cpu = 'other CPU'
+  writeFileSync(inputs[1].file, JSON.stringify(value))
+  const out = join(root, 'results', 'merged')
+  const comparison = mergeComparisons(root, inputs, out)
+  assert.equal(comparison.host.cpu, 'other CPU | test CPU')
+  assert.deepEqual(comparison.mergedFrom.map((entry) => entry.host.cpu), ['test CPU', 'other CPU'])
+})
+
 test('comparison merging refuses mismatched identity, duplicates and failed inputs without writing', (t) => {
   const root = scratch(t)
   const edit = (change) => {
@@ -94,7 +106,8 @@ test('comparison merging refuses mismatched identity, duplicates and failed inpu
   assert.throws(edit((input) => rewrite(input.file, (c) => { c.sources.candidate.version = '0.13.0' })), /candidate source differs/)
   assert.throws(edit((input) => rewrite(input.file, (c) => { c.options.runs = '6' })), /options differ/)
   assert.throws(edit((input) => rewrite(input.file, (c) => { c.status = 'failed' })), /failed, not completed/)
-  assert.throws(edit((input) => rewrite(input.file, (c) => { c.host.cpu = 'other' })), /host\.cpu differs/)
+  assert.throws(edit((input) => rewrite(input.file, (c) => { c.host.node = 'v0.0.1' })), /host\.node differs/)
+  assert.throws(edit((input) => rewrite(candidateDoc(input), (d) => { d.meta.node = 'v0.0.1' })), /meta\.node differs/)
   assert.throws(edit((input) => rewrite(candidateDoc(input), (d) => { d.meta.lockfileSha256 = 'other' })), /lockfileSha256 differs/)
   assert.throws(edit((input) => rewrite(candidateDoc(input), (d) => { d.meta.runner.sha256 = 'other' })), /runner harness differs/)
   // Memory kinds (and platforms) are never mixed in one comparison.

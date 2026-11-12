@@ -3,10 +3,15 @@
 import assert from 'node:assert/strict'
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { basename, dirname, join, relative, resolve } from 'node:path'
+import { mergeHosts } from './host.mjs'
 import { comparisonReport } from './report.mjs'
 
-const metaKeys = ['node', 'cpu', 'logicalCpuCount', 'platform', 'osRelease', 'availableParallelism', 'packageManager', 'lockfileSha256', 'measurement']
-const hostKeys = ['node', 'cpu', 'logicalCpuCount', 'platform', 'availableParallelism']
+// Runtime and platform must match; machine details may differ because matrix jobs
+// land on different hosts (see mergeHosts).
+const metaKeys = ['node', 'platform', 'packageManager', 'lockfileSha256', 'measurement']
+const metaHostKeys = ['cpu', 'logicalCpuCount', 'osRelease', 'availableParallelism']
+const hostKeys = ['node', 'platform']
+const varyingHostKeys = ['cpu', 'logicalCpuCount', 'availableParallelism']
 const without = (object, ...keys) => Object.fromEntries(Object.entries(object).filter(([key]) => !keys.includes(key)))
 const readJson = (file) => JSON.parse(readFileSync(file, 'utf8'))
 // Run files are repository-relative paths inside the comparison directory of the
@@ -48,6 +53,7 @@ function mergeDocuments(documents, names, runId) {
     results: documents.flatMap((doc) => doc.results),
     meta: {
       ...first.meta,
+      ...mergeHosts(documents.map((doc) => doc.meta), metaHostKeys),
       startedAt: documents.map((doc) => doc.meta.startedAt).sort()[0],
       endedAt: documents.map((doc) => doc.meta.endedAt).sort().at(-1),
       options: { ...first.meta.options, cases: documents.flatMap((doc) => doc.meta.options.cases ?? []) },
@@ -107,6 +113,7 @@ export function mergeComparisons(root, inputs, outDir, now = new Date()) {
   const comparison = {
     ...first.record,
     options: { ...first.record.options, cases: records.map(({ record }) => record.options.cases).filter(Boolean).join(',') },
+    host: { ...first.record.host, ...mergeHosts(records.map(({ record }) => record.host), varyingHostKeys) },
     runs,
     reports,
     schedule: records.flatMap(({ name, record }) => (record.schedule ?? []).map((step) => ({ ...step, mergeSource: name }))),
@@ -115,6 +122,7 @@ export function mergeComparisons(root, inputs, outDir, now = new Date()) {
     mergedFrom: records.map(({ name, record }) => ({
       name,
       cases: record.options.cases ?? null,
+      host: Object.fromEntries(varyingHostKeys.map((key) => [key, record.host[key]])),
       ci: record.ci && { job: record.ci.job, runner: record.ci.runner, image: record.ci.image },
       startedAt: record.startedAt,
       endedAt: record.endedAt,

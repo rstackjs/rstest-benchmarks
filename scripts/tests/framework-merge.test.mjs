@@ -109,6 +109,17 @@ test('merged results are written with the source trees that verification fingerp
   assert.equal(readFileSync(join(out, 'workspaces', 'jest', parts[0].record.plan[0].item.id, 'src', 'a.ts'), 'utf8'), 'export {}')
 })
 
+test('merging accepts different hosts per input and records each one', (t) => {
+  const root = scratch(t)
+  const parts = split().slice(0, 2)
+  parts[1].record.host = { ...parts[1].record.host, cpu: 'other CPU', logicalCpuCount: 8 }
+  const { merged } = mergeResults(write(mkdtempSync(join(root, 'case-')), parts))
+  const cpus = [parts[0].record.host.cpu, 'other CPU'].sort().join(' | ')
+  assert.equal(merged.host.cpu, cpus)
+  assert.equal(merged.host.node, parts[0].record.host.node)
+  assert.deepEqual(merged.mergedFrom.map((entry) => entry.host.cpu), [parts[0].record.host.cpu, 'other CPU'])
+})
+
 test('merging refuses inputs with different identity, duplicates or failed runs', (t) => {
   const root = scratch(t)
   const attempt = (edit) => {
@@ -120,7 +131,8 @@ test('merging refuses inputs with different identity, duplicates or failed runs'
   assert.throws(attempt((parts) => { parts[1].record.harnessHash = 'dead' }), /harnessHash differs/)
   assert.throws(attempt((parts) => { parts[2].record.dependencies = { ...parts[2].record.dependencies, vitest: '0.0.1' } }), /dependencies differs/)
   assert.throws(attempt((parts) => { parts[1].record.versions = { ...parts[1].record.versions, jest: '0.0.1' } }), /versions differs/)
-  assert.throws(attempt((parts) => { parts[1].record.host = { ...parts[1].record.host, cpu: 'other' } }), /host\.cpu differs/)
+  assert.throws(attempt((parts) => { parts[1].record.host = { ...parts[1].record.host, node: 'v0.0.1' } }), /host\.node differs/)
+  assert.throws(attempt((parts) => { parts[1].record.host = { ...parts[1].record.host, platform: 'linux x64' } }), /host\.platform differs/)
   assert.throws(attempt((parts) => { parts[1].record.options.runs = 7 }), /options\.runs differs/)
   assert.throws(attempt((parts) => { parts[1].record.status = 'failed' }), /failed, not completed/)
   assert.throws(attempt((parts) => { parts[1].record.ci.sha = 'other' }), /ci\.sha differs/)

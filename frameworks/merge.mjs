@@ -3,10 +3,14 @@
 import assert from 'node:assert/strict'
 import { cpSync, existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
+import { mergeHosts } from '../scripts/lib/host.mjs'
 
 // `measurement` carries the memory kind: records of different kinds are never mixed.
 const identityKeys = ['schemaVersion', 'lockHash', 'harnessHash', 'dependencies', 'versions', 'measurement']
-const hostKeys = ['node', 'cpu', 'logicalCpuCount', 'platform', 'os', 'parallelism']
+// Runtime and platform must match; machine details (CPU model, core counts, OS build)
+// may differ because matrix jobs land on different hosts.
+const sameHostKeys = ['node', 'platform']
+const varyingHostKeys = ['cpu', 'logicalCpuCount', 'os', 'parallelism']
 const optionKeys = ['runs', 'conditions', 'frameworks']
 
 const union = (target, source, what, from) => {
@@ -27,7 +31,7 @@ export function mergeResults(inputs) {
     assert.equal(record.status, 'completed', `${name}: result is ${record.status}, not completed`)
     for (const key of identityKeys)
       assert.deepEqual(record[key], first.record[key], `${name}: ${key} differs from ${first.name}`)
-    for (const key of hostKeys)
+    for (const key of sameHostKeys)
       assert.deepEqual(record.host?.[key], first.record.host?.[key], `${name}: host.${key} differs from ${first.name}`)
     for (const key of optionKeys)
       assert.deepEqual(record.options[key], first.record.options[key], `${name}: options.${key} differs from ${first.name}`)
@@ -50,6 +54,7 @@ export function mergeResults(inputs) {
     configHashes: {},
     browser: {},
   }
+  merged.host = { ...first.record.host, ...mergeHosts(records.map(({ record }) => record.host), varyingHostKeys) }
   delete merged.error
   delete merged.verification
   delete merged.publication
@@ -83,6 +88,7 @@ export function mergeResults(inputs) {
   merged.mergedFrom = records.map(({ name, record }) => ({
     name,
     cases: record.plan.map((group) => `${group.suite}/${group.item.id}/${group.provider}`),
+    host: Object.fromEntries(varyingHostKeys.map((key) => [key, record.host?.[key]])),
     ci: record.ci && { job: record.ci.job, runner: record.ci.runner, image: record.ci.image },
     startedAt: record.startedAt,
     endedAt: record.endedAt,
