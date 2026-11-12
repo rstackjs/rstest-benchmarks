@@ -34,14 +34,14 @@ const scope = (args) => new Promise((resolve) => {
   const unit = `probe-${process.pid}-${unitSeq++}`
   const p = spawn('sudo', ['systemd-run', '--scope', '--quiet', `--unit=${unit}`, '-p', 'MemoryAccounting=yes',
     `--uid=${process.getuid()}`, `--gid=${process.getgid()}`, `--setenv=PATH=${process.env.PATH}`, `--setenv=HOME=${process.env.HOME}`, '--', ...args], { stdio: ['ignore', 'pipe', 'pipe'] })
-  let stdout = '', stderr = '', killed = false
+  let stdout = '', stderr = '', killed = false, timedOut = false
   const kill = () => { if (killed) return; killed = true; spawnSync('sudo', ['systemctl', 'kill', '-s', 'KILL', `${unit}.scope`]) }
-  const hard = setTimeout(kill, 240000)
+  const hard = setTimeout(() => { timedOut = true; kill() }, 240000)
   p.stdout.on('data', (d) => { stdout += d; if (/\}\s*$/.test(stdout.trim()) && stdout.trim().split('\n').pop().startsWith('{')) kill() })
   p.stderr.on('data', (d) => { stderr += d })
-  p.on('close', () => { clearTimeout(hard); resolve({ stdout, stderr }) })
+  p.on('close', () => { clearTimeout(hard); resolve({ stdout, stderr, timedOut }) })
 })
-const parse = (r) => { try { return JSON.parse(r.stdout.trim().split('\n').pop()) } catch { return { error: (r.stderr || r.stdout || '').slice(0, 400) } } }
+const parse = (r) => { if (r.timedOut) return { timedOut: true, error: 'scope timeout (240 s)' }; try { return JSON.parse(r.stdout.trim().split('\n').pop()) } catch { return { error: (r.stderr || r.stdout || '').slice(0, 400) } } }
 const host = { cpus: os.cpus().length, cpu: os.cpus()[0]?.model, totalMemMiB: os.totalmem() / 1048576, node: process.version, kernel: os.release(), load: os.loadavg() }
 const emit = (row) => { appendFileSync(out, JSON.stringify({ case: caseId, host, ...row }) + '\n'); return row }
 const probe = join(root, '.github/probe/measure.mjs')

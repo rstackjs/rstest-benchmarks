@@ -5,6 +5,7 @@ const root = process.env.GITHUB_WORKSPACE
 const { generate, cases, frameworks } = await import(pathToFileURL(join(root, 'frameworks/fixtures.mjs')))
 const { configure } = await import(pathToFileURL(join(root, 'frameworks/configs.mjs')))
 const ws = join(root, 'results/ws')
-generate(ws, frameworks)
-for (const f of frameworks) for (const item of cases) configure(join(ws, 'workspaces', f, item.id), f, item)
+const all = [...frameworks, 'vitest-vmForks', 'rstest-vmForks']
+generate(ws, all)
+for (const f of all) for (const item of cases) configure(join(ws, 'workspaces', f, item.id), f, item)
 console.log('ok')
