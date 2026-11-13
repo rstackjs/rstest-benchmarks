@@ -8,7 +8,7 @@ The runner generates each fixture once per size and scaling dimension. Every sup
 
 Node compile cache is disabled with `NODE_DISABLE_COMPILE_CACHE=1` for the CLI and workers. Separately, the runner removes `dist/.rstest-temp`, `node_modules/.cache/rstest`, and the sequencing cache `node_modules/.cache/.rstest-results` before each fixture group's warmups. It retains caches across variants and timed rounds; config changes may invalidate build output. Thus the standard suite measures warm application runs, not first-run CI without restored cache.
 
-The Node and DOM defaults are `forks + isolate:true` with worker concurrency unset. Only the explicit pool suite changes the pool. Coverage runs use the same OS timing wrapper for both the no-coverage control and the enabled providers.
+The Node and DOM defaults are `forks + isolate:true` with worker concurrency unset. Only the explicit pool suite changes the pool. Coverage controls and enabled providers use the same process runner, with elapsed time and memory collected in separate passes.
 
 Watch/re-run latency, multi-project coordination, browser navigation, and long-lived memory growth need dedicated experiments with different timing boundaries. The default suites make no claims about them. See [workload design](workloads.md) and [running benchmarks](running.md).
 
