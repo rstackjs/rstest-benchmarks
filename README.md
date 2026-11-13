@@ -6,7 +6,7 @@ For comparisons between Rstest releases or a local checkout, see [Rstest version
 
 ## Quick start
 
-Use Node.js 24, the pnpm version pinned in this repository, and macOS for memory collection (Xcode Command Line Tools must provide `cc`; Linux is not supported for memory measurement). Run from the repository root:
+Use Node.js 26, the pnpm version pinned in this repository, and macOS for memory collection (Xcode Command Line Tools must provide `cc`; Linux is not supported for memory measurement). Run from the repository root:
 
 ```sh
 pnpm --dir frameworks install --frozen-lockfile
