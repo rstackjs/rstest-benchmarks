@@ -7,22 +7,9 @@ import { findArtifactFile } from '../lib/ci.mjs'
 import { mergeResults, writeMerged } from '../../frameworks/merge.mjs'
 import { publishedInput } from '../../frameworks/publication.mjs'
 import { verifySamples } from '../../frameworks/verify.mjs'
-import { cases } from '../../frameworks/fixtures.mjs'
 
-// Build a complete record from the committed published samples (relabelled to the
-// current two-pass schema), then split it by case the way the matrix does.
+// Split the committed two-pass samples like the CI matrix.
 const full = JSON.parse(readFileSync(new URL('../../frameworks/reports/result.json', import.meta.url), 'utf8'))
-full.memorySamples = []
-for (const sample of full.samples) {
-  if (sample.phase === 'timed') full.memorySamples.push({ ...sample, startedAt: sample.endedAt, wallMs: undefined, memoryBytes: sample.rssBytes })
-  delete sample.rssBytes
-}
-for (const item of cases.filter((item) => item.fixture)) {
-  Object.assign(full.fixtures[item.id], { files: item.files, tests: item.tests })
-  for (const group of full.plan.filter((group) => group.item.id === item.id)) Object.assign(group.item, { files: item.files, tests: item.tests })
-  for (const sample of [...full.samples, ...full.memorySamples].filter((sample) => sample.group === `main/${item.id}/none`))
-    Object.assign(sample.counts, { files: item.files, tests: item.tests, passed: item.tests })
-}
 delete full.publication
 full.ci = { url: 'https://github.com/example/benchmarks/actions/runs/1', sha: 'abc', attempt: 1, job: 'x', runner: 'r', image: 'i' }
 
@@ -72,7 +59,7 @@ test('per-case results merge into one record that verifies and publishes', (t) =
   assert.equal(merged.samples.length, full.samples.length)
   assert.equal(merged.memorySamples.length, full.memorySamples.length)
   assert.deepEqual(merged.plan.map(groupId).sort(), full.plan.map(groupId).sort())
-  assert.deepEqual(merged.options.suites, ['main', 'coverage', 'browser'])
+  assert.deepEqual(merged.options.suites, full.options.suites)
   assert.equal(merged.mergedFrom.length, parts.length)
   assert.deepEqual(merged.mergedFrom[0].cases, [groupId(parts[0].record.plan[0])])
   assert.equal(merged.ci.job, 'merged')
@@ -124,4 +111,20 @@ test('merging refuses inputs with different identity, duplicates or failed runs'
   assert.throws(attempt((parts) => { parts[1].record.ci.sha = 'other' }), /ci\.sha differs/)
   assert.throws(attempt((parts) => { parts[1] = { name: 'duplicate', record: structuredClone(parts[0].record) } }), /Duplicate case/)
   assert.throws(() => mergeResults([]), /No results/)
+})
+
+test('rerun cases merge with earlier successful attempts of the same run', (t) => {
+  const parts = split()
+  parts[1].record.ci.attempt = 2
+  const { merged } = mergeResults(write(scratch(t), parts))
+  assert.equal(merged.ci.attempt, 2)
+  assert.deepEqual(merged.mergedFrom.map(p => p.ci.attempt), parts.map(p => p.record.ci.attempt))
+  verifySamples(merged)
+})
+
+test('merging refuses different preview sources even with identical package versions', (t) => {
+  const parts = split().slice(0, 2)
+  parts[0].record.rstestSource = { requested: 'https://pkg.pr.new/@rstest/core@abcdef0' }
+  parts[1].record.rstestSource = { requested: 'https://pkg.pr.new/@rstest/core@abcdef1' }
+  assert.throws(() => mergeResults(write(scratch(t), parts)), /rstestSource differs/)
 })

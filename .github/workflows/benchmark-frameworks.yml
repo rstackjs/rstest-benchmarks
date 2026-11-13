@@ -20,9 +20,13 @@ on:
       exclude_cases:
         description: Case IDs to exclude, comma-separated (applied after cases)
         type: string
+      rstest_version:
+        description: Exact Rstest npm version or pkg.pr.new core URL (empty uses the lockfile)
+        type: string
 
 permissions:
   contents: read
+  actions: read
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.event.pull_request.number || github.run_id }}
@@ -89,9 +93,26 @@ jobs:
           BENCH_RUNS: ${{ inputs.runs || '5' }}
           BENCH_SUITE: ${{ matrix.suite }}
           BENCH_CASE: ${{ matrix.cases }}
+          BENCH_RSTEST_VERSION: ${{ inputs.rstest_version }}
         shell: bash
         run: |
-          pnpm compare:frameworks --suites "$BENCH_SUITE" --frameworks jest,vitest,vitest-vmForks,rstest,rstest-vmForks --cases "$BENCH_CASE" --runs "$BENCH_RUNS" --label ci-frameworks
+          args=()
+          if [[ -n "$BENCH_RSTEST_VERSION" ]]; then
+            args+=(--rstest-version "$BENCH_RSTEST_VERSION")
+          fi
+          pnpm compare:frameworks --suites "$BENCH_SUITE" --frameworks jest,vitest,vitest-vmForks,rstest,rstest-vmForks --cases "$BENCH_CASE" --runs "$BENCH_RUNS" --label ci-frameworks "${args[@]}"
+      - name: Package verified merge input
+        env:
+          RESULT_DIR: ${{ steps.benchmark.outputs.result-directory }}
+        run: node frameworks/pack-result.mjs --input "$RESULT_DIR" --output merge-input/case.tar.gz
+      - name: Upload merge input
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: benchmark-frameworks-result-${{ matrix.name }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: merge-input/case.tar.gz
+          compression-level: 0
+          if-no-files-found: error
+          retention-days: 30
       - name: Publish job summary
         if: always()
         env:
@@ -110,6 +131,7 @@ jobs:
             results/
             !results/**/node_modules/**
             !results/**/.cache/**
+            !results/framework-dependencies/**
           include-hidden-files: true
           if-no-files-found: warn
           retention-days: 30
@@ -117,7 +139,7 @@ jobs:
   merge:
     name: Merge results
     needs: [setup, benchmark]
-    if: ${{ always() && needs.setup.result == 'success' }}
+    if: ${{ always() && needs.setup.result == 'success' && needs.benchmark.result == 'success' }}
     runs-on: macos-15
     timeout-minutes: 20
     steps:
@@ -130,10 +152,10 @@ jobs:
       - name: Install pinned pnpm
         run: npm install --global "$(node -p 'require("./package.json").packageManager')"
       - name: Download case artifacts
-        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
-        with:
-          path: case-results
-          pattern: benchmark-frameworks-case-*-${{ github.run_id }}-${{ github.run_attempt }}
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          BENCH_MATRIX: ${{ needs.setup.outputs.matrix }}
+        run: node scripts/download-framework-artifacts.mjs
       # Refuses inputs whose lockfile, harness, dependencies or versions differ,
       # then runs the repository's verification on the merged record.
       - name: Merge case results

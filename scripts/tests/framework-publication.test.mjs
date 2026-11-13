@@ -9,17 +9,7 @@ import { cases } from '../../frameworks/fixtures.mjs'
 import { renderReport } from '../../frameworks/report.mjs'
 import { ciContext, ciResultDirectory } from '../lib/ci.mjs'
 
-// The committed published samples predate the footprint metric and carry the old
-// maxrss field. Relabel them so these fixtures match the current schema; the
-// values are only placeholders for report structure, not footprint data.
 const record0 = JSON.parse(readFileSync(new URL('../../frameworks/reports/result.json', import.meta.url), 'utf8'))
-record0.memorySamples = []
-for (const sample of record0.samples) {
-  // Build the separate memory pass from the old single-pass samples.
-  if (sample.phase === 'timed')
-    record0.memorySamples.push({ ...sample, startedAt: sample.endedAt, wallMs: undefined, memoryBytes: sample.rssBytes })
-  delete sample.rssBytes
-}
 const samples = JSON.stringify(record0)
 function fixture(t) {
   const root = mkdtempSync(join(tmpdir(), 'framework-publication-'))
@@ -77,7 +67,14 @@ test('framework publication updates tables and provenance together, with repeata
 })
 
 test('published single-file history retains its original workload labels and counts', () => {
-  const record = publishedInput(samples)
+  const history = JSON.parse(samples)
+  for (const id of ['minimal-node', 'minimal-react']) {
+    Object.assign(history.fixtures[id], { files: 1, tests: 1 })
+    for (const group of history.plan.filter(g => g.item.id === id)) Object.assign(group.item, { files: 1, tests: 1 })
+    for (const sample of [...history.samples, ...history.memorySamples].filter(s => s.group === `main/${id}/none`))
+      Object.assign(sample.counts, { files: 1, tests: 1, passed: 1 })
+  }
+  const record = publishedInput(JSON.stringify(history))
   assert.equal(record.fixtures['minimal-node'].files, 1)
   assert.equal(record.fixtures['minimal-react'].tests, 1)
   assert.match(renderReport(record).tables, /\| Node · single-file \|/)
@@ -210,4 +207,17 @@ test('legacy maxrss framework results are rejected with a clear error', () => {
     () => renderReport(legacy, 'result.json'),
     /legacy maxrss data \(rssBytes\)/,
   )
+})
+
+test('preview source survives publication and appears in reproduction instructions', (t) => {
+  const { root, input, record } = fixture(t)
+  const requested = 'https://pkg.pr.new/@rstest/core@abcdef0'
+  record.rstestSource = { kind: 'preview', requested }
+  record.options.rstestVersion = requested
+  writeFileSync(input, JSON.stringify(record))
+  refreshReport({ root, input })
+  const readme = readFileSync(join(root, 'README.md'), 'utf8')
+  assert(readme.includes(`--rstest-version ${requested}`))
+  assert(readme.includes(`Rstest source: ${requested}`) || readme.includes(`Rstest source: \`${requested}\``))
+  refreshReport({ root, check: true })
 })

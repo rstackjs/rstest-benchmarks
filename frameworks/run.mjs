@@ -42,6 +42,7 @@ import { formatCpu } from '../scripts/lib/host.mjs'
 import { createProgress, frameworkRunCounts } from '../scripts/lib/progress.mjs'
 import { readWorkers, slotVariables } from './workers.mjs'
 import { selectCases } from '../scripts/lib/selection.mjs'
+import { parseRstestVersion, prepareDependencies } from './dependencies.mjs'
 const { values } = parseArgs({
   options: {
     runs: { type: 'string', default: '6' },
@@ -53,8 +54,10 @@ const { values } = parseArgs({
     label: { type: 'string', default: 'frameworks' },
     install: { type: 'boolean', default: false },
     frameworks: { type: 'string', default: frameworks.join(',') },
+    'rstest-version': { type: 'string' },
   },
 })
+const rstestSource = parseRstestVersion(values['rstest-version'])
 if (!/^[a-zA-Z0-9][a-zA-Z0-9._-]*$/.test(values.label))
   throw Error('Invalid label')
 const runs = Number(values.runs),
@@ -106,7 +109,7 @@ const planned = selectCases(
 const groups = planned.filter((g) => g.frameworks.length)
 if (!groups.length) throw Error('No matching cases')
 if (values['dry-run']) {
-  console.log(JSON.stringify({ groups }, null, 2))
+  console.log(JSON.stringify({ groups, ...(rstestSource ? { rstestSource } : {}) }, null, 2))
   process.exit(0)
 }
 const host = {
@@ -118,18 +121,20 @@ const host = {
   parallelism: availableParallelism(),
 }
 console.log(`[host] ${formatCpu(host)}; ${host.platform}; Node ${host.node}`)
+const prepared = prepareDependencies(root, rstestSource, values.install)
+const dependencyRoot = prepared.directory
 const deps = JSON.parse(
-  readFileSync(join(root, 'frameworks/package.json')),
+  readFileSync(join(dependencyRoot, 'package.json')),
 ).dependencies
 if (
-  values.install ||
+  (!rstestSource && values.install) ||
   Object.keys(deps).some(
     (name) =>
-      !existsSync(join(root, 'frameworks/node_modules', name, 'package.json')),
+      !existsSync(join(dependencyRoot, 'node_modules', name, 'package.json')),
   )
 ) {
   const install = spawnSync('pnpm', ['install', '--frozen-lockfile'], {
-    cwd: join(root, 'frameworks'),
+    cwd: dependencyRoot,
     stdio: 'inherit',
   })
   if (install.status !== 0)
@@ -139,15 +144,15 @@ const resolved = Object.fromEntries(
   Object.keys(deps).map((name) => [
     name,
     JSON.parse(
-      readFileSync(join(root, 'frameworks/node_modules', name, 'package.json')),
+      readFileSync(join(dependencyRoot, 'node_modules', name, 'package.json')),
     ).version,
   ]),
 )
 for (const [name, version] of Object.entries(deps))
-  if (resolved[name] !== version)
+  if (!(rstestSource && name.startsWith('@rstest/')) && resolved[name] !== version)
     throw Error(`Installed ${name} differs from pinned version`)
 // Jest resolves its default transformer from jest-config's own dependency graph.
-const jestRequire = createRequire(realpathSync(join(root, 'frameworks/node_modules/jest/package.json')))
+const jestRequire = createRequire(realpathSync(join(dependencyRoot, 'node_modules/jest/package.json')))
 const jestCliRequire = createRequire(jestRequire.resolve('jest-cli/package.json'))
 const jestConfigRequire = createRequire(jestCliRequire.resolve('jest-config/package.json'))
 resolved['babel-jest'] = JSON.parse(readFileSync(jestConfigRequire.resolve('babel-jest/package.json'))).version
@@ -166,6 +171,7 @@ process.on('SIGTERM', () => controller.abort())
 const record = {
   schemaVersion: 1,
   ci: ciContext(),
+  ...(prepared.source ? { rstestSource: prepared.source } : {}),
   status: 'preparing',
   startedAt: new Date().toISOString(),
   options: {
@@ -175,6 +181,7 @@ const record = {
     cases: values.cases,
     excludeCases: values['exclude-cases'],
     frameworks: requested,
+    ...(rstestSource ? { rstestVersion: rstestSource.requested } : {}),
   },
   host,
   versions: {
@@ -189,7 +196,7 @@ const record = {
   },
   dependencies: resolved,
   lockHash: createHash('sha256')
-    .update(readFileSync(join(root, 'frameworks/pnpm-lock.yaml')))
+    .update(readFileSync(join(dependencyRoot, 'pnpm-lock.yaml')))
     .digest('hex'),
   harnessHash: fingerprint(join(root, 'frameworks/reporters')),
   samples: [],
@@ -231,7 +238,10 @@ try {
     { recursive: true },
   )
   record.harnessHash = fingerprint(join(directory, 'harness'))
-  record.fixtures = generate(directory, requested)
+  cpSync(join(dependencyRoot, 'package.json'), join(directory, 'dependencies.package.json'))
+  cpSync(join(dependencyRoot, 'pnpm-lock.yaml'), join(directory, 'dependencies.pnpm-lock.yaml'))
+  cpSync(join(dependencyRoot, 'pnpm-workspace.yaml'), join(directory, 'dependencies.pnpm-workspace.yaml'))
+  record.fixtures = generate(directory, requested, join(dependencyRoot, 'node_modules'))
   for (const framework of requested)
     for (const item of cases)
       configure(
@@ -314,7 +324,7 @@ try {
     const pkg = framework.startsWith('rstest')
         ? '@rstest/core'
         : frameworkFamily(framework)
-    const pkgPath = join(root, 'frameworks/node_modules', pkg, 'package.json'),
+    const pkgPath = join(dependencyRoot, 'node_modules', pkg, 'package.json'),
       pkgJson = JSON.parse(readFileSync(pkgPath))
     const bin =
       typeof pkgJson.bin === 'string'

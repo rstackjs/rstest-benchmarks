@@ -4,9 +4,9 @@ import assert from 'node:assert/strict'
 import { cpSync, existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 
-const identityKeys = ['schemaVersion', 'lockHash', 'harnessHash', 'dependencies', 'versions']
+const identityKeys = ['schemaVersion', 'lockHash', 'harnessHash', 'dependencies', 'versions', 'rstestSource']
 const hostKeys = ['node', 'cpu', 'logicalCpuCount', 'platform', 'os', 'parallelism']
-const optionKeys = ['runs', 'conditions', 'frameworks']
+const optionKeys = ['runs', 'conditions', 'frameworks', 'rstestVersion']
 
 const union = (target, source, what, from) => {
   for (const [key, value] of Object.entries(source ?? {})) {
@@ -32,7 +32,7 @@ export function mergeResults(inputs) {
       assert.deepEqual(record.options[key], first.record.options[key], `${name}: options.${key} differs from ${first.name}`)
     assert.equal(!record.ci, !first.record.ci, `${name}: CI context present in only some inputs`)
     if (record.ci)
-      for (const key of ['url', 'sha', 'attempt'])
+      for (const key of ['url', 'sha'])
         assert.equal(record.ci[key], first.record.ci[key], `${name}: ci.${key} differs from ${first.name}`)
   }
 
@@ -53,7 +53,7 @@ export function mergeResults(inputs) {
   delete merged.verification
   delete merged.publication
   const distinct = (key) => [...new Set(records.map(({ record }) => record.ci?.[key]).filter(Boolean))].join(', ')
-  if (first.record.ci) merged.ci = { ...first.record.ci, job: 'merged', runner: distinct('runner'), image: distinct('image') }
+  if (first.record.ci) merged.ci = { ...first.record.ci, attempt: Math.max(...records.map(({ record }) => record.ci.attempt)), job: 'merged', runner: distinct('runner'), image: distinct('image') }
   const suites = new Set()
   for (const { name, record } of records) {
     for (const group of record.plan) {
@@ -82,7 +82,7 @@ export function mergeResults(inputs) {
   merged.mergedFrom = records.map(({ name, record }) => ({
     name,
     cases: record.plan.map((group) => `${group.suite}/${group.item.id}/${group.provider}`),
-    ci: record.ci && { job: record.ci.job, runner: record.ci.runner, image: record.ci.image },
+    ci: record.ci && { job: record.ci.job, runner: record.ci.runner, image: record.ci.image, attempt: record.ci.attempt },
     startedAt: record.startedAt,
     endedAt: record.endedAt,
   }))

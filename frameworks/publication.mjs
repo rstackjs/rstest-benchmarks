@@ -65,9 +65,10 @@ function context(record) {
     measured: record.samples.filter((sample) => sample.phase === 'timed').length,
     warmups: record.samples.filter((sample) => sample.phase === 'warmup').length,
   }
-  const source = record.ci
+  let source = record.ci
     ? `Source: [GitHub Actions](${record.ci.url}), commit \`${record.ci.sha}\`, attempt ${record.ci.attempt}. Runner ${record.ci.runner}; image ${record.ci.image ?? 'unknown'}.\n\n`
     : ''
+  if (record.rstestSource) source += `Rstest source: \`${record.rstestSource.requested}\`. The run records its resolved versions and dependency lockfile.\n\n`
   const versions = Object.entries(record.versions).map(([name, version]) => `${name} **${version}**`).join(', ')
   return `${source}Measured ${record.startedAt.slice(0, 10)} (UTC) on ${formatCpu(record.host)}; ${record.host.platform}, Node ${record.host.node}. ${versions}; @swc/jest **${record.dependencies['@swc/jest']}**.\n\n${record.options.runs} timed runs per supported case and cache condition; all **${summary.measured} timed samples and ${summary.warmups} warmups passed**. Node compile cache is disabled. Default concurrency; named Rstest pool variants change only the pool. Cold and warm framework caches are reported separately; OS page cache and background load are uncontrolled. Browser mode compares Vitest against default Rstest only.`
 }
@@ -81,7 +82,7 @@ export function refreshReport({ root, input = join(root, 'frameworks/reports/res
   const endMarker = '<!-- framework-results:end -->'
   const start = readme.indexOf(startMarker), end = readme.indexOf(endMarker)
   assert(start >= 0 && end > start && readme.lastIndexOf(startMarker) === start && readme.lastIndexOf(endMarker) === end, 'Missing, duplicate or invalid framework result markers')
-  const command = `pnpm compare:frameworks --suites ${record.options.suites.join(',')} --cases ${cases.map((item) => item.id).join(',')} --frameworks ${record.options.frameworks.join(',')} --runs ${record.options.runs}`
+  const command = `pnpm compare:frameworks --suites ${record.options.suites.join(',')} --cases ${cases.map((item) => item.id).join(',')} --frameworks ${record.options.frameworks.join(',')} --runs ${record.options.runs}${record.rstestSource ? ` --rstest-version ${record.rstestSource.requested}` : ''}`
   const body = `\n\n${context(record)}\n\nReproduce this matrix using the matching source checkout and pinned dependencies:\n\n\`\`\`sh\n${command}\n\`\`\`\n\n${rendered.tables}\n\n`
   const updates = new Map([
     ['README.md', readme.slice(0, start + startMarker.length) + body + readme.slice(end)],

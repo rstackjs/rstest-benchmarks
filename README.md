@@ -26,9 +26,22 @@ pnpm compare:frameworks --suites main --cases many-files --runs 6
 pnpm compare:frameworks --suites main --conditions warm --runs 6
 ```
 
+## Select a Rstest version
+
+`--rstest-version` accepts an exact npm version (including prereleases) or a commit-addressed pkg.pr.new URL for `@rstest/core`:
+
+```sh
+pnpm compare:frameworks --rstest-version 0.12.5 --suites main --cases minimal-node --runs 5
+pnpm compare:frameworks --rstest-version 'https://pkg.pr.new/@rstest/core@<commit-sha>' --runs 5
+```
+
+Replace `<commit-sha>` with the published preview's commit hash. Repository-qualified URLs such as `https://pkg.pr.new/web-infra-dev/rstest/@rstest/core@<commit-sha>` are also supported. The core, browser, V8 coverage and Istanbul coverage packages must all be available for that release or commit; they are installed together, including transitive core overrides. Mutable tags such as `latest` and branch URLs are rejected.
+
+The runner installs the selected packages in an isolated directory under `results/framework-dependencies/`, leaving the repository's pinned packages unchanged. Other direct dependencies retain their pinned versions. Each result records the requested source, resolved versions and effective dependency manifest, workspace configuration and lockfile. Omitting the option uses the checked-in lockfile. This option applies to the framework comparison; `use-version` changes the separate Rstest version-benchmark apps.
+
 ## Run in CI
 
-The [Frameworks benchmark workflow](.github/workflows/benchmark-frameworks.yml) runs main and browser suites on pull requests and pushes to `main`. Use **Actions → Frameworks benchmark → Run workflow** to choose the repetition count or cases. Each case runs in its own matrix job and a final job merges the per-case results into one verified result. Rstest release comparisons have separate manual workflows for [performance](.github/workflows/benchmark-versions.yml) and [coverage](.github/workflows/benchmark-version-coverage.yml) (also one job per app, merged). Within a job, all compared runners execute sequentially on the same host; CI uploads reports and raw execution artifacts without committing results.
+The [Frameworks benchmark workflow](.github/workflows/benchmark-frameworks.yml) runs main and browser suites on pull requests and pushes to `main`. Use **Actions → Frameworks benchmark → Run workflow** to choose the repetition count, cases or `rstest_version` (the same value as the local option). Each case runs in its own matrix job and a final job merges the per-case results into one verified result. Rstest release comparisons have separate manual workflows for [performance](.github/workflows/benchmark-versions.yml) and [coverage](.github/workflows/benchmark-version-coverage.yml) (also one job per app, merged). Within a job, all compared runners execute sequentially on the same host; CI uploads reports and raw execution artifacts without committing results.
 
 To update this page from a successful framework run with all eight cases and browser mode, download its merged artifact (`benchmark-frameworks-merged-...`) and extract it under `results/`, preserving the run directory:
 
@@ -62,79 +75,77 @@ Each has one source file and two test files, with one test per file. [Node](fram
 
 ## Results
 
-> The tables below still use the previous memory metric (OS maxrss from `/usr/bin/time`). They will be replaced by process-tree footprint numbers in the next publication; old and new memory values are not comparable.
+> The tables below use macOS process-tree physical footprint. These memory values are not comparable with the previous OS maxrss measurements. This publication covers the main and browser suites; cross-framework coverage is not included.
 
 🥇 and 🥈 mark the lowest and second-lowest distinct unrounded medians in each row; exact ties share the marker. They do not indicate statistical significance.
 
-The published single-file rows below predate the two-file minimal workloads. Their recorded measurements remain unchanged; new runs report the two-file workloads separately.
-
 <!-- framework-results:start -->
 
-Measured 2026-11-06 (UTC) on Apple M4 Max; logical CPUs: not recorded; available parallelism: 14; darwin arm64, Node v24.11.1. jest **30.5.2**, vitest **5.1.0**, rstest **0.12.6**, rstest-vmForks **0.12.6**; @swc/jest **0.2.39**.
+Measured 2026-11-13 (UTC) on Apple M4 Max; logical CPUs: 14; available parallelism: 14; darwin arm64, Node v26.13.0. jest **30.5.2**, vitest **5.1.0**, vitest-vmForks **5.1.0**, rstest **0.12.6**, rstest-vmForks **0.12.6**; @swc/jest **0.2.39**.
 
-8 timed runs per supported case and cache condition; all **928 timed samples and 58 warmups passed**. Node compile cache is disabled. Default concurrency; named Rstest pool variants change only the pool. Cold and warm framework caches are reported separately; OS page cache and background load are uncontrolled. Browser mode compares Vitest against default Rstest only.
+5 timed runs per supported case and cache condition; all **420 timed samples and 42 warmups passed**. Node compile cache is disabled. Default concurrency; named Rstest pool variants change only the pool. Cold and warm framework caches are reported separately; OS page cache and background load are uncontrolled. Browser mode compares Vitest against default Rstest only.
 
 Reproduce this matrix using the matching source checkout and pinned dependencies:
 
 ```sh
-pnpm compare:frameworks --suites main,coverage,browser --cases minimal-node,minimal-react,startup,many-files,module-graph,backend,barrel,react --frameworks jest,vitest,rstest,rstest-vmForks --runs 8
+pnpm compare:frameworks --suites main,browser --cases minimal-node,minimal-react,startup,many-files,module-graph,backend,barrel,react --frameworks jest,vitest,vitest-vmForks,rstest,rstest-vmForks --runs 5
 ```
 
 **Main suite · cold cache · elapsed time**
 
-| Case | Jest + SWC | Vitest | Rstest | Rstest vmForks |
-| --- | ---: | ---: | ---: | ---: |
-| Node · single-file | 0.44s | 0.30s | 🥇 0.24s | 🥈 0.26s |
-| React · single-file | 0.76s | 0.64s | 🥇 0.51s | 🥈 0.54s |
-| Node startup | 0.65s | 0.34s | 🥇 0.27s | 🥈 0.30s |
-| Many files | 🥈 3.20s | 7.06s | 4.62s | 🥇 1.11s |
-| Module graph | 7.17s | 4.69s | 🥈 1.01s | 🥇 0.78s |
-| Backend | 1.15s | 0.88s | 🥇 0.63s | 🥈 0.73s |
-| Barrel | 21.99s | 9.94s | 🥈 0.56s | 🥇 0.47s |
-| React + jsdom | 2.39s | 3.94s | 🥈 1.74s | 🥇 1.18s |
+| Case | Jest + SWC | Vitest | Vitest vmForks | Rstest | Rstest vmForks |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| Node · 2 files | 0.33s | 0.27s | 0.29s | 🥇 0.21s | 🥈 0.22s |
+| React · 2 files | 0.62s | 0.51s | 0.50s | 🥈 0.47s | 🥇 0.46s |
+| Node startup | 0.38s | 0.28s | 0.31s | 🥇 0.21s | 🥈 0.24s |
+| Many files | 2.15s | 4.67s | 🥈 1.85s | 3.28s | 🥇 0.94s |
+| Module graph | 4.02s | 3.15s | 2.68s | 🥈 0.80s | 🥇 0.59s |
+| Backend | 0.72s | 0.58s | 0.59s | 🥇 0.44s | 🥈 0.48s |
+| Barrel | 11.77s | 7.97s | 7.80s | 🥈 0.43s | 🥇 0.37s |
+| React + jsdom | 1.26s | 1.84s | 🥈 1.07s | 1.12s | 🥇 0.85s |
 
-**Main suite · cold cache · RSS (MiB)**
+**Main suite · cold cache · Memory (MiB, process-tree footprint peak)**
 
-| Case | Jest + SWC | Vitest | Rstest | Rstest vmForks |
-| --- | ---: | ---: | ---: | ---: |
-| Node · single-file | 🥇 101.73 | 🥈 116.45 | 129.59 | 128.85 |
-| React · single-file | 🥈 182.49 | 🥇 157.73 | 262.34 | 262.43 |
-| Node startup | 🥇 93.20 | 🥈 122.80 | 140.07 | 139.54 |
-| Many files | 🥇 202.16 | 🥈 217.23 | 385.74 | 286.70 |
-| Module graph | 🥇 207.59 | 311.98 | 372.55 | 🥈 287.53 |
-| Backend | 🥈 151.85 | 🥇 137.45 | 154.85 | 155.45 |
-| Barrel | 363.26 | 429.61 | 🥇 163.47 | 🥈 163.73 |
-| React + jsdom | 🥈 182.54 | 🥇 176.92 | 444.17 | 357.92 |
+| Case | Jest + SWC | Vitest | Vitest vmForks | Rstest | Rstest vmForks |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| Node · 2 files | 277.49 | 🥇 100.82 | 128.45 | 🥈 107.48 | 139.47 |
+| React · 2 files | 395.36 | 🥇 253.42 | 🥈 275.20 | 423.07 | 426.56 |
+| Node startup | 373.83 | 🥈 166.61 | 234.43 | 🥇 155.86 | 252.26 |
+| Many files | 2199.37 | 🥈 613.07 | 2329.38 | 🥇 534.20 | 1349.10 |
+| Module graph | 1993.77 | 1190.47 | 1828.53 | 🥇 806.43 | 🥈 1135.53 |
+| Backend | 1102.47 | 🥈 702.08 | 734.43 | 🥇 591.34 | 952.44 |
+| Barrel | 3522.33 | 2242.67 | 2376.27 | 🥇 285.76 | 🥈 557.81 |
+| React + jsdom | 1737.90 | 🥇 1394.42 | 1775.21 | 🥈 1599.71 | 1916.81 |
 
 **Main suite · warm cache · elapsed time**
 
-| Case | Jest + SWC | Vitest | Rstest | Rstest vmForks |
-| --- | ---: | ---: | ---: | ---: |
-| Node · single-file | 🥇 0.21s | 0.27s | 🥈 0.23s | 0.27s |
-| React · single-file | 🥈 0.52s | 0.58s | 🥇 0.50s | 0.53s |
-| Node startup | 🥇 0.26s | 0.28s | 🥈 0.27s | 0.29s |
-| Many files | 🥈 2.20s | 6.21s | 4.47s | 🥇 1.10s |
-| Module graph | 2.38s | 3.10s | 🥈 0.97s | 🥇 0.75s |
-| Backend | 0.80s | 0.76s | 🥇 0.70s | 🥈 0.73s |
-| Barrel | 5.20s | 5.43s | 🥈 0.48s | 🥇 0.45s |
-| React + jsdom | 2.26s | 4.04s | 🥈 1.67s | 🥇 1.13s |
+| Case | Jest + SWC | Vitest | Vitest vmForks | Rstest | Rstest vmForks |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| Node · 2 files | 🥇 0.19s | 0.21s | 0.23s | 🥈 0.21s | 0.23s |
+| React · 2 files | 🥈 0.42s | 0.47s | 0.48s | 🥇 0.41s | 0.45s |
+| Node startup | 🥇 0.21s | 0.21s | 0.24s | 🥈 0.21s | 0.24s |
+| Many files | 1.89s | 4.50s | 🥈 1.63s | 3.54s | 🥇 0.93s |
+| Module graph | 1.29s | 1.89s | 1.47s | 🥈 0.69s | 🥇 0.53s |
+| Backend | 0.63s | 0.48s | 0.47s | 🥇 0.43s | 🥈 0.47s |
+| Barrel | 3.96s | 4.14s | 3.84s | 🥈 0.42s | 🥇 0.34s |
+| React + jsdom | 1.19s | 1.59s | 🥈 0.91s | 1.07s | 🥇 0.78s |
 
-**Main suite · warm cache · RSS (MiB)**
+**Main suite · warm cache · Memory (MiB, process-tree footprint peak)**
 
-| Case | Jest + SWC | Vitest | Rstest | Rstest vmForks |
-| --- | ---: | ---: | ---: | ---: |
-| Node · single-file | 🥇 94.88 | 🥈 114.16 | 129.01 | 129.13 |
-| React · single-file | 🥈 170.76 | 🥇 159.03 | 268.55 | 267.31 |
-| Node startup | 🥇 107.67 | 🥈 116.68 | 139.25 | 138.64 |
-| Many files | 🥇 195.02 | 🥈 200.84 | 387.97 | 288.22 |
-| Module graph | 🥇 192.76 | 🥈 239.39 | 390.24 | 286.01 |
-| Backend | 284.42 | 🥇 126.57 | 🥈 154.72 | 155.31 |
-| Barrel | 277.62 | 398.31 | 🥇 163.08 | 🥈 164.14 |
-| React + jsdom | 🥇 174.19 | 🥈 178.22 | 436.37 | 364.05 |
+| Case | Jest + SWC | Vitest | Vitest vmForks | Rstest | Rstest vmForks |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| Node · 2 files | 🥇 52.29 | 🥈 101.42 | 128.81 | 102.01 | 137.84 |
+| React · 2 files | 🥇 126.34 | 🥈 249.54 | 283.30 | 408.09 | 416.54 |
+| Node startup | 🥇 56.16 | 166.58 | 244.39 | 🥈 132.05 | 243.90 |
+| Many files | 2200.93 | 🥈 577.02 | 2411.58 | 🥇 549.67 | 1371.60 |
+| Module graph | 1825.50 | 1193.91 | 1822.79 | 🥇 781.96 | 🥈 1093.99 |
+| Backend | 🥇 221.73 | 621.27 | 728.31 | 🥈 594.15 | 967.85 |
+| Barrel | 2751.64 | 2267.95 | 2396.94 | 🥇 309.28 | 🥈 576.13 |
+| React + jsdom | 1644.10 | 🥇 1377.54 | 1664.50 | 🥈 1507.76 | 1874.34 |
 
 <!-- framework-results:end -->
 
-RSS is OS maxrss, not total concurrent worker memory. Full coverage/browser comparisons are in the [complete report](frameworks/reports/report.md), with [variability](frameworks/reports/variability.md) and [all samples and provenance](frameworks/reports/result.json). The tiny-project rows above are part of the same run and result set. Published framework reports use fixed paths in `frameworks/reports/`; each update replaces the current report and samples. Previous results remain available in Git history. Run `pnpm report:frameworks` to regenerate the reports and README tables from the published samples.
+Memory is the peak sum of physical footprints across the measured process tree. Full browser comparisons are in the [complete report](frameworks/reports/report.md), with [variability](frameworks/reports/variability.md) and [all samples and provenance](frameworks/reports/result.json). The tiny-project rows above are part of the same run and result set. Published framework reports use fixed paths in `frameworks/reports/`; each update replaces the current report and samples. Previous results remain available in Git history. Run `pnpm report:frameworks` to regenerate the reports and README tables from the published samples.
 
 See [workload design](docs/framework-comparison.md) for performance questions and fixture details. The proposed scaling extensions are not part of the implemented default matrix.
 

@@ -58,6 +58,7 @@ export function renderReport(record, source = 'framework result') {
   )
   if (record.ci) lines.splice(4, 0, `Source: [GitHub Actions](${record.ci.url}), commit \`${record.ci.sha}\`, attempt ${record.ci.attempt}; runner ${record.ci.runner}, image ${record.ci.image ?? 'unknown'}.`, '')
   if (record.comparisonNote) lines.splice(4, 0, record.comparisonNote, '')
+  if (record.rstestSource) lines.splice(4, 0, `Rstest source: \`${record.rstestSource.requested}\`. Resolved versions are listed below; the dependency lockfile is recorded with the run.`, '')
   if (runners.includes('rstest-vmThreads')) lines.push(
     'Rstest vmThreads uses the same published core package as Rstest, with only pool set to vmThreads. Default concurrency is retained; each file receives a fresh VM context. Browser mode is excluded for this variant. Thread heaps share one process while fork workers occupy separate processes; the process-tree footprint sum counts both.',
     '',

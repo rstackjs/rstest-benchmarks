@@ -22,6 +22,7 @@ Markdown and published-result-only changes do not trigger push/PR framework benc
 | `suites` | Fixed main/browser | Performance defaults to `main`; optionally select `scaling,barrel,pools`. Coverage stays separate |
 | `cases` | Optional comma-separated case IDs; empty selects all eight | App names or full case IDs; empty selects all cases in the workflow |
 | `exclude_cases` | Comma-separated case IDs to skip | App names or full case IDs to skip |
+| `rstest_version` | Exact npm version or commit-addressed pkg.pr.new core URL; empty uses the lockfile | — |
 | `baseline` | — | Exact npm release, default `0.11.0` |
 | `candidate` | — | Exact npm release(s), comma-separated, default `0.12.6` |
 
@@ -52,7 +53,7 @@ Local checkout comparison remains available through the local CLI; the version w
 
 Node is pinned to 26.13.0 and pnpm comes from `package.json`. Node 24.11.1 reproduced a Jest worker SIGSEGV in V8 GC on macOS arm64, matching the stack in [nodejs/node#62393](https://github.com/nodejs/node/issues/62393). The Node 26 pin keeps every runner on the same runtime without disabling JIT or changing concurrency. Results collected on different Node versions must be reported separately.
 
-The framework workflow installs its frozen lockfile and Chromium before measurement. The version performance workflow lets `compare` install each Rstest version and Chromium in its isolated workspace. The coverage workflow installs only the selected Rstest versions and workload dependencies. Neither version workflow installs the framework-comparison dependency set.
+The framework workflow installs its frozen lockfile and Chromium before measurement. An optional `rstest_version` installs all four Rstest packages into an isolated dependency directory before measurement; the result records the source URL/version, resolved package versions and effective lockfile. See [Select a Rstest version](../README.md#select-a-rstest-version) for local usage and preview requirements. The version performance workflow lets `compare` install each Rstest version and Chromium in its isolated workspace. The coverage workflow installs only the selected Rstest versions and workload dependencies. Neither version workflow installs the framework-comparison dependency set.
 
 Node compile cache is disabled. Within each job, all compared tools/versions run sequentially on one host, with their default concurrency; different matrix jobs run in parallel on different hosted runners. CI does not restore framework transformation, build or sequencing caches. Cache resets, warmups and rotating order remain controlled by the existing runners.
 
@@ -76,20 +77,26 @@ Hosted runners (Apple M1, 3 CPUs, 7 GiB) can be lost during very long jobs, and 
 
 `node scripts/ci-matrix.mjs frameworks|coverage --cases ... --exclude-cases ...` builds the matrix with the same selection rules as the local CLIs (`--cases react` gives `react` and `react-browser`; excluding `react` removes both; `browser/react/none` targets only browser mode). It writes the `matrix` output that the jobs consume through `fromJSON`. Unknown IDs or an empty selection fail in the planning job.
 
-Every matrix job uploads its own artifact, `benchmark-frameworks-case-<case>-<run ID>-<attempt>` or `benchmark-version-coverage-case-<app>-<run ID>-<attempt>`. The `Merge results` job runs even when a case job failed, downloads these artifacts and merges them:
+Every matrix job uploads its full diagnostic artifact, `benchmark-frameworks-case-<case>-<run ID>-<attempt>` or `benchmark-version-coverage-case-<app>-<run ID>-<attempt>`.
+
+Successful framework jobs additionally verify and upload `benchmark-frameworks-result-<case>-<run ID>-<attempt>`. This compact artifact contains one `case.tar.gz`: the result JSON and only the source trees needed to verify fixture fingerprints. The merge job runs after all framework jobs succeed. It downloads these compact inputs sequentially, verifies their SHA-256 digests, and retries listing/downloading/extraction up to three times with a fresh staging directory. Full logs and dependency/harness snapshots stay in the per-case diagnostic artifacts.
+
+For each expected matrix case, the downloader selects the most recent successful artifact from the same workflow run, up to the current attempt. This lets a merge-only retry reuse existing inputs, and a partial case retry combine rerun cases with earlier successful cases. Missing or expired inputs fail explicitly. Artifact attempt numbers are retained per input; a failed current benchmark job prevents merging older samples. The coverage workflow retains its existing download behavior and runs its merge job even when a case failed.
+
+The mergers then build and verify the combined results:
 
 - `frameworks/merge-results.mjs` builds one `result.json` and runs the repository's verification on it, then renders the reports. `scripts/merge-comparisons.mjs` builds one `comparison.json` with one baseline and one candidate result document for the coverage workflow, which `pnpm report:versions` publishes like a single run.
-- Merging refuses inputs that are not `completed`, whose lockfile, harness, dependencies, installed versions, host (CPU, Node, platform) or options differ, or that contain the same case twice. A failed case job therefore fails the merge instead of producing a partial result; the other cases remain available in their own artifacts.
-- The merged record keeps every sample unchanged and adds `mergedFrom` (artifact name, cases, runner and timestamps of each input). Samples of the framework result carry a `mergeSource` tag, because jobs run in parallel and `verify.mjs` checks that benchmark processes do not overlap only within one source. Nothing else in verification changes.
+- Merging refuses inputs that are not `completed`, whose lockfile, harness, dependencies, installed versions, requested Rstest source, host (CPU, Node, platform) or options differ, or that contain the same case twice. A failed case job therefore fails the merge instead of producing a partial result; the other cases remain available in their own artifacts.
+- The merged record keeps every sample unchanged and adds `mergedFrom` (artifact name, cases, runner, attempt and timestamps of each input). Samples of the framework result carry a `mergeSource` tag, because jobs run in parallel and `verify.mjs` checks that benchmark processes do not overlap only within one source. Nothing else in verification changes.
 - The merge job summary, the merged artifact (`benchmark-frameworks-merged-<OS>-<run ID>-<attempt>`, `benchmark-version-coverage-merged-...`) and the final `Check published reports` step (`if: always()`, so it reports even when the merge failed) follow the merge.
 
 ## Inspect results
 
-The framework summary (per case job, and the merged one) shows environment information and elapsed-time/memory comparisons. Rstest phase timings remain in the artifact’s full `report.md`; `summary.md` omits those diagnostic tables. Version jobs use the same compact elapsed-time and memory tables as the README, with environment information and repetition counts. Their `summary.md` excludes Variability and detailed Memory tables; complete reports remain under `reports/` in the artifact. Each matrix job's artifact is named as described in [Matrix jobs and merging](#matrix-jobs-and-merging); the merged artifacts are `benchmark-frameworks-merged-<OS>-<run ID>-<attempt>` and `benchmark-version-coverage-merged-<OS>-<run ID>-<attempt>`, and the single-job version workflow produces `benchmark-versions-<OS>-<run ID>-<attempt>`. Artifacts are retained for 30 days. It includes result JSON, reports, logs, generated source/configs, dependency lockfiles and harness snapshots. Installed `node_modules` and framework caches are excluded. Hidden configuration files are included.
+The framework summary (per case job, and the merged one) shows environment information and elapsed-time/memory comparisons. Rstest phase timings remain in the artifact’s full `report.md`; `summary.md` omits those diagnostic tables. Version jobs use the same compact elapsed-time and memory tables as the README, with environment information and repetition counts. Their `summary.md` excludes Variability and detailed Memory tables; complete reports remain under `reports/` in the artifact. Each matrix job's artifact is named as described in [Matrix jobs and merging](#matrix-jobs-and-merging); the merged artifacts are `benchmark-frameworks-merged-<OS>-<run ID>-<attempt>` and `benchmark-version-coverage-merged-<OS>-<run ID>-<attempt>`, and the single-job version workflow produces `benchmark-versions-<OS>-<run ID>-<attempt>`. Artifacts are retained for 30 days. The full per-case diagnostic artifact includes result JSON, reports, logs, generated source/configs, dependency lockfiles and harness snapshots. The merged framework artifact contains the combined JSON, reports and selected source trees; use its `mergedFrom` entries to locate full diagnostics. Installed `node_modules` and framework caches are excluded. Hidden configuration files are included.
 
 Artifacts are uploaded even after failure when a result directory exists. Failed or partial runs are diagnostic evidence, not publishable benchmark results. Full raw samples retain the run URL, commit, attempt and runner information. Download artifacts you need before retention expires.
 
-The workflows do not write to Git or open PRs. They only need read access to repository contents.
+The workflows do not write to Git or open PRs. They need read access to repository contents; the framework downloader also needs `actions: read` to retrieve artifacts from the current workflow run.
 
 ## Update the framework homepage
 
