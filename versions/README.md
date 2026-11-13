@@ -6,7 +6,7 @@ For Jest / Vitest / Rstest comparisons, see the [main README](../README.md).
 
 ## Compare versions
 
-Use Node.js 24 and the pnpm version pinned in `package.json`. Run from the repository root:
+Use Node.js 26 and the pnpm version pinned in `package.json`. Run from the repository root:
 
 ```sh
 # Two npm releases

@@ -1,6 +1,6 @@
 # Running benchmarks
 
-Use Node.js 24 and the pnpm version pinned in `package.json`. With nvm, run `nvm use` to select the recorded runtime.
+Use Node.js 26 and the pnpm version pinned in `package.json`. With nvm, run `nvm use` to select the recorded runtime.
 
 ## Compare versions
 
@@ -28,7 +28,7 @@ pnpm compare --baseline 0.12.6 --candidate local:../rstest \
 pnpm compare --baseline 0.12.5 --candidate 0.12.6 --dry-run
 ```
 
-One `--baseline` and one or more `--candidate` sources are required. Repeat `--candidate`, or separate npm versions with commas. Use repeated flags for local paths (a local path may contain commas). Duplicate candidates are rejected; a candidate may match the baseline for an A/A control. Both options accept an exact npm version (including prereleases) or `local:<path>` pointing to a Git checkout of the Rstest monorepo. `latest`, Git URLs, and package-directory paths are not accepted. The command requires Node.js 24 and pnpm on PATH; the local checkout must also support that runtime.
+One `--baseline` and one or more `--candidate` sources are required. Repeat `--candidate`, or separate npm versions with commas. Use repeated flags for local paths (a local path may contain commas). Duplicate candidates are rejected; a candidate may match the baseline for an A/A control. Both options accept an exact npm version (including prereleases) or `local:<path>` pointing to a Git checkout of the Rstest monorepo. `latest`, Git URLs, and package-directory paths are not accepted. The command requires Node.js 26 and pnpm on PATH; the local checkout must also support that runtime.
 
 The command prepares all installations before starting measurements; no root `pnpm install` is needed for `compare`. Each side uses an independent benchmark workspace with the same fixtures and runner. Rstest core, browser, and coverage dependencies are overridden together, including transitive imports, and installed versions are checked before timing. The top-level benchmark installation and manifests are preserved.
 

@@ -50,7 +50,9 @@ Five rounds let each of the five Node/DOM runners occupy each order position onc
 
 Local checkout comparison remains available through the local CLI; the version workflow inputs are for npm releases.
 
-Node is pinned to 24.11.1 and pnpm comes from `package.json`. The framework workflow installs its frozen lockfile and Chromium before measurement. The version performance workflow lets `compare` install each Rstest version and Chromium in its isolated workspace. The coverage workflow installs only the selected Rstest versions and workload dependencies. Neither version workflow installs the framework-comparison dependency set.
+Node is pinned to 26.13.0 and pnpm comes from `package.json`. Node 24.11.1 reproduced a Jest worker SIGSEGV in V8 GC on macOS arm64, matching the stack in [nodejs/node#62393](https://github.com/nodejs/node/issues/62393). The Node 26 pin keeps every runner on the same runtime without disabling JIT or changing concurrency. Results collected on different Node versions must be reported separately.
+
+The framework workflow installs its frozen lockfile and Chromium before measurement. The version performance workflow lets `compare` install each Rstest version and Chromium in its isolated workspace. The coverage workflow installs only the selected Rstest versions and workload dependencies. Neither version workflow installs the framework-comparison dependency set.
 
 Node compile cache is disabled. Within each job, all compared tools/versions run sequentially on one host, with their default concurrency; different matrix jobs run in parallel on different hosted runners. CI does not restore framework transformation, build or sequencing caches. Cache resets, warmups and rotating order remain controlled by the existing runners.
 
