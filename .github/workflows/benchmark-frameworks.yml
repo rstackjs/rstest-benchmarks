@@ -10,13 +10,8 @@ on:
   merge_group:
   workflow_dispatch:
     inputs:
-      runner:
-        description: Runner OS (results from different hosts must not be pooled)
-        type: choice
-        options: [macos-15, ubuntu-24.04]
-        default: macos-15
       runs:
-        description: Timed runs per runner/case/cache condition (10 is optional for fuller order balancing)
+        description: Timed runs per case/cache condition (10 is optional for fuller order balancing)
         type: string
         default: '5'
       cases:
@@ -25,19 +20,55 @@ on:
       exclude_cases:
         description: Case IDs to exclude, comma-separated (applied after cases)
         type: string
+      rstest_version:
+        description: Exact Rstest npm version or pkg.pr.new core URL (empty uses the lockfile)
+        type: string
 
 permissions:
   contents: read
+  actions: read
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.event.pull_request.number || github.run_id }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
+  # One matrix job per case keeps each job short and isolates failures: a lost
+  # runner or a browser problem costs one case, not the whole run.
+  setup:
+    name: Plan matrix
+    runs-on: macos-15
+    timeout-minutes: 15
+    outputs:
+      matrix: ${{ steps.plan.outputs.matrix }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+        with:
+          node-version: 26.13.0
+      - name: Install pinned pnpm
+        run: npm install --global "$(node -p 'require("./package.json").packageManager')"
+      - name: Test harness
+        run: pnpm test
+      - name: Plan matrix
+        id: plan
+        env:
+          BENCH_EXCLUDE_CASES: ${{ inputs.exclude_cases }}
+          BENCH_CASES: ${{ inputs.cases || 'minimal-node,minimal-react,startup,many-files,module-graph,backend,barrel,react' }}
+        run: node scripts/ci-matrix.mjs frameworks --cases "$BENCH_CASES" --exclude-cases "$BENCH_EXCLUDE_CASES"
+
   benchmark:
-    name: Benchmark
-    runs-on: ${{ inputs.runner || 'macos-15' }}
-    timeout-minutes: 90
+    name: Benchmark (${{ matrix.name }})
+    needs: setup
+    runs-on: macos-15
+    # The slowest case (barrel) is estimated at about 35 minutes on this runner
+    # with 5 runs; 60 minutes leaves headroom without hiding a hung job.
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJSON(needs.setup.outputs.matrix) }}
     env:
       NODE_DISABLE_COMPILE_CACHE: '1'
     steps:
@@ -46,28 +77,42 @@ jobs:
           persist-credentials: false
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
         with:
-          node-version: 24.11.1
+          node-version: 26.13.0
       - name: Install pinned pnpm
         run: npm install --global "$(node -p 'require("./package.json").packageManager')"
-      - name: Check harness and published reports
-        run: |
-          pnpm test
-          pnpm report:frameworks:check
-      - name: Install benchmark dependencies and Chromium
-        run: |
-          pnpm --dir frameworks install --frozen-lockfile
-          pnpm --dir frameworks exec playwright install --with-deps chromium
+      - name: Install benchmark dependencies
+        run: pnpm --dir frameworks install --frozen-lockfile
+      - name: Install Chromium
+        if: matrix.suite == 'browser'
+        run: pnpm --dir frameworks exec playwright install --with-deps chromium
       # Keep all compared frameworks on one host, running sequentially.
       # Do not restore transform, build or sequencing caches across CI jobs.
       - name: Run benchmarks
         id: benchmark
         env:
           BENCH_RUNS: ${{ inputs.runs || '5' }}
-          BENCH_EXCLUDE_CASES: ${{ inputs.exclude_cases }}
-          BENCH_CASES: ${{ inputs.cases || 'minimal-node,minimal-react,startup,many-files,module-graph,backend,barrel,react' }}
+          BENCH_SUITE: ${{ matrix.suite }}
+          BENCH_CASE: ${{ matrix.cases }}
+          BENCH_RSTEST_VERSION: ${{ inputs.rstest_version }}
         shell: bash
         run: |
-          pnpm compare:frameworks --suites main,browser --frameworks jest,vitest,vitest-vmForks,rstest,rstest-vmForks --cases "$BENCH_CASES" --exclude-cases "$BENCH_EXCLUDE_CASES" --runs "$BENCH_RUNS" --label ci-frameworks
+          args=()
+          if [[ -n "$BENCH_RSTEST_VERSION" ]]; then
+            args+=(--rstest-version "$BENCH_RSTEST_VERSION")
+          fi
+          pnpm compare:frameworks --suites "$BENCH_SUITE" --frameworks jest,vitest,vitest-vmForks,rstest,rstest-vmForks --cases "$BENCH_CASE" --runs "$BENCH_RUNS" --label ci-frameworks "${args[@]}"
+      - name: Package verified merge input
+        env:
+          RESULT_DIR: ${{ steps.benchmark.outputs.result-directory }}
+        run: node frameworks/pack-result.mjs --input "$RESULT_DIR" --output merge-input/case.tar.gz
+      - name: Upload merge input
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: benchmark-frameworks-result-${{ matrix.name }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: merge-input/case.tar.gz
+          compression-level: 0
+          if-no-files-found: error
+          retention-days: 30
       - name: Publish job summary
         if: always()
         env:
@@ -81,11 +126,60 @@ jobs:
         if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
-          name: benchmark-frameworks-${{ runner.os }}-${{ github.run_id }}-${{ github.run_attempt }}
+          name: benchmark-frameworks-case-${{ matrix.name }}-${{ github.run_id }}-${{ github.run_attempt }}
           path: |
             results/
             !results/**/node_modules/**
             !results/**/.cache/**
+            !results/framework-dependencies/**
           include-hidden-files: true
           if-no-files-found: warn
           retention-days: 30
+
+  merge:
+    name: Merge results
+    needs: [setup, benchmark]
+    if: ${{ always() && needs.setup.result == 'success' && needs.benchmark.result == 'success' }}
+    runs-on: macos-15
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+        with:
+          node-version: 26.13.0
+      - name: Install pinned pnpm
+        run: npm install --global "$(node -p 'require("./package.json").packageManager')"
+      - name: Download case artifacts
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          BENCH_MATRIX: ${{ needs.setup.outputs.matrix }}
+        run: node scripts/download-framework-artifacts.mjs
+      # Refuses inputs whose lockfile, harness, dependencies or versions differ,
+      # then runs the repository's verification on the merged record.
+      - name: Merge case results
+        id: merge
+        shell: bash
+        run: node frameworks/merge-results.mjs --output "results/ci-frameworks-merged-${GITHUB_RUN_ID}" case-results/*
+      - name: Publish job summary
+        if: always()
+        env:
+          RESULT_DIR: ${{ steps.merge.outputs.result-directory }}
+        shell: bash
+        run: |
+          if [[ -n "$RESULT_DIR" && -f "$RESULT_DIR/summary.md" ]]; then
+            cat "$RESULT_DIR/summary.md" >> "$GITHUB_STEP_SUMMARY"
+          fi
+      - name: Upload merged samples and reports
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: benchmark-frameworks-merged-${{ runner.os }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: results/
+          include-hidden-files: true
+          if-no-files-found: warn
+          retention-days: 30
+      - name: Check published reports
+        if: always()
+        run: pnpm report:frameworks:check

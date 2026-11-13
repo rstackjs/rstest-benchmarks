@@ -82,18 +82,18 @@
       "title": "coverage: 0.11.0 vs 0.12.6",
       "output": "reports/coverage.md",
       "marker": "coverage",
-      "context": "Sources: baseline: **0.11.0** (npm); candidate: **0.12.6** (npm). Measured 2026-11-06 (UTC); Apple M4 Max × 14, darwin arm64, Node v24.11.1.\n\n1 warmup(s) and **6 timed runs per supported case**; medians are reported. 15 selected cases. Every candidate percentage is relative to the baseline; negative means less elapsed time.\n\nSources run sequentially in rotating case/round order. For cases supported by all sources, each source occupies every order position equally often. Node compile cache is disabled. Rstest build and sequencing caches are cleared before each fixture's warmups and retained during measurement. Workload dependency graphs match. Background load and OS page cache are not controlled.",
+      "context": "Source: [GitHub Actions](https://github.com/rstackjs/rstest-benchmarks/actions/runs/43413826291), commit `6560450c5a8b34baff4bd5bc31d3d9f49b4dd661`, attempt 1.\n\nSources: baseline: **0.11.0** (npm); candidate: **0.12.6** (npm). Measured 2026-11-13 (UTC); Apple M1 (Virtual) × 3; logical CPUs: 3; available parallelism: 3; darwin arm64, Node v26.13.0.\n\n1 warmup(s) and **6 timed runs per supported case**; medians are reported. 15 selected cases. Every candidate percentage is relative to the baseline; negative means less elapsed time.\n\nSources run sequentially in rotating case/round order. For cases supported by all sources, each source occupies every order position equally often. Node compile cache is disabled. Rstest build and sequencing caches are cleared before each fixture's warmups and retained during measurement. Workload dependency graphs match. Background load and OS page cache are not controlled.",
       "columns": [
         {
           "label": "baseline: 0.11.0",
           "files": [
-            "reports/data/releases-0110-0126-2026-11-06T03-38-14-514Z-06dbc7cd-baseline-coverage.json"
+            "reports/data/ci-version-coverage-merged-2026-11-13T11-20-49-673Z-baseline-coverage.json"
           ]
         },
         {
           "label": "candidate: 0.12.6",
           "files": [
-            "reports/data/releases-0110-0126-2026-11-06T03-38-16-748Z-631fde57-candidate-coverage.json"
+            "reports/data/ci-version-coverage-merged-2026-11-13T11-20-49-673Z-candidate-coverage.json"
           ]
         }
       ]

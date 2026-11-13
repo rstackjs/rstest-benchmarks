@@ -56,8 +56,8 @@ React tests share the same component source and interactions. CSS imports need a
 4. Report two cache conditions separately: **empty framework caches**, cleared before each measured invocation; and **warm framework caches**, cleared once before one warmup per framework/case, then retained for six measured invocations. Each invocation starts a fresh process. This does not clear OS page caches or simulate a completely fresh machine. Vitest 5.1's default filesystem module cache remains enabled, with a case-local directory for controlled cleanup. Record framework cache settings; cache tuning belongs in a separately labeled variant.
 5. Run six measured rounds per framework/case/cache condition. Rotate through all six permutations of Jest, Vitest and Rstest to balance both position and pairwise order. Never overlap installations, fixture generation or benchmark processes with another timed run.
 6. Measure process start through exit, including transformation, workers, execution, reporting and shutdown. Prepare dependencies outside the timing interval. Use small reporter adapters that emit matching final counts and failure information, without per-test success output.
-7. Collect OS maxrss through the same timing wrapper for all frameworks. Preserve its platform-specific meaning; it is not the simultaneous sum of all worker memory. Keep warmup and failed samples, but only complete passing runs receive comparison percentages.
-8. Save every sample, command, cache action, environment, resolved version, test count and fixture/config fingerprint. Report median wall time and median maxrss; link to variability details. Avoid an overall arithmetic average across unrelated workloads.
+7. In a separate memory pass, rerun the same command with the same cache preparation, sample its process tree every 50 ms and sum macOS physical footprint, excluding the benchmark driver; record the per-run peak. Elapsed time comes only from the timing pass. See [Memory methodology](../README.md#memory-methodology). Keep warmup and failed samples, but only complete passing runs receive comparison percentages.
+8. Save every sample, command, cache action, environment, resolved version, test count and fixture/config fingerprint. Report median wall time and median peak footprint; link to variability details. Avoid an overall arithmetic average across unrelated workloads.
 
 The six default main cases produce 108 measured invocations per cache condition: 6 cases × 3 frameworks × 6 rounds. Running both conditions gives 216 measured invocations, plus 18 warmups for the warm-cache condition. The two tiny-project cases, coverage, scaling and browser comparisons are additional suites.
 
@@ -65,7 +65,7 @@ The six default main cases produce 108 measured invocations per cache condition:
 
 Keep shared fixtures independent of framework imports. Add adapters for commands, configuration, cache cleanup, count validation and version/provenance collection. Reuse the current process measurement, statistics and report-publication code where its assumptions hold; replace Rstest-only identities and compatibility checks before using them for cross-framework reports.
 
-Publish framework comparisons under their own report configuration and output paths. Each row should show Jest, Vitest and Rstest values, with a clearly named baseline. Present elapsed time and RSS in separate compact tables. Unsupported browser combinations and noisy samples remain explicit.
+Publish framework comparisons under their own report configuration and output paths. Each row should show Jest, Vitest and Rstest values, with a clearly named baseline. Present elapsed time and memory in separate compact tables. Unsupported browser combinations and noisy samples remain explicit.
 
 ## References
 
