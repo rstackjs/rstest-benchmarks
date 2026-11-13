@@ -113,6 +113,39 @@ jobs:
           include-hidden-files: true
           if-no-files-found: warn
           retention-days: 30
+      # Runs only when an earlier step failed. Every command is best effort so a
+      # missing directory or tool never hides the original failure.
+      - name: Collect macOS crash diagnostics
+        if: failure()
+        shell: bash
+        run: |
+          out="$RUNNER_TEMP/crash-diagnostics"
+          mkdir -p "$out/reports"
+          {
+            echo "# Crash diagnostics $(date -u +%FT%TZ)"
+            for dir in "$HOME/Library/Logs/DiagnosticReports" /Library/Logs/DiagnosticReports; do
+              echo "## $dir"
+              ls -la "$dir" 2>&1 || true
+            done
+          } > "$out/found.txt"
+          for dir in "$HOME/Library/Logs/DiagnosticReports" /Library/Logs/DiagnosticReports; do
+            for f in "$dir"/*.ips "$dir"/*.crash "$dir"/*node* "$dir"/*Jetsam* "$dir"/*jetsam*; do
+              [[ -f "$f" ]] && cp "$f" "$out/reports/$(echo "$dir" | tr '/' '_')_$(basename "$f")" 2>/dev/null || true
+            done
+          done
+          cap() { head -c 20000000; }
+          log show --last 90m --style compact --predicate 'process == "node" OR eventMessage CONTAINS[c] "node"' 2>&1 | cap > "$out/log-node.txt" || true
+          log show --last 90m --style compact --predicate 'process == "ReportCrash" OR process == "kernel" OR process == "logd" OR eventMessage CONTAINS[c] "jetsam" OR eventMessage CONTAINS[c] "memorystatus" OR eventMessage CONTAINS[c] "SIGSEGV" OR eventMessage CONTAINS[c] "EXC_BAD_ACCESS"' 2>&1 | cap > "$out/log-crash-memory.txt" || true
+          { vm_stat; echo; memory_pressure -Q; echo; sysctl hw.memsize vm.swapusage; echo; uptime; echo; ps -Ao pid,ppid,rss,etime,command | sort -k3 -nr | head -30; } > "$out/memory.txt" 2>&1 || true
+          ls -la "$out" "$out/reports" || true
+      - name: Upload crash diagnostics
+        if: failure()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: crash-diagnostics-${{ matrix.name }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/crash-diagnostics/
+          if-no-files-found: warn
+          retention-days: 30
 
   merge:
     name: Merge results
