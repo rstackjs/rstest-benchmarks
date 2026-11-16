@@ -81,7 +81,9 @@ Each has one source file and two test files, with one test per file. [Node](fram
 
 <!-- framework-results:start -->
 
-Measured 2026-11-13 (UTC) on Apple M4 Max; logical CPUs: 14; available parallelism: 14; darwin arm64, Node v26.13.0. jest **30.5.2**, vitest **5.1.0**, vitest-vmForks **5.1.0**, rstest **0.12.6**, rstest-vmForks **0.12.6**; @swc/jest **0.2.39**.
+Source: [GitHub Actions](https://github.com/rstackjs/rstest-benchmarks/actions/runs/43416806164), commit `00b730456da32b416828f52cd18dffd17bbe9b70`, attempt 1. Runner GitHub Actions 1000234580, GitHub Actions 1000234587, GitHub Actions 1000234584, GitHub Actions 1000234581, GitHub Actions 1000234591, GitHub Actions 1000234579, GitHub Actions 1000234590, GitHub Actions 1000234582, GitHub Actions 1000234585; image 20261104.0514.1.
+
+Measured 2026-11-13 (UTC) on Apple M1 (Virtual); logical CPUs: 3; available parallelism: 3; darwin arm64, Node v26.13.0. jest **30.5.2**, vitest **5.1.0**, vitest-vmForks **5.1.0**, rstest **0.12.6**, rstest-vmForks **0.12.6**; @swc/jest **0.2.39**.
 
 5 timed runs per supported case and cache condition; all **420 timed samples and 42 warmups passed**. Node compile cache is disabled. Default concurrency; named Rstest pool variants change only the pool. Cold and warm framework caches are reported separately; OS page cache and background load are uncontrolled. Browser mode compares Vitest against default Rstest only.
 
@@ -95,53 +97,53 @@ pnpm compare:frameworks --suites main,browser --cases minimal-node,minimal-react
 
 | Case | Jest + SWC | Vitest | Vitest vmForks | Rstest | Rstest vmForks |
 | --- | ---: | ---: | ---: | ---: | ---: |
-| Node · 2 files | 0.33s | 0.27s | 0.29s | 🥇 0.21s | 🥈 0.22s |
-| React · 2 files | 0.62s | 0.51s | 0.50s | 🥈 0.47s | 🥇 0.46s |
-| Node startup | 0.38s | 0.28s | 0.31s | 🥇 0.21s | 🥈 0.24s |
-| Many files | 2.15s | 4.67s | 🥈 1.85s | 3.28s | 🥇 0.94s |
-| Module graph | 4.02s | 3.15s | 2.68s | 🥈 0.80s | 🥇 0.59s |
-| Backend | 0.72s | 0.58s | 0.59s | 🥇 0.44s | 🥈 0.48s |
-| Barrel | 11.77s | 7.97s | 7.80s | 🥈 0.43s | 🥇 0.37s |
-| React + jsdom | 1.26s | 1.84s | 🥈 1.07s | 1.12s | 🥇 0.85s |
+| Backend | 🥈 1.17s | 2.43s | 1.30s | 1.95s | 🥇 1.03s |
+| Barrel | 12.11s | 19.71s | 14.08s | 🥈 1.71s | 🥇 0.77s |
+| Many files | 🥈 6.02s | 30.15s | 10.12s | 21.29s | 🥇 4.04s |
+| Node · 2 files | 0.65s | 0.50s | 0.56s | 🥇 0.44s | 🥈 0.47s |
+| React · 2 files | 0.88s | 🥇 0.84s | 🥈 0.87s | 0.98s | 0.91s |
+| Module graph | 5.32s | 11.02s | 6.74s | 🥈 4.05s | 🥇 2.58s |
+| React + jsdom | 🥈 1.80s | 6.79s | 1.91s | 5.76s | 🥇 1.77s |
+| Node startup | 0.68s | 0.81s | 0.78s | 🥈 0.67s | 🥇 0.54s |
 
 **Main suite · cold cache · Memory (MiB, process-tree footprint peak)**
 
 | Case | Jest + SWC | Vitest | Vitest vmForks | Rstest | Rstest vmForks |
 | --- | ---: | ---: | ---: | ---: | ---: |
-| Node · 2 files | 277.49 | 🥇 100.82 | 128.45 | 🥈 107.48 | 139.47 |
-| React · 2 files | 395.36 | 🥇 253.42 | 🥈 275.20 | 423.07 | 426.56 |
-| Node startup | 373.83 | 🥈 166.61 | 234.43 | 🥇 155.86 | 252.26 |
-| Many files | 2199.37 | 🥈 613.07 | 2329.38 | 🥇 534.20 | 1349.10 |
-| Module graph | 1993.77 | 1190.47 | 1828.53 | 🥇 806.43 | 🥈 1135.53 |
-| Backend | 1102.47 | 🥈 702.08 | 734.43 | 🥇 591.34 | 952.44 |
-| Barrel | 3522.33 | 2242.67 | 2376.27 | 🥇 285.76 | 🥈 557.81 |
-| React + jsdom | 1737.90 | 🥇 1394.42 | 1775.21 | 🥈 1599.71 | 1916.81 |
+| Backend | 372.07 | 🥈 164.14 | 301.33 | 🥇 160.70 | 327.74 |
+| Barrel | 1094.01 | 567.95 | 1008.64 | 🥇 140.90 | 🥈 167.09 |
+| Many files | 455.83 | 🥇 188.56 | 504.33 | 🥈 222.99 | 496.07 |
+| Node · 2 files | 120.01 | 🥇 108.36 | 129.87 | 🥈 111.39 | 128.85 |
+| React · 2 files | 🥈 237.01 | 🥇 236.77 | 257.34 | 381.60 | 362.12 |
+| Module graph | 570.64 | 🥈 300.20 | 628.19 | 🥇 275.06 | 457.91 |
+| React + jsdom | 481.96 | 🥇 267.51 | 476.24 | 🥈 412.78 | 597.65 |
+| Node startup | 134.87 | 🥇 115.36 | 138.56 | 🥈 117.08 | 138.39 |
 
 **Main suite · warm cache · elapsed time**
 
 | Case | Jest + SWC | Vitest | Vitest vmForks | Rstest | Rstest vmForks |
 | --- | ---: | ---: | ---: | ---: | ---: |
-| Node · 2 files | 🥇 0.19s | 0.21s | 0.23s | 🥈 0.21s | 0.23s |
-| React · 2 files | 🥈 0.42s | 0.47s | 0.48s | 🥇 0.41s | 0.45s |
-| Node startup | 🥇 0.21s | 0.21s | 0.24s | 🥈 0.21s | 0.24s |
-| Many files | 1.89s | 4.50s | 🥈 1.63s | 3.54s | 🥇 0.93s |
-| Module graph | 1.29s | 1.89s | 1.47s | 🥈 0.69s | 🥇 0.53s |
-| Backend | 0.63s | 0.48s | 0.47s | 🥇 0.43s | 🥈 0.47s |
-| Barrel | 3.96s | 4.14s | 3.84s | 🥈 0.42s | 🥇 0.34s |
-| React + jsdom | 1.19s | 1.59s | 🥈 0.91s | 1.07s | 🥇 0.78s |
+| Backend | 🥈 1.03s | 1.94s | 1.06s | 1.73s | 🥇 0.93s |
+| Barrel | 4.92s | 9.43s | 5.60s | 🥈 1.31s | 🥇 0.59s |
+| Many files | 🥈 5.35s | 26.92s | 8.72s | 24.28s | 🥇 4.01s |
+| Node · 2 files | 🥇 0.35s | 0.46s | 0.45s | 🥈 0.39s | 0.46s |
+| React · 2 files | 🥇 0.63s | 🥈 0.81s | 0.89s | 0.85s | 0.91s |
+| Module graph | 🥈 3.17s | 9.08s | 4.05s | 4.86s | 🥇 2.77s |
+| React + jsdom | 🥇 1.65s | 6.67s | 🥈 2.05s | 5.83s | 2.09s |
+| Node startup | 🥇 0.52s | 0.73s | 0.73s | 0.74s | 🥈 0.54s |
 
 **Main suite · warm cache · Memory (MiB, process-tree footprint peak)**
 
 | Case | Jest + SWC | Vitest | Vitest vmForks | Rstest | Rstest vmForks |
 | --- | ---: | ---: | ---: | ---: | ---: |
-| Node · 2 files | 🥇 52.29 | 🥈 101.42 | 128.81 | 102.01 | 137.84 |
-| React · 2 files | 🥇 126.34 | 🥈 249.54 | 283.30 | 408.09 | 416.54 |
-| Node startup | 🥇 56.16 | 166.58 | 244.39 | 🥈 132.05 | 243.90 |
-| Many files | 2200.93 | 🥈 577.02 | 2411.58 | 🥇 549.67 | 1371.60 |
-| Module graph | 1825.50 | 1193.91 | 1822.79 | 🥇 781.96 | 🥈 1093.99 |
-| Backend | 🥇 221.73 | 621.27 | 728.31 | 🥈 594.15 | 967.85 |
-| Barrel | 2751.64 | 2267.95 | 2396.94 | 🥇 309.28 | 🥈 576.13 |
-| React + jsdom | 1644.10 | 🥇 1377.54 | 1664.50 | 🥈 1507.76 | 1874.34 |
+| Backend | 207.73 | 🥇 155.34 | 294.88 | 🥈 163.31 | 327.05 |
+| Barrel | 845.15 | 494.29 | 990.74 | 🥇 142.49 | 🥈 166.67 |
+| Many files | 449.71 | 🥇 156.43 | 477.19 | 🥈 220.77 | 500.15 |
+| Node · 2 files | 🥇 48.13 | 🥈 106.94 | 126.41 | 112.28 | 128.38 |
+| React · 2 files | 🥇 128.28 | 🥈 234.86 | 258.74 | 358.21 | 355.37 |
+| Module graph | 533.59 | 🥇 244.36 | 559.47 | 🥈 269.15 | 453.67 |
+| React + jsdom | 494.53 | 🥇 250.57 | 456.65 | 🥈 390.12 | 587.78 |
+| Node startup | 🥇 62.72 | 🥈 111.58 | 134.48 | 118.24 | 140.53 |
 
 <!-- framework-results:end -->
 
