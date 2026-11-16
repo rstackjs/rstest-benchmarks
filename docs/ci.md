@@ -100,16 +100,13 @@ The benchmark workflows do not write to Git or open PRs; only [Publish results](
 
 ## Publish a finished run
 
-The **Publish results** workflow ([publish-results.yml](../.github/workflows/publish-results.yml)) updates the README, reports and charts on `main` from a finished run, without downloading artifacts by hand. Use **Actions → Publish results → Run workflow** and enter:
-
-- `run_id`: the ID of a successful **Frameworks benchmark**, **Rstest coverage benchmark** or **Rstest version benchmark** run (the number at the end of the run URL).
-- `dry_run`: when set, the job regenerates everything, prints the diff summary to the job summary and discards it without committing.
+The **Publish results** workflow ([publish-results.yml](../.github/workflows/publish-results.yml)) updates the README, reports and charts on `main` from a finished run, without downloading artifacts by hand. Use **Actions → Publish results → Run workflow** and enter `run_id`: the ID of a successful **Frameworks benchmark**, **Rstest coverage benchmark** or **Rstest version benchmark** run (the number at the end of the run URL). Check the run's merge job summary first. Validation and the checks abort before anything is committed, and a bad publication is one revert on `main`.
 
 The same logic runs locally with a token that can read Actions artifacts:
 
 ```sh
-GITHUB_TOKEN=$(gh auth token) node scripts/publish-run.mjs --run <run id> --dry-run
-GITHUB_TOKEN=$(gh auth token) node scripts/publish-run.mjs --run <run id>          # update the working tree
+GITHUB_TOKEN=$(gh auth token) node scripts/publish-run.mjs --run <run id>          # update the working tree only
+GITHUB_TOKEN=$(gh auth token) node scripts/publish-run.mjs --run <run id> --push   # commit and push to main (the workflow does this)
 ```
 
 The script detects the benchmark from the run's workflow, then:
@@ -118,7 +115,7 @@ The script detects the benchmark from the run's workflow, then:
 2. Downloads the artifacts with their SHA-256 digests checked. The GitHub token is sent to the GitHub API only. Framework runs use the compact per-case `benchmark-frameworks-result-*` artifacts, which the CI merge job also uses; the script merges them in the same order and verifies the merged record. Coverage and version runs use `benchmark-version-coverage-merged-*` or `benchmark-versions-*`.
 3. Publishes with the same code as `pnpm report:frameworks --input …` or `pnpm report:versions --input …`. Partial selections (for example a run with fewer than all eight cases) are rejected by that code.
 4. Runs the checks (`report:frameworks:check`, `report:check`).
-5. With `--push` (the workflow's default), commits `docs: publish <framework|version coverage|version> results from run <id>` and pushes it to `main`. If `main` moved, it rebases once and pushes again. If nothing changed, it says so and exits successfully.
+5. With `--push` (what the workflow uses), commits `docs: publish <framework|version coverage|version> results from run <id>` and pushes it to `main`. If `main` moved, it rebases once and pushes again. If nothing changed, it says so and exits successfully. It also writes a short job summary: run ID, what was published and the commit SHA, or "already up to date".
 
 The workflow needs the job permissions `contents: write` and `actions: read`. The repository default token permission is read, so these are granted in the job. It pushes directly to `main` as a fast-forward and does not open a PR, because opening PRs from Actions is disabled in this repository. Pushes made with `GITHUB_TOKEN` do not start other workflows. The framework workflows also ignore `**/*.md`, `reports/**` and `frameworks/reports/**` (which includes the charts). The publication paths must be clean before the script starts.
 

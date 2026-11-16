@@ -78,9 +78,8 @@ export function extractComparisonArchive(zip, resultsDir) {
 const git = (root, ...args) => command('git', args, { cwd: root })
 const changed = (root) => git(root, 'status', '--porcelain', '--', ...publishedPaths).trim()
 
-export async function publishRun({ root, repository, runId, token, apiUrl = 'https://api.github.com', fetchImpl = fetch, dryRun = false, push = false, log = console.log, summaryFile }) {
+export async function publishRun({ root, repository, runId, token, apiUrl = 'https://api.github.com', fetchImpl = fetch, push = false, log = console.log, summaryFile }) {
   assert(/^\d+$/.test(String(runId)), 'Invalid run ID')
-  assert(!(dryRun && push), '--dry-run and --push cannot be combined')
   assert(!changed(root), 'Publication paths have uncommitted changes; commit or discard them first')
   if (push) assert.equal(git(root, 'rev-parse', '--abbrev-ref', 'HEAD').trim(), 'main', 'Publishing with --push is only allowed on main')
 
@@ -117,12 +116,6 @@ export async function publishRun({ root, repository, runId, token, apiUrl = 'htt
       ? `${message}\n\n${git(root, 'diff', '--stat', '--', ...publishedPaths).trim()}\n\nNew files:\n${status.split('\n').filter((line) => line.startsWith('??')).join('\n') || '(none)'}`
       : `Nothing to publish: run ${runId} already matches the published ${workflow.title} results.`
     log(report)
-    if (summaryFile) appendFileSync(summaryFile, `### ${dryRun ? 'Dry run: ' : ''}Publish run ${runId}\n\n\`\`\`\n${report}\n\`\`\`\n`)
-    if (dryRun && status) {
-      git(root, 'restore', '--staged', '--worktree', '--', ...publishedPaths)
-      git(root, 'clean', '-fdq', '--', ...publishedPaths)
-      log('Dry run: working tree restored.')
-    }
     if (push && status) {
       git(root, 'add', '--', ...publishedPaths)
       git(root, '-c', 'user.name=github-actions[bot]', '-c', 'user.email=41898282+github-actions[bot]@users.noreply.github.com', 'commit', '-q', '-m', message)
@@ -133,6 +126,10 @@ export async function publishRun({ root, repository, runId, token, apiUrl = 'htt
       }
       log(`Pushed: ${message}`)
     }
+    const sha = push && status ? git(root, 'rev-parse', '--short', 'HEAD').trim() : null
+    const outcome = !status ? 'Already up to date: nothing to publish.' : push ? `Published as commit ${sha}: ${message}` : `Updated the working tree (not committed): ${message}`
+    log(outcome)
+    if (summaryFile) appendFileSync(summaryFile, `### Publish run ${runId}\n\n${outcome}\n\n\`\`\`\n${report}\n\`\`\`\n`)
     return { kind: workflow.kind, changed: Boolean(status), message }
   } finally {
     rmSync(work, { recursive: true, force: true })

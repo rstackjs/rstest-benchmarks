@@ -10,10 +10,6 @@ on:
         description: ID of a successful Frameworks benchmark, Rstest coverage benchmark or Rstest version benchmark run
         type: string
         required: true
-      dry_run:
-        description: Regenerate and show the diff in the job summary without committing
-        type: boolean
-        default: false
 
 permissions:
   contents: read
@@ -43,11 +39,4 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ github.token }}
           RUN_ID: ${{ inputs.run_id }}
-          DRY_RUN: ${{ inputs.dry_run }}
-        shell: bash
-        run: |
-          if [[ "$DRY_RUN" == "true" ]]; then
-            node scripts/publish-run.mjs --run "$RUN_ID" --dry-run
-          else
-            node scripts/publish-run.mjs --run "$RUN_ID" --push
-          fi
+        run: node scripts/publish-run.mjs --run "$RUN_ID" --push
