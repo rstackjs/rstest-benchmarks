@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import { heatColor, heatEndpoints, longestBars, renderChart, renderTable } from '../../frameworks/charts.mjs'
+import { heatColor, heatEndpoints, heatFullGap, longestBars, renderChart, renderTable } from '../../frameworks/charts.mjs'
 import { buildSummary } from '../../frameworks/summary.mjs'
 import { readFileSync } from 'node:fs'
 
@@ -98,7 +98,7 @@ test('values and gaps are right-aligned in two sub-columns of every cell', () =>
   assert.deepEqual(labels, [10, 10, 10])
 })
 
-test('cell fills touch each other: no spacing and no rounded corners', () => {
+test('cell fills touch each other with no spacing or rounded corners, and 1 px separators sit on the borders', () => {
   const rows = [{ name: 'A', cells: [cell('1s', null, 0, true), cell('2s', '+100%', 1), cell('3s', '+200%', 2)] }, { name: 'B', cells: [cell('1s', null, 0, true), cell('1s', null, 0, true), cell('1s', null, 0, true)] }]
   const svg = renderTable(tableInput(rows))
   const all = fills(svg)
@@ -112,27 +112,44 @@ test('cell fills touch each other: no spacing and no rounded corners', () => {
   assert.equal(all[0].x + all[0].width, all[1].x) // neighbours share an edge
   assert.equal(all[0].y + all[0].height, all[3].y) // and so do rows
   assert.doesNotMatch(svg, /rx=/)
-  assert.doesNotMatch(svg, /<line /)
+  const lines = [...svg.matchAll(/<line x1="([\d.]+)" y1="([\d.]+)" x2="([\d.]+)" y2="([\d.]+)" stroke="(#[0-9a-f]+)" stroke-opacity="[\d.]+" stroke-width="1"/g)]
+    .map((m) => ({ x1: Number(m[1]), y1: Number(m[2]), x2: Number(m[3]), y2: Number(m[4]), stroke: m[5] }))
+  const horizontal = lines.filter((l) => l.y1 === l.y2), vertical = lines.filter((l) => l.x1 === l.x2)
+  assert.deepEqual(horizontal.map((l) => l.y1), [30, 60, 90]) // header bottom + every row bottom
+  assert.deepEqual(vertical.map((l) => l.x1), [0, 1, 2, 3].map((i) => 130 + i * columnWidth)) // every column border
+  // Separator color differs per theme variant.
+  const dark = renderTable({ ...tableInput(rows), theme: 'dark' })
+  assert.match(svg, /stroke="#8c959f"/)
+  assert.match(dark, /stroke="#6e7681"/)
 })
 
-test('row colors: best is green, worst is red, others are continuous by gap / worst gap', () => {
-  const gaps = [0, 0.1, 0.3, 0.7, 1.5]
-  const rows = [{ name: 'A', cells: gaps.map((gap) => cell(`${gap}`, gap ? `+${gap}` : null, gap, gap === 0)) }]
+test('fixed scale: 0% is green, +100% or more is full red, monotonic in between; ties are green', () => {
+  assert.equal(heatFullGap, 1)
+  assert.equal(heatColor(0), heatEndpoints.best)
+  assert.equal(heatColor(1), heatEndpoints.worst)
+  const gaps = [0, 0.05, 0.15, 0.5, 1, 2, 10]
+  const rows = [
+    { name: 'A', cells: gaps.map((gap) => cell(`${gap}`, gap ? `+${gap}` : null, gap, gap === 0)) },
+    // The scale is the same in every row: a row whose worst gap is only +20% never turns fully red.
+    { name: 'B', cells: [cell('1', null, 0, true), cell('1.2', '+20%', 0.2), cell('1', null, 0, true), cell('1.1', '+10%', 0.1), cell('1', null, 0, true), cell('1', null, 0, true), cell('1', null, 0, true)] },
+  ]
   const svg = renderTable({ ...tableInput(rows), columns: gaps.map((_, i) => ({ framework: 'jest', label: `c${i}` })) })
   const colors = fills(svg).map((fill) => fill.color)
-  assert.equal(colors[0], heatEndpoints.best)
-  assert.equal(colors[4], heatEndpoints.worst)
-  // Interpolation is continuous in the gap: different gaps give different colors, and the
-  // middle passes through yellow/amber (red and green both high), not brown.
-  assert.equal(new Set(colors).size, 5)
+  const first = colors.slice(0, 7)
+  assert.equal(first[0], heatEndpoints.best)
+  assert.equal(first[4], heatEndpoints.worst) // +100%
+  assert.equal(first[5], heatEndpoints.worst) // +200%, capped
+  assert.equal(first[6], heatEndpoints.worst)
+  assert.equal(new Set(first.slice(0, 5)).size, 5) // continuous below the cap
+  const red = first.map((color) => hexToRgb(color)[0])
+  for (let i = 1; i < 5; i++) assert(red[i] >= red[i - 1] - 1)
+  const second = colors.slice(7)
+  assert.equal(second[0], heatEndpoints.best)
+  assert.equal(second[2], heatEndpoints.best) // ties stay green
+  assert.notEqual(second[1], heatEndpoints.worst) // +20% in another row is not full red
+  assert.equal(second[1], heatColor(0.2))
   const [r, g] = hexToRgb(heatColor(0.5))
   assert(r > 150 && g > 100, `midpoint ${heatColor(0.5)} should be amber/yellow`)
-  // Red grows and green shrinks along the whole scale.
-  const channels = Array.from({ length: 21 }, (_, i) => hexToRgb(heatColor(i / 20)))
-  for (let i = 1; i < channels.length; i++) assert(channels[i][0] >= channels[i - 1][0] - 1 && channels[i][1] <= channels[i - 1][1] + 12)
-  // A row where every value ties is entirely green.
-  const tied = renderTable(tableInput([{ name: 'T', cells: [cell('1s', null, 0, true), cell('1s', null, 0, true), cell('1s', null, 0, true)] }]))
-  assert.deepEqual([...new Set(fills(tied).map((fill) => fill.color))], [heatEndpoints.best])
 })
 
 test('summary lists medians per case, condition and framework', () => {
