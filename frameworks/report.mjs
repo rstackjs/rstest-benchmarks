@@ -5,7 +5,7 @@ import { join } from 'node:path'
 import { workerLabel } from './workers.mjs'
 import { assertNoLegacyMemory } from '../scripts/lib/legacy.mjs'
 import { renderChart } from './charts.mjs'
-import { formatElapsed, formatMemory, relativeCells } from './format.mjs'
+import { formatElapsed, formatMemory, markdownCells, relativeEntries } from './format.mjs'
 
 function caseName(group) {
   const [suite, name, provider] = group.split('/')
@@ -178,6 +178,8 @@ export function renderReport(record, source = 'framework result') {
       const separator = `| --- | ${names.map(() => '---:').join(' | ')} |`
       const main = [`**Main suite · ${condition} cache · ${metric === 'time' ? 'elapsed time' : title}**`, '', header, separator]
       const readmeMain = []
+      const structured = []
+      let browserRow = null
       lines.push(`### ${title}`, '', header, separator)
       const chart = []
       const browser = [header, separator]
@@ -195,14 +197,16 @@ export function renderReport(record, source = 'framework result') {
         })
         lines.push(`| ${caseName(group)} | ${cells.join(' | ')} |`)
         // README tables: compact values, each cell's difference from the row's best.
-        const compact = relativeCells(
+        const entries = relativeEntries(
           stats.map((s, i) => ({ value: s[metric].median, state: !sets[i].length ? 'missing' : s.complete ? 'ok' : 'incomplete' })),
           metric === 'time' ? formatElapsed : formatMemory,
         )
+        const compact = markdownCells(entries)
         if (group.startsWith('main/')) {
           const id = group.split('/')[1]
           main.push(`| ${mainCaseNames[id] ?? id} | ${cells.join(' | ')} |`)
           readmeMain.push(`| ${mainCaseNames[id] ?? id} | ${compact.join(' | ')} |`)
+          structured.push({ name: mainCaseNames[id] ?? id, cells: entries })
           chart.push({
             name: mainCaseNames[id] ?? id,
             bars: stats.map((s, i) => ({
@@ -213,7 +217,9 @@ export function renderReport(record, source = 'framework result') {
             })),
           })
         } else if (group.startsWith('browser/')) {
-          browser.push(`| ${mainCaseNames[group.split('/')[1]] ?? group.split('/')[1]} · browser | ${compact.join(' | ')} |`)
+          const browserName = mainCaseNames[group.split('/')[1]] ?? group.split('/')[1]
+          browser.push(`| ${browserName} · browser | ${compact.join(' | ')} |`)
+          browserRow = { name: `${browserName} · browser`, cells: entries }
         }
       }
       if (main.length > 4) mainTables.push(main.join('\n'))
@@ -222,6 +228,9 @@ export function renderReport(record, source = 'framework result') {
         sections[condition][metric] = {
           table: [header, separator, ...readmeMain].join('\n'),
           browser: browser.length > 2 ? browser.join('\n') : null,
+          columns: runners.map((framework, i) => ({ framework, label: names[i] })),
+          rows: structured,
+          browserRow,
           chart: renderChart({
             title: `${condition === 'warm' ? 'Warm' : 'Cold'} cache ${metric === 'time' ? 'elapsed time' : 'memory (MiB, process-tree footprint peak)'}, median per case`,
             groups: chart,

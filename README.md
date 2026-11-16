@@ -6,7 +6,7 @@ For comparisons between Rstest releases or a local checkout, see [Rstest version
 
 ## Results
 
-In each row the best (lowest) value is bold and the other cells show the difference from it. Differences do not indicate statistical significance. This publication covers the main and browser suites; cross-framework coverage is not included.
+In each row the best (lowest) result is green and marked 🏆. Other cells shade from green to red by their gap to it, reaching full red at +100% or more. Gaps do not indicate statistical significance. This publication covers the main and browser suites; cross-framework coverage is not included.
 
 <!-- framework-results:start -->
 
@@ -16,9 +16,13 @@ Rstest source: `https://pkg.pr.new/@rstest/core@fe5e00a`. The run records its re
 
 ### Elapsed time, cold cache
 
-![Elapsed time, cold cache](frameworks/reports/charts/cold-elapsed.svg)
+<picture>
+<source media="(prefers-color-scheme: dark)" srcset="frameworks/reports/charts/cold-elapsed-table-dark.svg">
+<img alt="Elapsed time table, cold cache" src="frameworks/reports/charts/cold-elapsed-table.svg">
+</picture>
 
-Within a case, bar length is proportional to the value. Across cases, the longest bar grows with the case's largest value on a log scale, so compare lengths only within a case.
+<details>
+<summary>Table data</summary>
 
 | Case | Jest + SWC | Vitest | Vitest vmForks | Rstest | Rstest vmForks |
 | --- | ---: | ---: | ---: | ---: | ---: |
@@ -31,11 +35,21 @@ Within a case, bar length is proportional to the value. Across cases, the longes
 | React + jsdom | 2.49s (+19%) | 9.20s (+341%) | 2.27s (+9%) | 6.70s (+222%) | **2.08s** |
 | Node startup | 0.93s (+60%) | 0.88s (+52%) | 0.70s (+21%) | 0.77s (+32%) | **0.58s** |
 
-### Memory, cold cache (MiB, peak process-tree footprint)
+</details>
 
-![Memory (MiB, peak process-tree footprint), cold cache](frameworks/reports/charts/cold-memory.svg)
+![Elapsed time, cold cache](frameworks/reports/charts/cold-elapsed.svg)
 
 Within a case, bar length is proportional to the value. Across cases, the longest bar grows with the case's largest value on a log scale, so compare lengths only within a case.
+
+### Memory, cold cache (MiB, peak process-tree footprint)
+
+<picture>
+<source media="(prefers-color-scheme: dark)" srcset="frameworks/reports/charts/cold-memory-table-dark.svg">
+<img alt="Memory (MiB, peak process-tree footprint) table, cold cache" src="frameworks/reports/charts/cold-memory-table.svg">
+</picture>
+
+<details>
+<summary>Table data</summary>
 
 | Case | Jest + SWC | Vitest | Vitest vmForks | Rstest | Rstest vmForks |
 | --- | ---: | ---: | ---: | ---: | ---: |
@@ -48,14 +62,24 @@ Within a case, bar length is proportional to the value. Across cases, the longes
 | React + jsdom | 526 (+95%) | **269** | 477 (+77%) | 338 (+25%) | 531 (+97%) |
 | Node startup | 133 (+15%) | **115** | 139 (+20%) | 119 (+3%) | 139 (+21%) |
 
+</details>
+
+![Memory (MiB, peak process-tree footprint), cold cache](frameworks/reports/charts/cold-memory.svg)
+
+Within a case, bar length is proportional to the value. Across cases, the longest bar grows with the case's largest value on a log scale, so compare lengths only within a case.
+
 <details>
 <summary>Warm cache</summary>
 
 **Warm cache · Elapsed time**
 
-![Elapsed time, warm cache](frameworks/reports/charts/warm-elapsed.svg)
+<picture>
+<source media="(prefers-color-scheme: dark)" srcset="frameworks/reports/charts/warm-elapsed-table-dark.svg">
+<img alt="Elapsed time table, warm cache" src="frameworks/reports/charts/warm-elapsed-table.svg">
+</picture>
 
-Within a case, bar length is proportional to the value. Across cases, the longest bar grows with the case's largest value on a log scale, so compare lengths only within a case.
+<details>
+<summary>Table data</summary>
 
 | Case | Jest + SWC | Vitest | Vitest vmForks | Rstest | Rstest vmForks |
 | --- | ---: | ---: | ---: | ---: | ---: |
@@ -68,11 +92,21 @@ Within a case, bar length is proportional to the value. Across cases, the longes
 | React + jsdom | **2.23s** | 9.67s (+333%) | 2.62s (+17%) | 6.87s (+208%) | 2.46s (+10%) |
 | Node startup | **0.42s** | 0.81s (+90%) | 0.61s (+45%) | 0.69s (+63%) | 0.50s (+18%) |
 
-**Warm cache · Memory (MiB, peak process-tree footprint)**
+</details>
 
-![Memory (MiB, peak process-tree footprint), warm cache](frameworks/reports/charts/warm-memory.svg)
+![Elapsed time, warm cache](frameworks/reports/charts/warm-elapsed.svg)
 
 Within a case, bar length is proportional to the value. Across cases, the longest bar grows with the case's largest value on a log scale, so compare lengths only within a case.
+
+**Warm cache · Memory (MiB, peak process-tree footprint)**
+
+<picture>
+<source media="(prefers-color-scheme: dark)" srcset="frameworks/reports/charts/warm-memory-table-dark.svg">
+<img alt="Memory (MiB, peak process-tree footprint) table, warm cache" src="frameworks/reports/charts/warm-memory-table.svg">
+</picture>
+
+<details>
+<summary>Table data</summary>
 
 | Case | Jest + SWC | Vitest | Vitest vmForks | Rstest | Rstest vmForks |
 | --- | ---: | ---: | ---: | ---: | ---: |
@@ -87,32 +121,62 @@ Within a case, bar length is proportional to the value. Across cases, the longes
 
 </details>
 
+![Memory (MiB, peak process-tree footprint), warm cache](frameworks/reports/charts/warm-memory.svg)
+
+Within a case, bar length is proportional to the value. Across cases, the longest bar grows with the case's largest value on a log scale, so compare lengths only within a case.
+
+</details>
+
 <details>
 <summary>Browser mode</summary>
 
-**Browser mode · cold cache · Elapsed time**
+**Browser mode · Elapsed time**
+
+<picture>
+<source media="(prefers-color-scheme: dark)" srcset="frameworks/reports/charts/browser-elapsed-table-dark.svg">
+<img alt="Browser mode Elapsed time table" src="frameworks/reports/charts/browser-elapsed-table.svg">
+</picture>
+
+<details>
+<summary>Table data</summary>
+
+**cold cache**
 
 | Case | Jest + SWC | Vitest | Vitest vmForks | Rstest | Rstest vmForks |
 | --- | ---: | ---: | ---: | ---: | ---: |
 | React + jsdom · browser | — | **6.22s** | — | 7.01s (+13%) | — |
 
-**Browser mode · cold cache · Memory (MiB, peak process-tree footprint)**
-
-| Case | Jest + SWC | Vitest | Vitest vmForks | Rstest | Rstest vmForks |
-| --- | ---: | ---: | ---: | ---: | ---: |
-| React + jsdom · browser | — | 920 (+153%) | — | **363** | — |
-
-**Browser mode · warm cache · Elapsed time**
+**warm cache**
 
 | Case | Jest + SWC | Vitest | Vitest vmForks | Rstest | Rstest vmForks |
 | --- | ---: | ---: | ---: | ---: | ---: |
 | React + jsdom · browser | — | **4.64s** | — | 6.18s (+33%) | — |
 
-**Browser mode · warm cache · Memory (MiB, peak process-tree footprint)**
+</details>
+
+**Browser mode · Memory (MiB, peak process-tree footprint)**
+
+<picture>
+<source media="(prefers-color-scheme: dark)" srcset="frameworks/reports/charts/browser-memory-table-dark.svg">
+<img alt="Browser mode Memory (MiB, peak process-tree footprint) table" src="frameworks/reports/charts/browser-memory-table.svg">
+</picture>
+
+<details>
+<summary>Table data</summary>
+
+**cold cache**
+
+| Case | Jest + SWC | Vitest | Vitest vmForks | Rstest | Rstest vmForks |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| React + jsdom · browser | — | 920 (+153%) | — | **363** | — |
+
+**warm cache**
 
 | Case | Jest + SWC | Vitest | Vitest vmForks | Rstest | Rstest vmForks |
 | --- | ---: | ---: | ---: | ---: | ---: |
 | React + jsdom · browser | — | 797 (+123%) | — | **357** | — |
+
+</details>
 
 </details>
 

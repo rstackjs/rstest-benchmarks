@@ -6,6 +6,7 @@ import { cases } from './fixtures.mjs'
 import { selectedFor } from './order.mjs'
 import { renderReport } from './report.mjs'
 import { summaryJson } from './summary.mjs'
+import { renderTable } from './charts.mjs'
 import { verifySamples } from './verify.mjs'
 
 function validate(record, source) {
@@ -63,6 +64,10 @@ export function publishedInput(source, name = 'framework result') {
 const metricNames = { time: 'Elapsed time', memory: 'Memory (MiB, peak process-tree footprint)' }
 const chartFile = { time: 'elapsed', memory: 'memory' }
 const chartPath = (condition, metric) => `frameworks/reports/charts/${condition}-${chartFile[metric]}.svg`
+const tablePath = (name, theme = 'light') => `frameworks/reports/charts/${name}-table${theme === 'dark' ? '-dark' : ''}.svg`
+// Light and dark variants: GitHub picks one by theme, since no text color reads on both.
+const tableImage = (name, alt) => `<picture>\n<source media="(prefers-color-scheme: dark)" srcset="${tablePath(name, 'dark')}">\n<img alt="${alt}" src="${tablePath(name)}">\n</picture>`
+const browserTableName = (metric) => `browser-${chartFile[metric]}`
 
 // One short line: where the numbers come from. Full runner details stay in report.md.
 function provenance(record) {
@@ -87,13 +92,17 @@ function context(record, rendered, command) {
   const { sections } = rendered
   const view = (condition, metric) => {
     const section = sections[condition]?.[metric]
-    return `![${metricNames[metric]}, ${condition} cache](${chartPath(condition, metric)})\n\nWithin a case, bar length is proportional to the value. Across cases, the longest bar grows with the case's largest value on a log scale, so compare lengths only within a case.\n\n${section.table}`
+    // The heatmap comes first: it answers "which framework is fastest" at a glance; the bars
+    // then show magnitudes within each case.
+    return `${tableImage(`${condition}-${chartFile[metric]}`, `${metricNames[metric]} table, ${condition} cache`)}\n\n${details('Table data', section.table)}\n\n![${metricNames[metric]}, ${condition} cache](${chartPath(condition, metric)})\n\nWithin a case, bar length is proportional to the value. Across cases, the longest bar grows with the case's largest value on a log scale, so compare lengths only within a case.`
   }
   const warm = ['time', 'memory'].map((metric) => `**Warm cache · ${metricNames[metric]}**\n\n${view('warm', metric)}`).join('\n\n')
-  const browser = ['cold', 'warm'].flatMap((condition) => ['time', 'memory'].map((metric) => {
-    const table = sections[condition]?.[metric]?.browser
-    return table && `**Browser mode · ${condition} cache · ${metricNames[metric]}**\n\n${table}`
-  })).filter(Boolean).join('\n\n')
+  const browser = ['time', 'memory'].map((metric) => {
+    const rows = ['cold', 'warm'].map((condition) => sections[condition]?.[metric]?.browserRow && { ...sections[condition][metric].browserRow, condition }).filter(Boolean)
+    if (!rows.length) return null
+    const markdown = ['cold', 'warm'].map((condition) => sections[condition]?.[metric]?.browser && `**${condition} cache**\n\n${sections[condition][metric].browser}`).filter(Boolean).join('\n\n')
+    return `**Browser mode · ${metricNames[metric]}**\n\n${tableImage(browserTableName(metric), `Browser mode ${metricNames[metric]} table`)}\n\n${details('Table data', markdown)}`
+  }).filter(Boolean).join('\n\n')
   const run = `${record.options.runs} timed runs per supported case and cache condition; all **${summary.measured} timed samples and ${summary.warmups} warmups passed**. Node compile cache is disabled. Default concurrency; named Rstest pool variants change only the pool. Cold and warm framework caches are reported separately; OS page cache and background load are uncontrolled. Browser mode compares Vitest against default Rstest only.`
   const rstest = record.rstestSource ? `Rstest source: \`${record.rstestSource.requested}\`. The run records its resolved versions and dependency lockfile.\n\n` : ''
   return [
@@ -125,7 +134,17 @@ export function refreshReport({ root, input = join(root, 'frameworks/reports/res
     ['frameworks/reports/summary.json', summaryJson(record)],
   ])
   for (const [condition, metrics] of Object.entries(rendered.sections))
-    for (const [metric, section] of Object.entries(metrics)) updates.set(chartPath(condition, metric), section.chart)
+    for (const [metric, section] of Object.entries(metrics)) {
+      updates.set(chartPath(condition, metric), section.chart)
+      for (const theme of ['light', 'dark']) updates.set(tablePath(`${condition}-${chartFile[metric]}`, theme), renderTable({ title: `${metricNames[metric]}, ${condition} cache`, columns: section.columns, rows: section.rows, theme }))
+    }
+  for (const metric of ['time', 'memory']) {
+    const rows = ['cold', 'warm'].map((condition) => {
+      const row = rendered.sections[condition]?.[metric]?.browserRow
+      return row && { ...row, name: `${row.name}, ${condition}` }
+    }).filter(Boolean)
+    if (rows.length) for (const theme of ['light', 'dark']) updates.set(tablePath(browserTableName(metric), theme), renderTable({ title: `Browser mode ${metricNames[metric]}`, columns: rendered.sections.cold[metric].columns, rows, theme }))
+  }
   // Keep a published input byte-for-byte when only regenerating its presentation.
   if (input !== join(root, 'frameworks/reports/result.json'))
     updates.set('frameworks/reports/result.json', JSON.stringify(record, null, 2) + '\n')
