@@ -6,7 +6,7 @@ For comparisons between Rstest releases or a local checkout, see [Rstest version
 
 ## Results
 
-In each row the best (lowest) result is green and marked 🏆. Other cells shade toward red on a log scale of their ratio to the best, reaching full red at the row's slowest or largest result (or at 2x the best if the whole row is within 2x). Colors compare cells within a row, not across rows. Gaps do not indicate statistical significance. This publication covers the main and browser suites; cross-framework coverage is not included.
+In each row the best (lowest) result is marked 🏆. Cell color follows the factor to the best result in the row, using the [js-framework-benchmark](https://github.com/krausest/js-framework-benchmark) scale: green at 1x, yellow at 2x, red at 4x or more. Gaps do not indicate statistical significance. This publication covers the main and browser suites; cross-framework coverage is not included.
 
 <!-- framework-results:start -->
 

@@ -78,56 +78,29 @@ const tableWidth = 760
 const nameColumn = 130
 const rowTableHeight = 30
 const gapColumn = 54 // room for "+1114%" in the muted difference column
-// Heatmap: per-row log scale. With r = value / rowBest and D = max(rowWorstRatio, minRedRatio),
-// a cell gets t = ln(r) / ln(D) clamped to [0, 1]: the best is green, the row's worst (or 2x
-// the best when the whole row is within 2x) is full red, and the
-// colors in between are interpolated continuously in OKLCH (the hue runs through
-// yellow/amber, not brown). Fills are translucent so they work on
-// light and dark; text colors differ per theme variant because no single color reads on both.
+// Heatmap colors: computeColor from js-framework-benchmark (Apache-2.0, Stefan Krause),
+// https://github.com/krausest/js-framework-benchmark/blob/7ebdd8105e5416beb5a1736cf4eae13cf0bc3faa/webdriver-ts-results/src/Common.ts
+// `factor` is value / best in the row (>= 1): rgb(99,191,124) green at 1x, rgb(255,236,132)
+// yellow at 2x (linear RGB in between), then linear to rgb(249,105,108) red at 4x, capped there.
+export function computeColor(factor) {
+  if (factor < 2.0) {
+    const a = factor - 1.0
+    const r = (1.0 - a) * 99 + a * 255
+    const g = (1.0 - a) * 191 + a * 236
+    const b = (1.0 - a) * 124 + a * 132
+    return `rgb(${r.toFixed(0)}, ${g.toFixed(0)}, ${b.toFixed(0)})`
+  }
+  const a = Math.min((factor - 2.0) / 2.0, 1.0)
+  const r = (1.0 - a) * 255 + a * 249
+  const g = (1.0 - a) * 236 + a * 105
+  const b = (1.0 - a) * 132 + a * 108
+  return `rgb(${r.toFixed(0)}, ${g.toFixed(0)}, ${b.toFixed(0)})`
+}
+// Cells are opaque, so their text is dark in both variants; labels outside the cells
+// follow the theme (`value`, `muted`).
 const themes = {
-  light: { value: '#1f2328', muted: '#57606a' },
-  dark: { value: '#f0f6fc', muted: '#b1bac4' },
-}
-export const heatEndpoints = { best: '#2da44e', worst: '#e5534b' }
-const heatOpacity = 0.5
-export const MIN_RED_RATIO = 2 // a row never reaches full red below +100%
-const cellGap = 3 // space between neighbouring cells
-
-const toLinear = (c) => (c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4)
-const fromLinear = (c) => (c <= 0.0031308 ? 12.92 * c : 1.055 * c ** (1 / 2.4) - 0.055)
-function toOklch(hexColor) {
-  const [r, g, b] = [1, 3, 5].map((i) => toLinear(parseInt(hexColor.slice(i, i + 2), 16) / 255))
-  const l = Math.cbrt(0.4122214708 * r + 0.5363325363 * g + 0.0514459929 * b)
-  const m = Math.cbrt(0.2119034982 * r + 0.6806995451 * g + 0.1073969566 * b)
-  const sCone = Math.cbrt(0.0883024619 * r + 0.2817188376 * g + 0.6299787005 * b)
-  const L = 0.2104542553 * l + 0.793617785 * m - 0.0040720468 * sCone
-  const a = 1.9779984951 * l - 2.428592205 * m + 0.4505937099 * sCone
-  const bb = 0.0259040371 * l + 0.7827717662 * m - 0.808675766 * sCone
-  return { L, C: Math.hypot(a, bb), h: Math.atan2(bb, a) }
-}
-function fromOklch({ L, C, h }) {
-  const a = C * Math.cos(h), b = C * Math.sin(h)
-  const l = (L + 0.3963377774 * a + 0.2158037573 * b) ** 3
-  const m = (L - 0.1055613458 * a - 0.0638541728 * b) ** 3
-  const sCone = (L - 0.0894841775 * a - 1.291485548 * b) ** 3
-  const rgb = [4.0767416621 * l - 3.3077115913 * m + 0.2309699292 * sCone, -1.2684380046 * l + 2.6097574011 * m - 0.3413193965 * sCone, -0.0041960863 * l - 0.7034186147 * m + 1.707614701 * sCone]
-  return `#${rgb.map((c) => Math.round(Math.min(Math.max(fromLinear(Math.min(Math.max(c, 0), 1)), 0), 1) * 255).toString(16).padStart(2, '0')).join('')}`
-}
-const bestLch = toOklch(heatEndpoints.best), worstLch = toOklch(heatEndpoints.worst)
-
-// Position of a cell on its row's log scale; `ratio` is value / rowBest, `rowWorstRatio` the row's largest.
-export function heatPosition(ratio, rowWorstRatio) {
-  const denominator = Math.log(Math.max(rowWorstRatio, MIN_RED_RATIO))
-  return Math.min(Math.max(Math.log(Math.max(ratio, 1)) / denominator, 0), 1)
-}
-
-// t = 0 gives the best color and t = 1 the worst; hue takes the short way round.
-export function heatColor(t) {
-  const x = Math.min(Math.max(t, 0), 1)
-  let dh = worstLch.h - bestLch.h
-  if (dh > Math.PI) dh -= 2 * Math.PI
-  if (dh < -Math.PI) dh += 2 * Math.PI
-  return fromOklch({ L: bestLch.L + (worstLch.L - bestLch.L) * x, C: bestLch.C + (worstLch.C - bestLch.C) * x, h: bestLch.h + dh * x })
+  light: { value: '#1f2328', muted: '#57606a', cell: '#000', cellMuted: '#3d444d' },
+  dark: { value: '#f0f6fc', muted: '#b1bac4', cell: '#000', cellMuted: '#3d444d' },
 }
 
 // Text width in px at 11 px / weight 600, measured in Chromium with the table font stack
@@ -140,13 +113,14 @@ const letterWidths = '0123456789'.split('').map((c) => [c, 6.12]).concat(Object.
 for (const [char, width] of letterWidths) glyphWidths[char] = width
 export const textWidth = (text) => [...text].reduce((sum, char) => sum + (glyphWidths[char] ?? 6.3), 0)
 
+const cellGap = 3 // space between neighbouring cells
 const dotDiameter = 9
 const dotLabelGap = 10
 
 // `columns`: [{ framework, label }]; `rows`: [{ name, cells: [{ state, text, best, diff, gap }] }].
 // `theme` selects the text colors ('light' or 'dark'); the fills are the same.
 export function renderTable({ title, columns, rows, theme = 'light' }) {
-  const { value: valueColor, muted } = themes[theme]
+  const { value: valueColor, muted, cell: cellColor, cellMuted } = themes[theme]
   const columnWidth = (tableWidth - nameColumn) / columns.length
   const parts = []
   const headerY = rowTableHeight / 2
@@ -161,22 +135,20 @@ export function renderTable({ title, columns, rows, theme = 'light' }) {
     const top = rowTableHeight * (rowIndex + 1)
     const middle = top + rowTableHeight / 2
     parts.push(`<text x="0" y="${middle}" dominant-baseline="central" fill="${valueColor}" font-weight="600" ${font}>${escape(row.name)}</text>`)
-    const worstRatio = Math.max(1, ...row.cells.filter((cell) => cell.state === 'ok').map((cell) => 1 + cell.gap))
     row.cells.forEach((cell, index) => {
       const left = nameColumn + index * columnWidth
       const right = left + columnWidth
       if (cell.state === 'ok') {
         // Separated cells: a 3 px gap on every side and rounded corners.
-        const t = heatPosition(1 + cell.gap, worstRatio)
-        parts.push(`<rect x="${fixed(left + cellGap)}" y="${top + cellGap}" width="${fixed(columnWidth - 2 * cellGap)}" height="${rowTableHeight - 2 * cellGap}" rx="3" fill="${heatColor(t)}" fill-opacity="${heatOpacity}"/>`)
+        parts.push(`<rect x="${fixed(left + cellGap)}" y="${top + cellGap}" width="${fixed(columnWidth - 2 * cellGap)}" height="${rowTableHeight - 2 * cellGap}" rx="3" fill="${computeColor(1 + cell.gap)}"/>`)
       }
       if (cell.best) parts.push(`<text x="${fixed(left + 9)}" y="${middle}" dominant-baseline="central" font-size="10" ${font.replace(/ font-size="11"/, '')}>🏆</text>`)
       if (cell.state !== 'ok') {
         parts.push(`<text x="${fixed(right - 10)}" y="${middle}" dominant-baseline="central" text-anchor="end" fill="${muted}" ${font}>${escape(cell.text)}</text>`)
         return
       }
-      parts.push(`<text x="${fixed(right - 10 - gapColumn)}" y="${middle}" dominant-baseline="central" text-anchor="end" fill="${valueColor}"${cell.best ? ' font-weight="700"' : ''} style="font-variant-numeric: tabular-nums" ${font}>${escape(cell.text)}</text>`)
-      if (cell.diff) parts.push(`<text x="${fixed(right - 10)}" y="${middle}" dominant-baseline="central" text-anchor="end" fill="${muted}" font-size="10" style="font-variant-numeric: tabular-nums" ${font.replace(/ font-size="11"/, '')}>${escape(cell.diff)}</text>`)
+      parts.push(`<text x="${fixed(right - 10 - gapColumn)}" y="${middle}" dominant-baseline="central" text-anchor="end" fill="${cellColor}"${cell.best ? ' font-weight="700"' : ''} style="font-variant-numeric: tabular-nums" ${font}>${escape(cell.text)}</text>`)
+      if (cell.diff) parts.push(`<text x="${fixed(right - 10)}" y="${middle}" dominant-baseline="central" text-anchor="end" fill="${cellMuted}" font-size="10" style="font-variant-numeric: tabular-nums" ${font.replace(/ font-size="11"/, '')}>${escape(cell.diff)}</text>`)
     })
   })
   const total = rowTableHeight * (rows.length + 1)
