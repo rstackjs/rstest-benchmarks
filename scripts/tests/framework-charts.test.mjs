@@ -23,10 +23,13 @@ test('chart rendering is deterministic and scales each group to its own maximum'
   assert.match(first, /^<svg xmlns=/)
   assert.match(first, /Barrel &lt;1&gt;/)
   assert.match(first, /fill="#848d97"/)
-  // The largest bar in every group is the full bar width (470px).
-  assert.equal(first.match(/width="470.00"/g).length, 2)
+  // The largest bar in every group is the full bar width (670px).
+  assert.equal(first.match(/width="670.00"/g).length, 2)
   // A missing value draws a dash instead of a bar.
   assert.match(first, />—<\/text>/)
+  // Bars and the legend start at the left edge; case names sit above their bars.
+  assert.match(first, /<rect x="0" y="0" width="10"/)
+  assert.match(first, /<text x="0" y="\d+(\.\d+)?" dominant-baseline="central" fill="#848d97" font-weight="600"[^>]*>Barrel &lt;1&gt;/)
   assert.doesNotMatch(first, /NaN|undefined/)
 })
 
