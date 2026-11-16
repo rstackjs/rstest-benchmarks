@@ -1,5 +1,6 @@
 import { spawn } from 'node:child_process'
-import { openSync, closeSync, readFileSync } from 'node:fs'
+import { openSync, closeSync } from 'node:fs'
+import { getMemorySampler } from './memory.mjs'
 
 export async function execute({
   command,
@@ -9,7 +10,10 @@ export async function execute({
   timeoutMs,
   signal,
   graceful = false,
+  memory = false,
 }) {
+  // Compile the footprint helper before the clock starts; fail early off macOS.
+  const sampler = memory ? await getMemorySampler() : null
   const startedAt = new Date().toISOString()
   const start = performance.now()
   const stdoutPath = `${prefix}.stdout.log`
@@ -48,6 +52,8 @@ export async function execute({
   }, timeoutMs)
   signal?.addEventListener('abort', abort, { once: true })
   if (signal?.aborted) abort()
+  // The child leads its own process group, so the driver is excluded.
+  const monitor = sampler && child.pid ? sampler.start(child.pid) : null
   const result = await new Promise((resolve) => {
     child.on('error', (cause) => {
       error = cause.message
@@ -56,22 +62,42 @@ export async function execute({
       resolve({ exitCode, signal: exitSignal }),
     )
   })
+  // Capture timing before waiting for the sampler's last in-flight snapshot.
+  const endedAt = new Date().toISOString()
+  const wallMs = performance.now() - start
   clearTimeout(timer)
   clearTimeout(killTimer)
+  let memoryBytes = null
+  if (monitor) {
+    try {
+      memoryBytes = await monitor.stop()
+    } catch (cause) {
+      error ??= `Memory sampler failed: ${cause.message}`
+    }
+  }
   signal?.removeEventListener('abort', abort)
   closeSync(stdout)
   closeSync(stderr)
   return {
     startedAt,
-    endedAt: new Date().toISOString(),
-    wallMs: performance.now() - start,
+    endedAt,
+    wallMs,
     ...result,
+    ...(memory ? { memoryBytes } : {}),
     timedOut,
     interrupted,
     error,
     stdoutPath,
     stderrPath,
   }
+}
+
+// True when a memory-pass run ended exactly like its timing-pass run.
+export function sameRunOutcome(run, reference, countKeys) {
+  return (
+    run.exitCode === reference.exitCode &&
+    countKeys.every((key) => run.counts?.[key] === reference.counts?.[key])
+  )
 }
 
 export function reportCounts(output, expectedFiles, expectedTests) {
@@ -103,14 +129,4 @@ export function reportCounts(output, expectedFiles, expectedTests) {
     return counts
   }
   throw new Error('Missing structured Markdown reporter summary')
-}
-
-export function readRss(path, platform) {
-  const output = readFileSync(path, 'utf8')
-  const match =
-    platform === 'darwin'
-      ? output.match(/(\d+)\s+maximum resident set size/i)
-      : output.match(/maximum resident set size \(kbytes\):\s+(\d+)/i)
-  if (!match) throw new Error('Missing /usr/bin/time maximum resident set size')
-  return Number(match[1]) * (platform === 'darwin' ? 1 : 1024)
 }

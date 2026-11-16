@@ -1,4 +1,5 @@
 import { readFileSync } from 'node:fs'
+import { assertNoLegacyMemory } from './legacy.mjs'
 import { createHash } from 'node:crypto'
 import { dirname, relative } from 'node:path'
 import { statistics, seconds, percent } from './stats.mjs'
@@ -24,6 +25,7 @@ export function normalize(document, source = 'memory') {
   return document.results.map((row) => {
     const suite =
       document.suite ?? (row.provider ? 'coverage' : row.app ? 'main' : 'pools')
+    assertNoLegacyMemory(source, row, suite === 'coverage' && row.status === 'passed')
     const timed = legacy
       ? row.samples
       : row.samples
@@ -31,16 +33,16 @@ export function normalize(document, source = 'memory') {
             (sample) => sample.phase === 'timed' && sample.status === 'passed',
           )
           .map((sample) => sample.wallMs)
-    const rss = legacy
-      ? (row.rssSamples ?? []).filter((value) => value != null)
-      : row.samples
+    const memory = legacy
+      ? (row.memorySamples ?? []).filter((value) => value != null)
+      : (row.memorySamples ?? [])
           .filter(
             (sample) =>
               sample.phase === 'timed' &&
               sample.status === 'passed' &&
-              sample.rssBytes != null,
+              sample.memoryBytes != null,
           )
-          .map((sample) => sample.rssBytes)
+          .map((sample) => sample.memoryBytes)
     const expected = document.meta.options?.runs ?? document.meta.runs
     const status = legacy
       ? row.error
@@ -83,9 +85,9 @@ export function normalize(document, source = 'memory') {
       environment: row.environment ?? null,
       dependencies: row.dependencies ?? null,
       samples: timed,
-      rssSamples: rss,
+      memorySamples: memory,
       stats: statistics(timed),
-      rssStats: statistics(rss),
+      memoryStats: statistics(memory),
     }
   })
 }
@@ -142,7 +144,7 @@ function compatibility(a, b, withinColumn = false) {
       warmup: meta.measurement.warmup,
       reporter: meta.measurement.reporter,
       cache: meta.measurement.cache,
-      rss: meta.measurement.rss,
+      memory: meta.measurement.memory,
       order: meta.measurement.order,
       maxWorkers: meta.measurement.maxWorkers,
     }
@@ -176,7 +178,7 @@ export function mergeRows(rows, axis = null) {
           .flatMap((other) => compatibility(row, other, true)),
       )
       const samples = group.flatMap((row) => row.samples)
-      const rssSamples = group.flatMap((row) => row.rssSamples)
+      const memorySamples = group.flatMap((row) => row.memorySamples)
       return [
         id,
         {
@@ -185,9 +187,9 @@ export function mergeRows(rows, axis = null) {
           members: group,
           sources: group.map((row) => row.source),
           samples,
-          rssSamples,
+          memorySamples,
           stats: statistics(samples),
-          rssStats: statistics(rssSamples),
+          memoryStats: statistics(memorySamples),
           status: differences.length
             ? 'incompatible'
             : group.every((row) => row.status === 'passed')
@@ -293,7 +295,7 @@ export function singleReport(document) {
         'MAD',
         'SD',
         'CV',
-        'MaxRSS median (MiB)',
+        'Memory median (MiB, process-tree footprint peak)',
       ],
       rows.map((row) => [
         row.name,
@@ -303,9 +305,9 @@ export function singleReport(document) {
         row.provider,
         row.status,
         ...spread(row),
-        row.rssStats.median == null
+        row.memoryStats.median == null
           ? '—'
-          : (row.rssStats.median / 1024 ** 2).toFixed(2),
+          : (row.memoryStats.median / 1024 ** 2).toFixed(2),
       ]),
     ),
     '',
@@ -319,7 +321,7 @@ export function singleReport(document) {
           '',
         ]
       : []),
-    'RSS is the OS `/usr/bin/time` maxrss metric, not a simultaneous sum of the process tree. Raw samples, warmups, commands, counts and provenance are in [result.json](result.json); stdout/stderr and source snapshots accompany it.',
+    'Memory is the peak of the summed macOS physical footprint over the command process tree (sampled every ~50 ms, benchmark driver excluded); the table shows the median across runs. Raw samples, warmups, commands, counts and provenance are in [result.json](result.json); stdout/stderr and source snapshots accompany it.',
     '',
     ...rows
       .filter((row) => row.status !== 'passed')
@@ -369,8 +371,8 @@ export function comparisonReport(
   const ids = [...new Set(columns.flatMap((column) => [...column.rows.keys()]))]
   const summaryRows = [],
     detailRows = [],
-    rssSummaryRows = [],
-    rssRows = []
+    memorySummaryRows = [],
+    memoryRows = []
   for (const id of ids) {
     const values = columns.map((column) => column.rows.get(id))
     const first = values.find(Boolean)
@@ -391,15 +393,15 @@ export function comparisonReport(
       if (comparison.note) notes.add(comparison.note)
     }
     summaryRows.push([...cells, [...notes].join('; ') || '—'])
-    if (values.some((row) => row?.rssStats.n)) {
+    if (values.some((row) => row?.memoryStats.n)) {
       const memoryValues = values.map((row) => row && ({
         ...row,
-        stats: row.rssStats,
-        status: row.status === 'passed' && row.rssStats.n !== row.stats.n
+        stats: row.memoryStats,
+        status: row.status === 'passed' && row.memoryStats.n !== row.stats.n
           ? 'incomplete'
           : row.status,
       }))
-      rssSummaryRows.push([name, ...memoryValues.flatMap((row, index) => {
+      memorySummaryRows.push([name, ...memoryValues.flatMap((row, index) => {
         if (!row || !row.stats.n) return index === 0 ? ['—'] : ['—', '—']
         if (row.status !== 'passed') return index === 0 ? [row.status.toUpperCase()] : [row.status.toUpperCase(), '—']
         const value = (row.stats.median / 1024 ** 2).toFixed(2)
@@ -417,15 +419,15 @@ export function comparisonReport(
         row.files ?? 'unknown',
         row.tests ?? 'unknown',
       ])
-      if (row.rssStats.n)
-        rssRows.push([
+      if (row.memoryStats.n)
+        memoryRows.push([
           name,
           columns[index].label,
           row.status,
-          row.rssStats.n,
-          (row.rssStats.median / 1024 ** 2).toFixed(2),
-          `${(row.rssStats.min / 1024 ** 2).toFixed(2)}–${(row.rssStats.max / 1024 ** 2).toFixed(2)}`,
-          row.rssStats.cv == null ? '—' : `${row.rssStats.cv.toFixed(2)}%`,
+          row.memoryStats.n,
+          (row.memoryStats.median / 1024 ** 2).toFixed(2),
+          `${(row.memoryStats.min / 1024 ** 2).toFixed(2)}–${(row.memoryStats.max / 1024 ** 2).toFixed(2)}`,
+          row.memoryStats.cv == null ? '—' : `${row.memoryStats.cv.toFixed(2)}%`,
         ])
     })
   }
@@ -445,10 +447,10 @@ export function comparisonReport(
     ).entries(),
   ]
   const published = inputs.some(([, meta]) => meta.publication)
-  const rssSummary = rssSummaryRows.length ? table(headers, rssSummaryRows) : ''
+  const memorySummary = memorySummaryRows.length ? table(headers, memorySummaryRows) : ''
   return {
     summary,
-    rssSummary,
+    memorySummary,
     jobSummary: [
       `# ${spec.title ?? 'Benchmark comparison'}`,
       '',
@@ -463,7 +465,7 @@ export function comparisonReport(
       ...(spec.context ? [spec.context, ''] : []),
       'Each Δ is relative to the baseline; negative means less elapsed time or memory. Values display two decimal places; changes use unrounded medians.',
       '',
-      compactTables({ summary, rssSummary }),
+      compactTables({ summary, memorySummary }),
       '',
       'Full reports, variability, samples and execution details are available in the workflow artifact.',
       '',
@@ -504,11 +506,11 @@ export function comparisonReport(
         detailRows,
       ),
       '',
-      ...(rssRows.length
+      ...(memoryRows.length
         ? [
             '## Memory',
             '',
-            'OS `/usr/bin/time` maxrss in MiB; not a simultaneous process-tree peak.',
+            'Peak process-tree physical footprint in MiB (macOS `phys_footprint`, summed every ~50 ms).',
             '',
             table(
               [
@@ -520,7 +522,7 @@ export function comparisonReport(
                 'Min–max MiB',
                 'CV',
               ],
-              rssRows,
+              memoryRows,
             ),
             '',
           ]
@@ -554,8 +556,8 @@ export function comparisonReport(
 }
 
 function compactTables(report) {
-  const memory = report.rssSummary
-    ? `\n\n### RSS comparison\n\nMedian maxrss in MiB; negative percentages mean less memory. This is OS maxrss, not the simultaneous total of all worker processes.\n\n${report.rssSummary}`
+  const memory = report.memorySummary
+    ? `\n\n### Memory comparison\n\nMedian of the per-run peak process-tree physical footprint in MiB; negative percentages mean less memory.\n\n${report.memorySummary}`
     : ''
   return `${report.summary}${memory}`
 }

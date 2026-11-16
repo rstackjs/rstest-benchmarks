@@ -18,6 +18,7 @@ import { parseArgs } from 'node:util'
 import { randomUUID } from 'node:crypto'
 import { spawnSync } from 'node:child_process'
 import { execute } from './lib/process.mjs'
+import { assertMemorySupported } from './lib/memory.mjs'
 import { parseOptions, environment, suiteSteps } from './runner.mjs'
 import { runPaired } from './lib/paired.mjs'
 import { casesFor } from './lib/cases.mjs'
@@ -116,11 +117,7 @@ async function compareSources() {
     if (!matrix[suite].length) delete matrix[suite]
   }
   selected = Object.keys(matrix)
-  if (
-    selected.includes('coverage') &&
-    !['darwin', 'linux'].includes(process.platform)
-  )
-    throw new Error('Coverage RSS requires macOS or Linux')
+  if (selected.includes('coverage')) assertMemorySupported()
   if (values['dry-run']) {
     console.log(
       JSON.stringify(
@@ -362,6 +359,7 @@ async function compareSources() {
     )
     const progress = createProgress({
       timed: counts.reduce((sum, count) => sum + count.timed, 0),
+      memory: counts.reduce((sum, count) => sum + count.memory, 0),
       warmup: counts.reduce((sum, count) => sum + count.warmup, 0),
     })
     for (const [index, suite] of selected.entries()) {

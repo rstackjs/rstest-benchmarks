@@ -1,6 +1,8 @@
 # coverage: 0.11.0 vs 0.12.6
 
-Sources: baseline: **0.11.0** (npm); candidate: **0.12.6** (npm). Measured 2026-11-06 (UTC); Apple M4 Max × 14, darwin arm64, Node v24.11.1.
+Source: [GitHub Actions](https://github.com/rstackjs/rstest-benchmarks/actions/runs/43413826291), commit `6560450c5a8b34baff4bd5bc31d3d9f49b4dd661`, attempt 1.
+
+Sources: baseline: **0.11.0** (npm); candidate: **0.12.6** (npm). Measured 2026-11-13 (UTC); Apple M1 (Virtual) × 3; logical CPUs: 3; available parallelism: 3; darwin arm64, Node v26.13.0.
 
 1 warmup(s) and **6 timed runs per supported case**; medians are reported. 15 selected cases. Every candidate percentage is relative to the baseline; negative means less elapsed time.
 
@@ -10,21 +12,21 @@ Generated from raw samples. Change = (candidate / baseline − 1) × 100%; negat
 
 | Case | baseline: 0.11.0 | candidate: 0.12.6 | Δ |
 | --- | --- | --- | --- |
-| Node module graph / none | 0.67s | 0.70s | +5.02% |
-| Node module graph / v8 | 1.32s | 1.08s | -18.13% |
-| Node module graph / istanbul | 0.99s | 0.86s | -12.82% |
-| Node dependencies and service logic / none | 0.58s | 0.62s | +7.02% |
-| Node dependencies and service logic / v8 | 0.82s | 0.79s | -4.18% |
-| Node dependencies and service logic / istanbul | 0.69s | 0.65s | -5.59% |
-| React + jsdom / none | 3.68s | 1.86s | -49.59% |
-| React + jsdom / v8 | 4.18s | 2.27s | -45.75% |
-| React + jsdom / istanbul | 4.04s | 1.99s | -50.72% |
-| barrel graph · medium / none | 0.41s | 0.43s | +6.97% |
-| barrel graph · medium / v8 | 0.63s | 0.62s | -1.82% |
-| barrel graph · medium / istanbul | 0.53s | 0.50s | -6.42% |
-| barrel graph · large / none | 0.44s | 0.45s | +1.60% |
-| barrel graph · large / v8 | 0.64s | 0.61s | -4.01% |
-| barrel graph · large / istanbul | 0.59s | 0.52s | -12.27% |
+| barrel graph · medium / none | 1.09s | 1.16s | +6.79% |
+| barrel graph · medium / v8 | 1.87s | 1.73s | -7.70% |
+| barrel graph · medium / istanbul | 1.53s | 1.29s | -15.58% |
+| barrel graph · large / none | 1.50s | 1.50s | -0.33% |
+| barrel graph · large / v8 | 2.41s | 2.25s | -6.71% |
+| barrel graph · large / istanbul | 2.05s | 1.70s | -17.33% |
+| Node dependencies and service logic / none | 1.85s | 2.32s | +25.41% |
+| Node dependencies and service logic / v8 | 3.14s | 2.92s | -7.00% |
+| Node dependencies and service logic / istanbul | 2.65s | 2.28s | -13.77% |
+| Node module graph / none | 2.43s | 2.40s | -1.35% |
+| Node module graph / v8 | 4.69s | 4.13s | -11.87% |
+| Node module graph / istanbul | 4.13s | 3.54s | -14.34% |
+| React + jsdom / none | 11.99s | 10.30s | -14.14% |
+| React + jsdom / v8 | 15.20s | 12.40s | -18.40% |
+| React + jsdom / istanbul | 12.04s | 10.77s | -10.54% |
 
 ## Variability
 
@@ -32,78 +34,78 @@ MAD is unscaled. CV uses sample standard deviation (n − 1). Evaluate CV togeth
 
 | Case | Column | Status | n | Median | Min–max | MAD | SD | CV | Files | Tests |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| Node module graph / none | baseline: 0.11.0 | passed | 6 | 0.67s | 0.64s–0.68s | 0.01s | 0.01s | 2.16% | 40 | 122 |
-| Node module graph / none | candidate: 0.12.6 | passed | 6 | 0.70s | 0.66s–0.74s | 0.03s | 0.03s | 4.31% | 40 | 122 |
-| Node module graph / v8 | baseline: 0.11.0 | passed | 6 | 1.32s | 1.25s–1.36s | 0.03s | 0.04s | 3.21% | 40 | 122 |
-| Node module graph / v8 | candidate: 0.12.6 | passed | 6 | 1.08s | 1.06s–1.25s | 0.02s | 0.07s | 6.69% | 40 | 122 |
-| Node module graph / istanbul | baseline: 0.11.0 | passed | 6 | 0.99s | 0.97s–1.00s | 0.01s | 0.01s | 1.28% | 40 | 122 |
-| Node module graph / istanbul | candidate: 0.12.6 | passed | 6 | 0.86s | 0.82s–0.94s | 0.04s | 0.05s | 5.49% | 40 | 122 |
-| Node dependencies and service logic / none | baseline: 0.11.0 | passed | 6 | 0.58s | 0.56s–0.59s | 0.01s | 0.01s | 2.18% | 16 | 45 |
-| Node dependencies and service logic / none | candidate: 0.12.6 | passed | 6 | 0.62s | 0.60s–0.74s | 0.01s | 0.05s | 8.25% | 16 | 45 |
-| Node dependencies and service logic / v8 | baseline: 0.11.0 | passed | 6 | 0.82s | 0.80s–0.87s | 0.02s | 0.02s | 3.00% | 16 | 45 |
-| Node dependencies and service logic / v8 | candidate: 0.12.6 | passed | 6 | 0.79s | 0.77s–0.80s | 0.01s | 0.02s | 1.98% | 16 | 45 |
-| Node dependencies and service logic / istanbul | baseline: 0.11.0 | passed | 6 | 0.69s | 0.66s–1.01s | 0.02s | 0.13s | 17.94% | 16 | 45 |
-| Node dependencies and service logic / istanbul | candidate: 0.12.6 | passed | 6 | 0.65s | 0.64s–0.74s | 0.02s | 0.04s | 5.86% | 16 | 45 |
-| React + jsdom / none | baseline: 0.11.0 | passed | 6 | 3.68s | 3.68s–5.25s | 0.01s | 0.63s | 15.66% | 30 | 54 |
-| React + jsdom / none | candidate: 0.12.6 | passed | 6 | 1.86s | 1.80s–1.97s | 0.04s | 0.06s | 3.41% | 30 | 54 |
-| React + jsdom / v8 | baseline: 0.11.0 | passed | 6 | 4.18s | 4.01s–4.38s | 0.07s | 0.12s | 2.97% | 30 | 54 |
-| React + jsdom / v8 | candidate: 0.12.6 | passed | 6 | 2.27s | 2.20s–2.43s | 0.04s | 0.09s | 3.70% | 30 | 54 |
-| React + jsdom / istanbul | baseline: 0.11.0 | passed | 6 | 4.04s | 3.73s–5.71s | 0.24s | 0.74s | 17.33% | 30 | 54 |
-| React + jsdom / istanbul | candidate: 0.12.6 | passed | 6 | 1.99s | 1.88s–2.16s | 0.07s | 0.10s | 5.04% | 30 | 54 |
-| barrel graph · medium / none | baseline: 0.11.0 | passed | 6 | 0.41s | 0.39s–0.43s | 0.01s | 0.01s | 3.40% | 20 | 40 |
-| barrel graph · medium / none | candidate: 0.12.6 | passed | 6 | 0.43s | 0.42s–0.47s | 0.01s | 0.02s | 4.10% | 20 | 40 |
-| barrel graph · medium / v8 | baseline: 0.11.0 | passed | 6 | 0.63s | 0.60s–0.86s | 0.03s | 0.11s | 15.79% | 20 | 40 |
-| barrel graph · medium / v8 | candidate: 0.12.6 | passed | 6 | 0.62s | 0.58s–0.76s | 0.03s | 0.07s | 10.48% | 20 | 40 |
-| barrel graph · medium / istanbul | baseline: 0.11.0 | passed | 6 | 0.53s | 0.52s–0.88s | 0.01s | 0.14s | 24.32% | 20 | 40 |
-| barrel graph · medium / istanbul | candidate: 0.12.6 | passed | 6 | 0.50s | 0.48s–0.51s | 0.01s | 0.01s | 1.89% | 20 | 40 |
-| barrel graph · large / none | baseline: 0.11.0 | passed | 6 | 0.44s | 0.41s–0.45s | 0.00s | 0.01s | 2.89% | 20 | 40 |
-| barrel graph · large / none | candidate: 0.12.6 | passed | 6 | 0.45s | 0.42s–0.52s | 0.02s | 0.04s | 7.73% | 20 | 40 |
-| barrel graph · large / v8 | baseline: 0.11.0 | passed | 6 | 0.64s | 0.60s–0.66s | 0.01s | 0.02s | 3.11% | 20 | 40 |
-| barrel graph · large / v8 | candidate: 0.12.6 | passed | 6 | 0.61s | 0.58s–0.75s | 0.03s | 0.08s | 12.07% | 20 | 40 |
-| barrel graph · large / istanbul | baseline: 0.11.0 | passed | 6 | 0.59s | 0.54s–0.69s | 0.05s | 0.06s | 10.08% | 20 | 40 |
-| barrel graph · large / istanbul | candidate: 0.12.6 | passed | 6 | 0.52s | 0.51s–0.53s | 0.00s | 0.01s | 1.18% | 20 | 40 |
+| barrel graph · medium / none | baseline: 0.11.0 | passed | 6 | 1.09s | 0.95s–1.12s | 0.03s | 0.07s | 6.58% | 20 | 40 |
+| barrel graph · medium / none | candidate: 0.12.6 | passed | 6 | 1.16s | 1.02s–1.39s | 0.06s | 0.13s | 10.90% | 20 | 40 |
+| barrel graph · medium / v8 | baseline: 0.11.0 | passed | 6 | 1.87s | 1.69s–2.36s | 0.15s | 0.26s | 13.40% | 20 | 40 |
+| barrel graph · medium / v8 | candidate: 0.12.6 | passed | 6 | 1.73s | 1.51s–2.01s | 0.11s | 0.18s | 10.52% | 20 | 40 |
+| barrel graph · medium / istanbul | baseline: 0.11.0 | passed | 6 | 1.53s | 1.33s–1.88s | 0.18s | 0.22s | 14.02% | 20 | 40 |
+| barrel graph · medium / istanbul | candidate: 0.12.6 | passed | 6 | 1.29s | 1.17s–1.65s | 0.11s | 0.18s | 13.23% | 20 | 40 |
+| barrel graph · large / none | baseline: 0.11.0 | passed | 6 | 1.50s | 1.08s–1.67s | 0.13s | 0.22s | 15.57% | 20 | 40 |
+| barrel graph · large / none | candidate: 0.12.6 | passed | 6 | 1.50s | 1.22s–1.59s | 0.05s | 0.13s | 9.11% | 20 | 40 |
+| barrel graph · large / v8 | baseline: 0.11.0 | passed | 6 | 2.41s | 1.75s–3.21s | 0.32s | 0.51s | 21.38% | 20 | 40 |
+| barrel graph · large / v8 | candidate: 0.12.6 | passed | 6 | 2.25s | 1.54s–2.61s | 0.10s | 0.36s | 16.39% | 20 | 40 |
+| barrel graph · large / istanbul | baseline: 0.11.0 | passed | 6 | 2.05s | 1.80s–2.54s | 0.18s | 0.28s | 13.34% | 20 | 40 |
+| barrel graph · large / istanbul | candidate: 0.12.6 | passed | 6 | 1.70s | 1.55s–1.88s | 0.10s | 0.12s | 7.20% | 20 | 40 |
+| Node dependencies and service logic / none | baseline: 0.11.0 | passed | 6 | 1.85s | 1.71s–2.28s | 0.09s | 0.25s | 12.79% | 16 | 45 |
+| Node dependencies and service logic / none | candidate: 0.12.6 | passed | 6 | 2.32s | 2.08s–2.50s | 0.10s | 0.15s | 6.46% | 16 | 45 |
+| Node dependencies and service logic / v8 | baseline: 0.11.0 | passed | 6 | 3.14s | 2.72s–5.57s | 0.41s | 1.12s | 31.18% | 16 | 45 |
+| Node dependencies and service logic / v8 | candidate: 0.12.6 | passed | 6 | 2.92s | 2.26s–3.76s | 0.43s | 0.56s | 19.18% | 16 | 45 |
+| Node dependencies and service logic / istanbul | baseline: 0.11.0 | passed | 6 | 2.65s | 2.45s–4.01s | 0.19s | 0.59s | 20.70% | 16 | 45 |
+| Node dependencies and service logic / istanbul | candidate: 0.12.6 | passed | 6 | 2.28s | 1.79s–3.59s | 0.25s | 0.65s | 27.73% | 16 | 45 |
+| Node module graph / none | baseline: 0.11.0 | passed | 6 | 2.43s | 2.07s–2.82s | 0.20s | 0.27s | 11.23% | 40 | 122 |
+| Node module graph / none | candidate: 0.12.6 | passed | 6 | 2.40s | 2.05s–3.18s | 0.22s | 0.42s | 16.46% | 40 | 122 |
+| Node module graph / v8 | baseline: 0.11.0 | passed | 6 | 4.69s | 4.34s–5.17s | 0.18s | 0.29s | 6.04% | 40 | 122 |
+| Node module graph / v8 | candidate: 0.12.6 | passed | 6 | 4.13s | 3.31s–4.52s | 0.36s | 0.53s | 13.34% | 40 | 122 |
+| Node module graph / istanbul | baseline: 0.11.0 | passed | 6 | 4.13s | 3.72s–5.10s | 0.27s | 0.50s | 12.02% | 40 | 122 |
+| Node module graph / istanbul | candidate: 0.12.6 | passed | 6 | 3.54s | 3.17s–3.90s | 0.12s | 0.24s | 6.90% | 40 | 122 |
+| React + jsdom / none | baseline: 0.11.0 | passed | 6 | 11.99s | 10.65s–17.24s | 0.41s | 2.32s | 18.35% | 30 | 54 |
+| React + jsdom / none | candidate: 0.12.6 | passed | 6 | 10.30s | 9.29s–11.60s | 0.38s | 0.79s | 7.60% | 30 | 54 |
+| React + jsdom / v8 | baseline: 0.11.0 | passed | 6 | 15.20s | 13.12s–15.49s | 0.22s | 1.01s | 6.87% | 30 | 54 |
+| React + jsdom / v8 | candidate: 0.12.6 | passed | 6 | 12.40s | 11.32s–14.04s | 0.63s | 0.96s | 7.63% | 30 | 54 |
+| React + jsdom / istanbul | baseline: 0.11.0 | passed | 6 | 12.04s | 10.79s–13.48s | 0.74s | 1.03s | 8.40% | 30 | 54 |
+| React + jsdom / istanbul | candidate: 0.12.6 | passed | 6 | 10.77s | 9.38s–13.91s | 0.49s | 1.57s | 14.32% | 30 | 54 |
 
 ## Memory
 
-OS `/usr/bin/time` maxrss in MiB; not a simultaneous process-tree peak.
+Peak process-tree physical footprint in MiB (macOS `phys_footprint`, summed every ~50 ms).
 
 | Case | Column | Status | n | Median MiB | Min–max MiB | CV |
 | --- | --- | --- | --- | --- | --- | --- |
-| Node module graph / none | baseline: 0.11.0 | passed | 6 | 202.37 | 201.34–203.72 | 0.44% |
-| Node module graph / none | candidate: 0.12.6 | passed | 6 | 211.61 | 210.44–215.20 | 0.87% |
-| Node module graph / v8 | baseline: 0.11.0 | passed | 6 | 422.49 | 413.28–425.20 | 1.02% |
-| Node module graph / v8 | candidate: 0.12.6 | passed | 6 | 345.38 | 338.11–353.52 | 1.73% |
-| Node module graph / istanbul | baseline: 0.11.0 | passed | 6 | 304.63 | 297.52–306.44 | 1.06% |
-| Node module graph / istanbul | candidate: 0.12.6 | passed | 6 | 336.74 | 332.25–341.55 | 1.14% |
-| Node dependencies and service logic / none | baseline: 0.11.0 | passed | 6 | 169.91 | 165.23–173.83 | 1.73% |
-| Node dependencies and service logic / none | candidate: 0.12.6 | passed | 6 | 179.90 | 174.17–181.52 | 1.56% |
-| Node dependencies and service logic / v8 | baseline: 0.11.0 | passed | 6 | 213.02 | 210.83–214.73 | 0.63% |
-| Node dependencies and service logic / v8 | candidate: 0.12.6 | passed | 6 | 215.48 | 206.58–219.97 | 2.38% |
-| Node dependencies and service logic / istanbul | baseline: 0.11.0 | passed | 6 | 209.96 | 207.95–213.05 | 0.80% |
-| Node dependencies and service logic / istanbul | candidate: 0.12.6 | passed | 6 | 218.64 | 215.84–221.48 | 1.04% |
-| React + jsdom / none | baseline: 0.11.0 | passed | 6 | 538.51 | 460.31–590.58 | 9.07% |
-| React + jsdom / none | candidate: 0.12.6 | passed | 6 | 535.93 | 520.59–546.59 | 1.97% |
-| React + jsdom / v8 | baseline: 0.11.0 | passed | 6 | 751.02 | 722.22–797.27 | 3.77% |
-| React + jsdom / v8 | candidate: 0.12.6 | passed | 6 | 744.12 | 698.64–758.00 | 3.54% |
-| React + jsdom / istanbul | baseline: 0.11.0 | passed | 6 | 461.52 | 453.25–477.45 | 1.89% |
-| React + jsdom / istanbul | candidate: 0.12.6 | passed | 6 | 575.39 | 557.66–580.05 | 1.58% |
-| barrel graph · medium / none | baseline: 0.11.0 | passed | 6 | 173.40 | 169.77–175.06 | 1.25% |
-| barrel graph · medium / none | candidate: 0.12.6 | passed | 6 | 181.17 | 179.56–185.45 | 1.22% |
-| barrel graph · medium / v8 | baseline: 0.11.0 | passed | 6 | 202.46 | 196.64–203.20 | 1.26% |
-| barrel graph · medium / v8 | candidate: 0.12.6 | passed | 6 | 203.30 | 200.75–206.14 | 1.07% |
-| barrel graph · medium / istanbul | baseline: 0.11.0 | passed | 6 | 213.21 | 210.05–215.31 | 0.94% |
-| barrel graph · medium / istanbul | candidate: 0.12.6 | passed | 6 | 219.60 | 214.92–222.52 | 1.43% |
-| barrel graph · large / none | baseline: 0.11.0 | passed | 6 | 181.84 | 176.00–186.25 | 1.92% |
-| barrel graph · large / none | candidate: 0.12.6 | passed | 6 | 188.88 | 185.78–193.83 | 1.51% |
-| barrel graph · large / v8 | baseline: 0.11.0 | passed | 6 | 208.60 | 208.05–212.69 | 0.88% |
-| barrel graph · large / v8 | candidate: 0.12.6 | passed | 6 | 219.97 | 213.97–226.84 | 1.90% |
-| barrel graph · large / istanbul | baseline: 0.11.0 | passed | 6 | 220.05 | 217.53–223.25 | 0.86% |
-| barrel graph · large / istanbul | candidate: 0.12.6 | passed | 6 | 231.27 | 224.91–233.97 | 1.58% |
+| barrel graph · medium / none | baseline: 0.11.0 | passed | 6 | 130.13 | 127.14–132.46 | 1.51% |
+| barrel graph · medium / none | candidate: 0.12.6 | passed | 6 | 137.65 | 134.87–140.68 | 1.44% |
+| barrel graph · medium / v8 | baseline: 0.11.0 | passed | 6 | 166.20 | 161.73–168.53 | 1.44% |
+| barrel graph · medium / v8 | candidate: 0.12.6 | passed | 6 | 148.49 | 144.90–151.37 | 1.51% |
+| barrel graph · medium / istanbul | baseline: 0.11.0 | passed | 6 | 181.99 | 179.15–186.54 | 1.39% |
+| barrel graph · medium / istanbul | candidate: 0.12.6 | passed | 6 | 169.06 | 166.99–170.96 | 0.86% |
+| barrel graph · large / none | baseline: 0.11.0 | passed | 6 | 140.07 | 137.44–147.47 | 3.15% |
+| barrel graph · large / none | candidate: 0.12.6 | passed | 6 | 145.18 | 143.64–147.54 | 1.03% |
+| barrel graph · large / v8 | baseline: 0.11.0 | passed | 6 | 176.35 | 172.95–181.47 | 1.74% |
+| barrel graph · large / v8 | candidate: 0.12.6 | passed | 6 | 158.93 | 155.70–160.90 | 1.31% |
+| barrel graph · large / istanbul | baseline: 0.11.0 | passed | 6 | 193.49 | 190.87–199.51 | 1.76% |
+| barrel graph · large / istanbul | candidate: 0.12.6 | passed | 6 | 176.88 | 175.10–179.23 | 0.93% |
+| Node dependencies and service logic / none | baseline: 0.11.0 | passed | 6 | 164.19 | 151.65–169.19 | 4.29% |
+| Node dependencies and service logic / none | candidate: 0.12.6 | passed | 6 | 165.59 | 162.36–167.28 | 1.28% |
+| Node dependencies and service logic / v8 | baseline: 0.11.0 | passed | 6 | 186.43 | 182.13–191.73 | 2.04% |
+| Node dependencies and service logic / v8 | candidate: 0.12.6 | passed | 6 | 178.27 | 172.39–181.21 | 2.02% |
+| Node dependencies and service logic / istanbul | baseline: 0.11.0 | passed | 6 | 204.62 | 199.14–208.80 | 1.54% |
+| Node dependencies and service logic / istanbul | candidate: 0.12.6 | passed | 6 | 200.90 | 189.34–203.03 | 2.89% |
+| Node module graph / none | baseline: 0.11.0 | passed | 6 | 156.94 | 149.91–162.87 | 2.70% |
+| Node module graph / none | candidate: 0.12.6 | passed | 6 | 154.58 | 152.68–156.69 | 0.98% |
+| Node module graph / v8 | baseline: 0.11.0 | passed | 6 | 270.91 | 268.39–275.30 | 0.92% |
+| Node module graph / v8 | candidate: 0.12.6 | passed | 6 | 218.68 | 191.58–228.12 | 7.26% |
+| Node module graph / istanbul | baseline: 0.11.0 | passed | 6 | 272.56 | 268.16–284.26 | 2.41% |
+| Node module graph / istanbul | candidate: 0.12.6 | passed | 6 | 244.66 | 227.92–250.95 | 3.27% |
+| React + jsdom / none | baseline: 0.11.0 | passed | 6 | 503.69 | 490.97–517.54 | 2.08% |
+| React + jsdom / none | candidate: 0.12.6 | passed | 6 | 598.55 | 596.65–613.92 | 1.25% |
+| React + jsdom / v8 | baseline: 0.11.0 | passed | 6 | 666.48 | 613.06–676.09 | 3.52% |
+| React + jsdom / v8 | candidate: 0.12.6 | passed | 6 | 604.18 | 596.99–609.87 | 0.90% |
+| React + jsdom / istanbul | baseline: 0.11.0 | passed | 6 | 512.04 | 495.15–537.18 | 3.07% |
+| React + jsdom / istanbul | candidate: 0.12.6 | passed | 6 | 629.39 | 604.26–639.31 | 2.07% |
 
 ## Inputs and provenance
 
-- `reports/data/releases-0110-0126-2026-11-06T03-38-14-514Z-06dbc7cd-baseline-coverage.json`: 2026-11-06T03:38:14.532Z; Node v24.11.1; Apple M4 Max × 14; logical CPUs: not recorded; available parallelism: 14; darwin arm64; lockfile SHA-256: 7f35af5876a5c68b2da3985e75cf92db3f4ae3891a513ba7c354e587e09b8421. Source: npm / 0.11.0; fingerprint: 27da13cc2b4ab0a6ce1f46eab28f7cf323a8fce1a7074ae84c2b26d151792f8c.
-- `reports/data/releases-0110-0126-2026-11-06T03-38-16-748Z-631fde57-candidate-coverage.json`: 2026-11-06T03:38:16.765Z; Node v24.11.1; Apple M4 Max × 14; logical CPUs: not recorded; available parallelism: 14; darwin arm64; lockfile SHA-256: 7123888d5cfe1ee770452ece3fca53bf0702544ea23a11b4dce7557cace858c1. Source: npm / 0.12.6; fingerprint: 7d901a930ef93f885c74f9d3e8ab22dbdaef06698b4f32a0611c98105e956bde.
+- `reports/data/ci-version-coverage-merged-2026-11-13T11-20-49-673Z-baseline-coverage.json`: 2026-11-13T11:03:52.614Z; Node v26.13.0; Apple M1 (Virtual) × 3; logical CPUs: 3; available parallelism: 3; darwin arm64; lockfile SHA-256: 7f35af5876a5c68b2da3985e75cf92db3f4ae3891a513ba7c354e587e09b8421. Source: npm / 0.11.0; fingerprint: 27da13cc2b4ab0a6ce1f46eab28f7cf323a8fce1a7074ae84c2b26d151792f8c.
+- `reports/data/ci-version-coverage-merged-2026-11-13T11-20-49-673Z-candidate-coverage.json`: 2026-11-13T11:03:53.070Z; Node v26.13.0; Apple M1 (Virtual) × 3; logical CPUs: 3; available parallelism: 3; darwin arm64; lockfile SHA-256: 7123888d5cfe1ee770452ece3fca53bf0702544ea23a11b4dce7557cace858c1. Source: npm / 0.12.6; fingerprint: 7d901a930ef93f885c74f9d3e8ab22dbdaef06698b4f32a0611c98105e956bde.
 
 Published inputs retain every sample, warmup, test count, timestamp and compatibility fingerprint. Full logs, commands and source snapshots are stored separately; meta.publication.sourceSha256 identifies the original result JSON.
 Versions are measured in paired case/round order, alternating the first side each round and fixture. No benchmark processes overlap. Workload dependencies, fixtures, configurations, harness and host compatibility are checked before calculating changes.

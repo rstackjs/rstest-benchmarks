@@ -26,8 +26,12 @@ test('publication preserves measurements and compatibility checks without local 
       dependencies: { '@rstest/core': { version: '0.12.5', path: '/local/install' } },
       samples: [100, 10, 20, 30].map((wallMs, index) => ({
         phase: index ? 'timed' : 'warmup', status: 'passed', wallMs,
-        rssBytes: wallMs * 1024, order: index, counts: { tests: 2 },
+        order: index, counts: { tests: 2 },
         command: ['/local/node'], stdoutPath: 'logs/output',
+      })),
+      memorySamples: [10, 20, 30].map((wallMs, index) => ({
+        phase: 'timed', status: 'passed', memoryBytes: wallMs * 1024, order: index,
+        command: ['/local/node'], stdoutPath: 'logs/memory-output',
       })),
     }, {
       app: 'failure', status: 'failed',
@@ -46,6 +50,8 @@ test('publication preserves measurements and compatibility checks without local 
   assert.equal(exported.results[0].fixture.files, undefined)
   assert.equal(exported.results[0].dependencies['@rstest/core'].path, undefined)
   assert.equal(exported.results[0].samples[0].command, undefined)
+  assert.equal(exported.results[0].memorySamples[0].command, undefined)
+  assert.equal(exported.results[0].memorySamples[0].stdoutPath, undefined)
   assert.deepEqual(exported.results[1], document.results[1])
   assert.deepEqual(exported.results[2], document.results[2])
   const spec = { columns: [

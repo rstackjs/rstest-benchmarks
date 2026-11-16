@@ -8,15 +8,15 @@ test('framework total accounts for cold/warm, repeats and browser support', () =
   const requested = ['jest', 'vitest', 'vitest-vmForks', 'rstest', 'rstest-vmForks']
   const groups = [{ suite: 'main' }, { suite: 'coverage' }, { suite: 'browser' }]
     .map((group) => ({ ...group, frameworks: selectedFor(group, requested) }))
-  assert.deepEqual(frameworkRunCounts(groups, ['cold', 'warm'], 6), { timed: 144, warmup: 12 })
-  assert.deepEqual(frameworkRunCounts(groups, ['cold'], 1), { timed: 12, warmup: 0 })
-  assert.deepEqual(frameworkRunCounts(groups, ['warm'], 1), { timed: 12, warmup: 12 })
+  assert.deepEqual(frameworkRunCounts(groups, ['cold', 'warm'], 6), { timed: 144, memory: 144, warmup: 12 })
+  assert.deepEqual(frameworkRunCounts(groups, ['cold'], 1), { timed: 12, memory: 12, warmup: 0 })
+  assert.deepEqual(frameworkRunCounts(groups, ['warm'], 1), { timed: 12, memory: 12, warmup: 12 })
 })
 
 test('version total excludes unsupported VM pools and Vue browser', () => {
   const items = [...casesFor('main'), ...casesFor('pools', { scales: ['small'] })]
-  assert.deepEqual(versionRunCounts(items, { runs: 6, warmup: 1 }, () => '0.11.0'), { timed: 66, warmup: 11 })
-  assert.deepEqual(versionRunCounts(items, { runs: 6, warmup: 0 }, () => '0.12.6'), { timed: 84, warmup: 0 })
+  assert.deepEqual(versionRunCounts(items, { runs: 6, warmup: 1 }, () => '0.11.0'), { timed: 66, memory: 0, warmup: 11 })
+  assert.deepEqual(versionRunCounts(items, { runs: 6, warmup: 0 }, () => '0.12.6'), { timed: 84, memory: 0, warmup: 0 })
 })
 
 test('shared progress retains one counter across sides and suites, with matching start/end numbers', () => {
@@ -25,7 +25,7 @@ test('shared progress retains one counter across sides and suites, with matching
   progress.start('baseline/main warmup')('passed')
   progress.start('candidate/main timed')('passed')
   progress.start('baseline/coverage timed')('failed')
-  assert.match(logs[0], /3 executions: 2 timed \+ 1 warmup/)
+  assert.match(logs[0], /3 executions: 2 timed \+ 0 memory \+ 1 warmup/)
   assert.deepEqual(logs.slice(1), [
     '[1/3] baseline/main warmup: starting',
     '[1/3] baseline/main warmup: passed',

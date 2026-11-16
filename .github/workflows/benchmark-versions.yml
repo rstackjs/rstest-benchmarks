@@ -3,11 +3,6 @@ name: Rstest version benchmark
 on:
   workflow_dispatch:
     inputs:
-      runner:
-        description: Runner OS (results from different hosts must not be pooled)
-        type: choice
-        options: [macos-15, ubuntu-24.04]
-        default: macos-15
       runs:
         description: Timed runs per case (use a multiple of the number of versions)
         type: string
@@ -41,7 +36,7 @@ concurrency:
 jobs:
   benchmark:
     name: Benchmark
-    runs-on: ${{ inputs.runner || 'macos-15' }}
+    runs-on: macos-15
     timeout-minutes: 90
     env:
       NODE_DISABLE_COMPILE_CACHE: '1'
@@ -51,18 +46,11 @@ jobs:
           persist-credentials: false
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
         with:
-          node-version: 24.11.1
+          node-version: 26.13.0
       - name: Install pinned pnpm
         run: npm install --global "$(node -p 'require("./package.json").packageManager')"
-      - name: Check harness and published reports
-        run: |
-          pnpm test
-          pnpm report:check
-      - name: Install Chromium system dependencies
-        if: runner.os == 'Linux'
-        run: |
-          PLAYWRIGHT_VERSION="$(node -p 'require("./apps/react-spa/package.json").devDependencies.playwright')"
-          pnpm dlx "playwright@$PLAYWRIGHT_VERSION" install-deps chromium
+      - name: Test harness
+        run: pnpm test
       # compare installs each version in an isolated workspace, including Chromium.
       # Compared versions run sequentially on one host with runner-managed caches.
       - name: Run benchmarks
@@ -98,3 +86,6 @@ jobs:
           include-hidden-files: true
           if-no-files-found: warn
           retention-days: 30
+      - name: Check published reports
+        if: always()
+        run: pnpm report:check

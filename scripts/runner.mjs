@@ -21,7 +21,8 @@ import {
   unsupportedReason,
 } from './lib/cases.mjs'
 import { statistics, seconds } from './lib/stats.mjs'
-import { execute, reportCounts, readRss } from './lib/process.mjs'
+import { execute, reportCounts, sameRunOutcome } from './lib/process.mjs'
+import { assertMemorySupported } from './lib/memory.mjs'
 import {
   machine,
   dependencies,
@@ -32,6 +33,9 @@ import {
 import { singleReport } from './lib/report.mjs'
 import { formatCpu } from './lib/host.mjs'
 import { createProgress, versionRunCounts } from './lib/progress.mjs'
+
+// Counters a memory run must reproduce from its timing run.
+const countKeys = ['testFiles', 'passedTests', 'failedTests', 'failedFiles', 'skippedTests', 'todoTests']
 
 const ROOT = fileURLToPath(new URL('..', import.meta.url))
 export const CACHE = [
@@ -154,10 +158,7 @@ export async function* suiteSteps(
     )
     return
   }
-  if (suite === 'coverage' && !['darwin', 'linux'].includes(process.platform))
-    throw new Error(
-      'Coverage RSS measurements require macOS or Linux /usr/bin/time',
-    )
+  if (suite === 'coverage') assertMemorySupported()
   const items = casesFor(suite, options).filter((item) => !caseIds || caseIds.includes(item.id))
   if (!items.length) throw new Error('No benchmark cases selected')
   if (caseIds) options.cases = caseIds
@@ -241,9 +242,9 @@ export async function* suiteSteps(
           cache:
             'Node compile cache disabled via NODE_DISABLE_COMPILE_CACHE=1; clear Rstest build and sequencing caches once per fixture before warmups; retain across variants and timed rounds',
           maxWorkers: 'Rstest default (unset)',
-          rss:
+          memory:
             suite === 'coverage'
-              ? '/usr/bin/time maxrss; not simultaneous process-tree RSS'
+              ? 'macOS phys_footprint summed over the command process tree every ~50 ms, excluding the benchmark driver; peak per run'
               : null,
           environment:
             'Inherited environment; BENCH_*, scale and Node compile-cache overrides cleared, then NODE_DISABLE_COMPILE_CACHE=1 enforced. Only documented non-secret controls saved.',
@@ -255,7 +256,7 @@ export async function* suiteSteps(
         status: 'pending',
         samples: [],
         stats: statistics([]),
-        rssStats: statistics([]),
+        memoryStats: statistics([]),
       })),
     }
     console.log(
@@ -382,7 +383,10 @@ export async function* suiteSteps(
           console.log(`${progressLabel}: skipped ${item.id}: ${reason}`)
         }
       }
-      const run = async (item, phase, round) => {
+      // measurement 'timing' runs without the sampler; 'memory' reruns the same
+      // command under it. Elapsed time comes only from timing samples and memory
+      // only from memory samples.
+      const run = async (item, phase, round, measurement = 'timing', reference) => {
         if (item.status !== 'running' || controller.signal.aborted) return
         const childEnv = { ...env }
         if (item.pool === 'browser') childEnv.BENCH_BROWSER = 'true'
@@ -408,17 +412,13 @@ export async function* suiteSteps(
             '--coverage.reporters',
             'text',
           )
-        if (suite === 'coverage')
-          command.unshift(
-            '/usr/bin/time',
-            process.platform === 'darwin' ? '-l' : '-v',
-          )
         if (suite === 'coverage') {
           for (const dir of ['coverage', '.rstest-reports'])
             rmSync(join(appDir, dir), { recursive: true, force: true })
         }
         const order = sequence++
         const sample = {
+          measurement,
           phase,
           round,
           order,
@@ -428,10 +428,11 @@ export async function* suiteSteps(
           stdoutPath: join(runDir, 'logs', `${order}.stdout.log`),
           stderrPath: join(runDir, 'logs', `${order}.stderr.log`),
         }
-        item.samples.push(sample)
+        if (measurement === 'memory') (item.memorySamples ??= []).push(sample)
+        else item.samples.push(sample)
         persist()
         const finish = progress.start(
-          `${progressLabel}: ${phase} ${round + 1} ${item.id}`,
+          `${progressLabel}: ${measurement} ${phase} ${round + 1} ${item.id}`,
         )
         Object.assign(
           sample,
@@ -442,6 +443,7 @@ export async function* suiteSteps(
             prefix: join(runDir, 'logs', String(order)),
             timeoutMs: options['timeout-ms'],
             signal: controller.signal,
+            memory: measurement === 'memory',
           }),
         )
         try {
@@ -461,8 +463,14 @@ export async function* suiteSteps(
             item.tests,
           )
           item.tests = sample.counts.passedTests
-          if (suite === 'coverage')
-            sample.rssBytes = readRss(sample.stderrPath, process.platform)
+          if (measurement === 'memory') {
+            if (!Number.isFinite(sample.memoryBytes))
+              throw new Error('No process-tree memory samples were collected')
+            if (!sameRunOutcome(sample, reference, countKeys))
+              throw new Error(
+                `Memory run differs from its timing run: exit ${sample.exitCode} vs ${reference.exitCode}; counts ${JSON.stringify(sample.counts)} vs ${JSON.stringify(reference.counts)}`,
+              )
+          }
           sample.status = 'passed'
         } catch (error) {
           sample.status = 'failed'
@@ -476,17 +484,22 @@ export async function* suiteSteps(
           (sample) => sample.phase === 'timed' && sample.status === 'passed',
         )
         item.stats = statistics(timed.map((sample) => sample.wallMs))
-        item.rssStats = statistics(
-          timed.flatMap((sample) =>
-            sample.rssBytes == null ? [] : [sample.rssBytes],
-          ),
+        item.memoryStats = statistics(
+          (item.memorySamples ?? [])
+            .filter(
+              (sample) => sample.phase === 'timed' && sample.status === 'passed',
+            )
+            .map((sample) => sample.memoryBytes),
         )
         persist()
         finish(
-          sample.status === 'passed'
-            ? `passed ${seconds(sample.wallMs)}`
-            : `failed: ${sample.error}`,
+          sample.status !== 'passed'
+            ? `failed: ${sample.error}`
+            : measurement === 'memory'
+              ? `passed ${(sample.memoryBytes / 1048576).toFixed(1)} MiB`
+              : `passed ${seconds(sample.wallMs)}`,
         )
+        return sample
       }
       clearFixtureCaches(appDir)
       for (const item of rotate(group, 0, options.reverse)) {
@@ -498,7 +511,10 @@ export async function* suiteSteps(
       for (let round = 0; round < options.runs; round++)
         for (const item of rotate(group, round, options.reverse)) {
           yield { kind: 'sample', id: item.id, phase: 'timed', round }
-          await run(item, 'timed', round)
+          const timing = await run(item, 'timed', round)
+          // Memory pass: same preparation, rerun under the sampler.
+          if (suite === 'coverage' && timing?.status === 'passed')
+            await run(item, 'timed', round, 'memory', timing)
         }
       for (const item of group)
         if (item.status === 'running')

@@ -20,7 +20,8 @@ import {
 import { createHash } from 'node:crypto'
 import { spawnSync } from 'node:child_process'
 import { createRequire } from 'node:module'
-import { execute, readRss } from '../scripts/lib/process.mjs'
+import { execute, sameRunOutcome } from '../scripts/lib/process.mjs'
+import { assertMemorySupported } from '../scripts/lib/memory.mjs'
 import { environment } from '../scripts/runner.mjs'
 import {
   generate,
@@ -34,13 +35,14 @@ import {
 } from './fixtures.mjs'
 import { configure } from './configs.mjs'
 import { report } from './report.mjs'
-import { verify } from './verify.mjs'
+import { verify, countKeys } from './verify.mjs'
 import { ciContext, ciResultDirectory } from '../scripts/lib/ci.mjs'
 import { selectedFor, orderFor } from './order.mjs'
 import { formatCpu } from '../scripts/lib/host.mjs'
 import { createProgress, frameworkRunCounts } from '../scripts/lib/progress.mjs'
 import { readWorkers, slotVariables } from './workers.mjs'
 import { selectCases } from '../scripts/lib/selection.mjs'
+import { parseRstestVersion, prepareDependencies } from './dependencies.mjs'
 const { values } = parseArgs({
   options: {
     runs: { type: 'string', default: '6' },
@@ -52,8 +54,10 @@ const { values } = parseArgs({
     label: { type: 'string', default: 'frameworks' },
     install: { type: 'boolean', default: false },
     frameworks: { type: 'string', default: frameworks.join(',') },
+    'rstest-version': { type: 'string' },
   },
 })
+const rstestSource = parseRstestVersion(values['rstest-version'])
 if (!/^[a-zA-Z0-9][a-zA-Z0-9._-]*$/.test(values.label))
   throw Error('Invalid label')
 const runs = Number(values.runs),
@@ -74,8 +78,7 @@ if (
   throw Error('conditions must be cold,warm')
 if (suites.some((x) => !['main', 'coverage', 'browser'].includes(x)))
   throw Error('unknown suite')
-if (!['darwin', 'linux'].includes(platform()))
-  throw Error('RSS requires macOS or Linux')
+assertMemorySupported()
 const planned = selectCases(
   [
     ...(suites.includes('main')
@@ -106,7 +109,7 @@ const planned = selectCases(
 const groups = planned.filter((g) => g.frameworks.length)
 if (!groups.length) throw Error('No matching cases')
 if (values['dry-run']) {
-  console.log(JSON.stringify({ groups }, null, 2))
+  console.log(JSON.stringify({ groups, ...(rstestSource ? { rstestSource } : {}) }, null, 2))
   process.exit(0)
 }
 const host = {
@@ -118,18 +121,20 @@ const host = {
   parallelism: availableParallelism(),
 }
 console.log(`[host] ${formatCpu(host)}; ${host.platform}; Node ${host.node}`)
+const prepared = prepareDependencies(root, rstestSource, values.install)
+const dependencyRoot = prepared.directory
 const deps = JSON.parse(
-  readFileSync(join(root, 'frameworks/package.json')),
+  readFileSync(join(dependencyRoot, 'package.json')),
 ).dependencies
 if (
-  values.install ||
+  (!rstestSource && values.install) ||
   Object.keys(deps).some(
     (name) =>
-      !existsSync(join(root, 'frameworks/node_modules', name, 'package.json')),
+      !existsSync(join(dependencyRoot, 'node_modules', name, 'package.json')),
   )
 ) {
   const install = spawnSync('pnpm', ['install', '--frozen-lockfile'], {
-    cwd: join(root, 'frameworks'),
+    cwd: dependencyRoot,
     stdio: 'inherit',
   })
   if (install.status !== 0)
@@ -139,15 +144,15 @@ const resolved = Object.fromEntries(
   Object.keys(deps).map((name) => [
     name,
     JSON.parse(
-      readFileSync(join(root, 'frameworks/node_modules', name, 'package.json')),
+      readFileSync(join(dependencyRoot, 'node_modules', name, 'package.json')),
     ).version,
   ]),
 )
 for (const [name, version] of Object.entries(deps))
-  if (resolved[name] !== version)
+  if (!(rstestSource && name.startsWith('@rstest/')) && resolved[name] !== version)
     throw Error(`Installed ${name} differs from pinned version`)
 // Jest resolves its default transformer from jest-config's own dependency graph.
-const jestRequire = createRequire(realpathSync(join(root, 'frameworks/node_modules/jest/package.json')))
+const jestRequire = createRequire(realpathSync(join(dependencyRoot, 'node_modules/jest/package.json')))
 const jestCliRequire = createRequire(jestRequire.resolve('jest-cli/package.json'))
 const jestConfigRequire = createRequire(jestCliRequire.resolve('jest-config/package.json'))
 resolved['babel-jest'] = JSON.parse(readFileSync(jestConfigRequire.resolve('babel-jest/package.json'))).version
@@ -166,6 +171,7 @@ process.on('SIGTERM', () => controller.abort())
 const record = {
   schemaVersion: 1,
   ci: ciContext(),
+  ...(prepared.source ? { rstestSource: prepared.source } : {}),
   status: 'preparing',
   startedAt: new Date().toISOString(),
   options: {
@@ -175,6 +181,7 @@ const record = {
     cases: values.cases,
     excludeCases: values['exclude-cases'],
     frameworks: requested,
+    ...(rstestSource ? { rstestVersion: rstestSource.requested } : {}),
   },
   host,
   versions: {
@@ -189,10 +196,11 @@ const record = {
   },
   dependencies: resolved,
   lockHash: createHash('sha256')
-    .update(readFileSync(join(root, 'frameworks/pnpm-lock.yaml')))
+    .update(readFileSync(join(dependencyRoot, 'pnpm-lock.yaml')))
     .digest('hex'),
   harnessHash: fingerprint(join(root, 'frameworks/reporters')),
   samples: [],
+  memorySamples: [],
   cacheActions: [],
 }
 const save = () => {
@@ -230,7 +238,10 @@ try {
     { recursive: true },
   )
   record.harnessHash = fingerprint(join(directory, 'harness'))
-  record.fixtures = generate(directory, requested)
+  cpSync(join(dependencyRoot, 'package.json'), join(directory, 'dependencies.package.json'))
+  cpSync(join(dependencyRoot, 'pnpm-lock.yaml'), join(directory, 'dependencies.pnpm-lock.yaml'))
+  cpSync(join(dependencyRoot, 'pnpm-workspace.yaml'), join(directory, 'dependencies.pnpm-workspace.yaml'))
+  record.fixtures = generate(directory, requested, join(dependencyRoot, 'node_modules'))
   for (const framework of requested)
     for (const item of cases)
       configure(
@@ -285,15 +296,18 @@ try {
   }
   record.status = 'running'
   save()
-  async function sample(group, condition, framework, round, phase) {
+  let logId = 0
+  // measurement 'timing' runs with no sampler; 'memory' reruns the same command
+  // under the sampler. Elapsed time is taken only from timing samples and memory
+  // only from memory samples.
+  async function sample(group, condition, framework, round, phase, measurement = 'timing', reference) {
     if (controller.signal.aborted) throw Error('Interrupted')
     const cwd = join(directory, 'workspaces', framework, group.item.id)
     if (condition === 'cold') clear(cwd)
     rmSync(join(cwd, 'coverage'), { recursive: true, force: true })
-    const id = record.samples.length,
+    const id = logId++,
       prefix = join(directory, 'logs', String(id)),
-      countPath = prefix + '.json',
-      rssPath = prefix + '.rss'
+      countPath = prefix + '.json'
     const env = {
       ...environment(),
       FRAMEWORK_REPORT: countPath,
@@ -310,17 +324,13 @@ try {
     const pkg = framework.startsWith('rstest')
         ? '@rstest/core'
         : frameworkFamily(framework)
-    const pkgPath = join(root, 'frameworks/node_modules', pkg, 'package.json'),
+    const pkgPath = join(dependencyRoot, 'node_modules', pkg, 'package.json'),
       pkgJson = JSON.parse(readFileSync(pkgPath))
     const bin =
       typeof pkgJson.bin === 'string'
         ? pkgJson.bin
         : pkgJson.bin[frameworkFamily(framework)]
     const command = [
-      '/usr/bin/time',
-      ...(platform() === 'darwin' ? ['-l'] : ['-v']),
-      '-o',
-      rssPath,
       process.execPath,
       resolve(pkgPath, '..', bin),
       ...(frameworkFamily(framework) === 'jest'
@@ -329,7 +339,7 @@ try {
     ]
     const startLoad = loadavg()
     const finish = progress.start(
-      `${phase} ${phase === 'warmup' ? 1 : round + 1} ${condition} ${group.suite}/${group.item.id}/${group.provider} ${framework}`,
+      `${measurement} ${phase} ${phase === 'warmup' ? 1 : round + 1} ${condition} ${group.suite}/${group.item.id}/${group.provider} ${framework}`,
     )
     const r = await execute({
       command,
@@ -339,6 +349,7 @@ try {
       timeoutMs: 180000,
       signal: controller.signal,
       graceful: true,
+      memory: measurement === 'memory',
     })
     const counts = existsSync(countPath)
       ? JSON.parse(readFileSync(countPath))
@@ -346,6 +357,7 @@ try {
     const passed =
       r.exitCode === 0 &&
       !r.timedOut &&
+      (measurement === 'timing' || Number.isFinite(r.memoryBytes)) &&
       counts &&
       counts.files === group.item.files &&
       counts.tests === group.item.tests &&
@@ -407,15 +419,27 @@ try {
       ...r,
       counts,
       coveredFiles,
-      rssBytes: existsSync(rssPath) ? readRss(rssPath, platform()) : null,
     }
-    record.samples.push(s)
+    if (reference) {
+      // A memory run must behave exactly like its timing run.
+      if (!sameRunOutcome({ exitCode: r.exitCode, counts }, reference, countKeys)) {
+        s.status = 'failed'
+        s.consistencyError = `Memory run differs from its timing run: exit ${r.exitCode} vs ${reference.exitCode}; counts ${JSON.stringify(counts)} vs ${JSON.stringify(reference.counts)}`
+      }
+    }
+    ;(measurement === 'memory' ? record.memorySamples : record.samples).push(s)
     save()
-    finish(`${(r.wallMs / 1000).toFixed(3)}s ${s.status}`)
+    finish(
+      measurement === 'memory'
+        ? `${(s.memoryBytes / 1048576).toFixed(1)} MiB ${s.status}`
+        : `${(r.wallMs / 1000).toFixed(3)}s ${s.status}`,
+    )
+    if (s.consistencyError) throw Error(s.consistencyError)
     if (coverageError) throw Error(coverageError)
     if (workerError) throw Error(workerError)
     if (!passed)
       throw Error(`Failed sample: ${prefix}; counts ${JSON.stringify(counts)}`)
+    return s
   }
   for (const group of groups)
     for (const condition of conditions) {
@@ -427,8 +451,12 @@ try {
           await sample(group, condition, framework, -1, 'warmup')
       for (let round = 0; round < runs; round++) {
         const order = orderFor(selected, round)
-        for (const framework of order)
-          await sample(group, condition, framework, round, 'timed')
+        for (const framework of order) {
+          // Timing pass first (no sampler), then the memory pass with the same
+          // cold/warm preparation, as in build-tools-performance.
+          const timing = await sample(group, condition, framework, round, 'timed')
+          await sample(group, condition, framework, round, 'timed', 'memory', timing)
+        }
       }
     }
   record.status = 'completed'

@@ -45,7 +45,7 @@ export function fingerprint(dir) {
     hash.update(path.slice(dir.length)).update(readFileSync(path))
   return hash.digest('hex')
 }
-export function generate(directory, selected = frameworks) {
+export function generate(directory, selected = frameworks, dependenciesDirectory = join(root, 'frameworks/node_modules')) {
   const generation = join(directory, 'generation')
   cpSync(join(root, 'tools/generator'), join(generation, 'tools/generator'), {
     recursive: true,
@@ -136,10 +136,10 @@ export function generate(directory, selected = frameworks) {
       )
       mkdirSync(join(dest, 'node_modules'), { recursive: true })
       for (const name of readdirSync(
-        join(root, 'frameworks/node_modules'),
+        dependenciesDirectory,
       ).filter((n) => !n.startsWith('.')))
         symlinkSync(
-          join(root, 'frameworks/node_modules', name),
+          join(dependenciesDirectory, name),
           join(dest, 'node_modules', name),
           'dir',
         )

@@ -15,7 +15,11 @@ function render(t, samples, host = { node: 'v24', cpu: 'fixture', platform: 'tes
       host,
       versions: { jest: 'test', vitest: 'test', rstest: 'test' },
       options: { runs: 2, conditions: ['warm'] },
-      samples,
+      // Memory comes from the separate memory pass, elapsed time from timing.
+      samples: samples.map(({ memoryBytes, ...sample }) => sample),
+      memorySamples: samples
+        .filter((sample) => sample.phase === 'timed' && sample.memoryBytes != null)
+        .map(({ wallMs, ...sample }) => sample),
     },
     directory,
   )
@@ -25,7 +29,7 @@ function render(t, samples, host = { node: 'v24', cpu: 'fixture', platform: 'tes
   const summary = readFileSync(join(directory, 'summary.md'), 'utf8')
   assert.doesNotMatch(summary, /## Rstest phase timings|\| Build \| Runtime \|/)
   assert.match(summary, /### Elapsed time/)
-  assert.match(summary, /### RSS \(MiB\)/)
+  assert.match(summary, /### Memory \(MiB, process-tree footprint peak\)/)
   assert.match(summary, /logical CPUs:/)
   assert.match(summary, /## Observed test workers/)
   assert.doesNotMatch(text, /CV > 10%|high variation|\| Notes \||Δ|%/)
@@ -40,7 +44,7 @@ function samples(framework, times, overrides = {}) {
     phase: 'timed',
     status: 'passed',
     wallMs,
-    rssBytes: 100 * 1024 ** 2,
+    memoryBytes: 100 * 1024 ** 2,
     ...overrides,
   }))
 }
@@ -57,7 +61,7 @@ test('report distinguishes processor model, logical CPUs and available paralleli
   assert.match(historical, /logical CPUs: not recorded; available parallelism: 2/)
 })
 
-test('report excludes warmups and keeps RSS separate from elapsed time', (t) => {
+test('report excludes warmups and keeps memory separate from elapsed time', (t) => {
   const text = render(t, [
     ...samples('jest', [1000, 3000]),
     ...samples('vitest', [500, 1500]),
@@ -104,8 +108,8 @@ test('browser comparison ranks available frameworks and leaves Jest unavailable'
 
 test('medals use unrounded medians and share second place for exact ties', (t) => {
   const text = render(t, [
-    ...samples('jest', [1000.1, 1000.1], { rssBytes: 300 * 1024 ** 2 }),
-    ...samples('vitest', [1000.2, 1000.2], { rssBytes: 200 * 1024 ** 2 }),
+    ...samples('jest', [1000.1, 1000.1], { memoryBytes: 300 * 1024 ** 2 }),
+    ...samples('vitest', [1000.2, 1000.2], { memoryBytes: 200 * 1024 ** 2 }),
     ...samples('rstest', [1000.2, 1000.2]),
   ])
   assert.match(text, /\| startup \| 🥇 1\.00s \| 🥈 1\.00s \| 🥈 1\.00s \|/)

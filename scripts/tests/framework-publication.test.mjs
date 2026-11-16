@@ -9,7 +9,8 @@ import { cases } from '../../frameworks/fixtures.mjs'
 import { renderReport } from '../../frameworks/report.mjs'
 import { ciContext, ciResultDirectory } from '../lib/ci.mjs'
 
-const samples = readFileSync(new URL('../../frameworks/reports/result.json', import.meta.url), 'utf8')
+const record0 = JSON.parse(readFileSync(new URL('../../frameworks/reports/result.json', import.meta.url), 'utf8'))
+const samples = JSON.stringify(record0)
 function fixture(t) {
   const root = mkdtempSync(join(tmpdir(), 'framework-publication-'))
   t.after(() => rmSync(root, { recursive: true, force: true }))
@@ -25,7 +26,7 @@ function fixture(t) {
     Object.assign(record.fixtures[item.id], { files: item.files, tests: item.tests })
     for (const group of record.plan.filter((group) => group.item.id === item.id))
       Object.assign(group.item, { files: item.files, tests: item.tests })
-    for (const sample of record.samples.filter((sample) => sample.group === `main/${item.id}/none`))
+    for (const sample of [...record.samples, ...record.memorySamples].filter((sample) => sample.group === `main/${item.id}/none`))
       Object.assign(sample.counts, { files: item.files, tests: item.tests, passed: item.tests })
   }
   record.ci = {
@@ -66,7 +67,14 @@ test('framework publication updates tables and provenance together, with repeata
 })
 
 test('published single-file history retains its original workload labels and counts', () => {
-  const record = publishedInput(samples)
+  const history = JSON.parse(samples)
+  for (const id of ['minimal-node', 'minimal-react']) {
+    Object.assign(history.fixtures[id], { files: 1, tests: 1 })
+    for (const group of history.plan.filter(g => g.item.id === id)) Object.assign(group.item, { files: 1, tests: 1 })
+    for (const sample of [...history.samples, ...history.memorySamples].filter(s => s.group === `main/${id}/none`))
+      Object.assign(sample.counts, { files: 1, tests: 1, passed: 1 })
+  }
+  const record = publishedInput(JSON.stringify(history))
   assert.equal(record.fixtures['minimal-node'].files, 1)
   assert.equal(record.fixtures['minimal-react'].tests, 1)
   assert.match(renderReport(record).tables, /\| Node · single-file \|/)
@@ -78,6 +86,7 @@ test('main and browser CI results publish without coverage; missing browser stil
   record.options.suites = ['main', 'browser']
   record.plan = record.plan.filter((group) => group.suite !== 'coverage')
   record.samples = record.samples.filter((sample) => !sample.group.startsWith('coverage/'))
+  record.memorySamples = record.memorySamples.filter((sample) => !sample.group.startsWith('coverage/'))
   writeFileSync(input, JSON.stringify(record))
   refreshReport({ root, input })
   refreshReport({ root, check: true })
@@ -85,6 +94,7 @@ test('main and browser CI results publish without coverage; missing browser stil
   assert.match(readme, /--suites main,browser/)
   record.plan = record.plan.filter((group) => group.suite !== 'browser')
   record.samples = record.samples.filter((sample) => !sample.group.startsWith('browser/'))
+  record.memorySamples = record.memorySamples.filter((sample) => !sample.group.startsWith('browser/'))
   writeFileSync(input, JSON.stringify(record))
   assert.throws(() => refreshReport({ root, input }), /complete main and browser/)
   assert.equal(readFileSync(join(root, 'README.md'), 'utf8'), readme)
@@ -97,13 +107,17 @@ test('framework publication rejects incomplete, failed, partial or invalid sampl
     (r) => { r.status = 'failed' },
     (r) => { r.samples.pop() },
     (r) => { r.samples[0].status = 'failed' },
-    (r) => { r.samples[0].rssBytes = null },
+    (r) => { r.memorySamples[0].memoryBytes = null },
+    (r) => { r.memorySamples.pop() },
+    (r) => { r.memorySamples[0].counts.passed = 0 },
+    (r) => { r.samples[0].memoryBytes = 1 },
     (r) => { r.samples[0].counts.passed = 0 },
     (r) => { r.samples[0].round = 99 },
     (r) => { r.independentBatches = true },
     (r) => {
       r.plan = r.plan.filter((g) => g.item.id === 'minimal-node')
       r.samples = r.samples.filter((s) => s.group === 'main/minimal-node/none')
+      r.memorySamples = r.memorySamples.filter((s) => s.group === 'main/minimal-node/none')
     },
   ]) {
     const bad = structuredClone(record)
@@ -171,4 +185,39 @@ test('framework publication restores the homepage if a later file write fails', 
     patched.mock.restore()
     syncBuiltinESMExports()
   }
+})
+
+test('legacy maxrss framework results are rejected with a clear error', () => {
+  const legacy = {
+    status: 'completed',
+    plan: [{ suite: 'main', item: { id: 'x' }, provider: 'none' }],
+    options: { runs: 1, conditions: ['cold'] },
+    samples: [{ group: 'main/x/none', rssBytes: 1024 }],
+  }
+  assert.throws(
+    () => publishedInput(JSON.stringify({ schemaVersion: 1, ...legacy }), 'result.json'),
+    /result\.json: legacy maxrss data \(rssBytes\); republish with the footprint sampler/,
+  )
+  const noMemory = { ...legacy, samples: [{ group: 'main/x/none' }] }
+  assert.throws(
+    () => publishedInput(JSON.stringify({ schemaVersion: 1, ...noMemory }), 'result.json'),
+    /result\.json: legacy maxrss data \(missing memorySamples\)/,
+  )
+  assert.throws(
+    () => renderReport(legacy, 'result.json'),
+    /legacy maxrss data \(rssBytes\)/,
+  )
+})
+
+test('preview source survives publication and appears in reproduction instructions', (t) => {
+  const { root, input, record } = fixture(t)
+  const requested = 'https://pkg.pr.new/@rstest/core@abcdef0'
+  record.rstestSource = { kind: 'preview', requested }
+  record.options.rstestVersion = requested
+  writeFileSync(input, JSON.stringify(record))
+  refreshReport({ root, input })
+  const readme = readFileSync(join(root, 'README.md'), 'utf8')
+  assert(readme.includes(`--rstest-version ${requested}`))
+  assert(readme.includes(`Rstest source: ${requested}`) || readme.includes(`Rstest source: \`${requested}\``))
+  refreshReport({ root, check: true })
 })

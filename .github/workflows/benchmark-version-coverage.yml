@@ -3,11 +3,6 @@ name: Rstest coverage benchmark
 on:
   workflow_dispatch:
     inputs:
-      runner:
-        description: Runner OS (results from different hosts must not be pooled)
-        type: choice
-        options: [macos-15, ubuntu-24.04]
-        default: macos-15
       runs:
         description: Timed runs per case (use a multiple of the number of versions)
         type: string
@@ -35,10 +30,42 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  # One matrix job per app keeps each job short and isolates failures. Every job
+  # runs both versions and the none/V8/Istanbul controls of its app on one host.
+  setup:
+    name: Plan matrix
+    runs-on: macos-15
+    timeout-minutes: 15
+    outputs:
+      matrix: ${{ steps.plan.outputs.matrix }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+        with:
+          node-version: 26.13.0
+      - name: Install pinned pnpm
+        run: npm install --global "$(node -p 'require("./package.json").packageManager')"
+      - name: Test harness
+        run: pnpm test
+      - name: Plan matrix
+        id: plan
+        env:
+          BENCH_CASES: ${{ inputs.cases }}
+          BENCH_EXCLUDE_CASES: ${{ inputs.exclude_cases }}
+        run: node scripts/ci-matrix.mjs coverage --cases "$BENCH_CASES" --exclude-cases "$BENCH_EXCLUDE_CASES"
+
   benchmark:
-    name: Benchmark
-    runs-on: ${{ inputs.runner || 'macos-15' }}
-    timeout-minutes: 90
+    name: Benchmark (${{ matrix.name }})
+    needs: setup
+    runs-on: macos-15
+    # The whole coverage suite took 34 minutes in one job; the largest app is
+    # well under half of it. 45 minutes covers installation and a slower runner.
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJSON(needs.setup.outputs.matrix) }}
     env:
       NODE_DISABLE_COMPILE_CACHE: '1'
     steps:
@@ -47,25 +74,20 @@ jobs:
           persist-credentials: false
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
         with:
-          node-version: 24.11.1
+          node-version: 26.13.0
       - name: Install pinned pnpm
         run: npm install --global "$(node -p 'require("./package.json").packageManager')"
-      - name: Check harness and published reports
-        run: |
-          pnpm test
-          pnpm report:check
       # Compared versions run sequentially on one host with runner-managed caches.
       - name: Run benchmarks
         id: benchmark
         env:
           BENCH_RUNS: ${{ inputs.runs || '6' }}
-          BENCH_CASES: ${{ inputs.cases }}
-          BENCH_EXCLUDE_CASES: ${{ inputs.exclude_cases }}
+          BENCH_CASE: ${{ matrix.cases }}
           BENCH_BASELINE: ${{ inputs.baseline || '0.11.0' }}
           BENCH_CANDIDATE: ${{ inputs.candidate || '0.12.6' }}
         shell: bash
         run: |
-          pnpm compare --baseline "$BENCH_BASELINE" --candidate "$BENCH_CANDIDATE" --suites coverage --cases "$BENCH_CASES" --exclude-cases "$BENCH_EXCLUDE_CASES" --runs "$BENCH_RUNS" --label ci-version-coverage
+          pnpm compare --baseline "$BENCH_BASELINE" --candidate "$BENCH_CANDIDATE" --suites coverage --cases "$BENCH_CASE" --runs "$BENCH_RUNS" --label ci-version-coverage
       - name: Publish job summary
         if: always()
         env:
@@ -79,7 +101,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
-          name: benchmark-version-coverage-${{ runner.os }}-${{ github.run_id }}-${{ github.run_attempt }}
+          name: benchmark-version-coverage-case-${{ matrix.name }}-${{ github.run_id }}-${{ github.run_attempt }}
           path: |
             results/
             !results/**/node_modules/**
@@ -87,3 +109,50 @@ jobs:
           include-hidden-files: true
           if-no-files-found: warn
           retention-days: 30
+
+  merge:
+    name: Merge results
+    needs: [setup, benchmark]
+    if: ${{ always() && needs.setup.result == 'success' }}
+    runs-on: macos-15
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+        with:
+          node-version: 26.13.0
+      - name: Install pinned pnpm
+        run: npm install --global "$(node -p 'require("./package.json").packageManager')"
+      - name: Download app artifacts
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          path: case-results
+          pattern: benchmark-version-coverage-case-*-${{ github.run_id }}-${{ github.run_attempt }}
+      # Refuses inputs whose versions, options, host, harness or lockfile differ.
+      - name: Merge app comparisons
+        id: merge
+        shell: bash
+        run: node scripts/merge-comparisons.mjs --output "results/ci-version-coverage-merged-${GITHUB_RUN_ID}" case-results/*
+      - name: Publish job summary
+        if: always()
+        env:
+          RESULT_DIR: ${{ steps.merge.outputs.result-directory }}
+        shell: bash
+        run: |
+          if [[ -n "$RESULT_DIR" && -f "$RESULT_DIR/summary.md" ]]; then
+            cat "$RESULT_DIR/summary.md" >> "$GITHUB_STEP_SUMMARY"
+          fi
+      - name: Upload merged samples and reports
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: benchmark-version-coverage-merged-${{ runner.os }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: results/
+          include-hidden-files: true
+          if-no-files-found: warn
+          retention-days: 30
+      - name: Check published reports
+        if: always()
+        run: pnpm report:check

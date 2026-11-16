@@ -3,6 +3,7 @@ import { formatCpu } from '../scripts/lib/host.mjs'
 import { writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { workerLabel } from './workers.mjs'
+import { assertNoLegacyMemory } from '../scripts/lib/legacy.mjs'
 
 function caseName(group) {
   const [suite, name, provider] = group.split('/')
@@ -13,7 +14,8 @@ function caseName(group) {
   return group
 }
 
-export function renderReport(record) {
+export function renderReport(record, source = 'framework result') {
+  assertNoLegacyMemory(source, record, true)
   const runners = record.options.frameworks ?? Object.keys(record.versions)
   const names = runners.map(
     (f) =>
@@ -41,7 +43,7 @@ export function renderReport(record) {
     '',
     `${record.options.runs} measured runs per framework/case/cache condition; medians. Each sample is a fresh process. Warm cache: one warmup after clearing caches; cold cache: cleared before every measured run. Node compile cache disabled; OS page cache and background load uncontrolled. Framework defaults, except explicitly named variants.`,
     '',
-    'RSS is OS /usr/bin/time maxrss (MiB), not simultaneous aggregate process-tree memory. Installations and generation are outside timing. All samples retained.',
+    'Memory is the peak of the summed macOS physical footprint (`phys_footprint`) over the benchmarked command\'s process tree, sampled every ~50 ms and excluding the benchmark driver; the table shows the median across runs in MiB. Elapsed time comes from a timing pass with no sampler running; memory comes from a separate pass that reruns the same command under the sampler with the same cache preparation. Installations and generation are outside timing. All samples retained.',
     '',
     '🥇 and 🥈 mark the lowest and second-lowest distinct unrounded medians among complete results in each row; exact ties share the marker. They do not indicate statistical significance.',
     '',
@@ -56,8 +58,9 @@ export function renderReport(record) {
   )
   if (record.ci) lines.splice(4, 0, `Source: [GitHub Actions](${record.ci.url}), commit \`${record.ci.sha}\`, attempt ${record.ci.attempt}; runner ${record.ci.runner}, image ${record.ci.image ?? 'unknown'}.`, '')
   if (record.comparisonNote) lines.splice(4, 0, record.comparisonNote, '')
+  if (record.rstestSource) lines.splice(4, 0, `Rstest source: \`${record.rstestSource.requested}\`. Resolved versions are listed below; the dependency lockfile is recorded with the run.`, '')
   if (runners.includes('rstest-vmThreads')) lines.push(
-    'Rstest vmThreads uses the same published core package as Rstest, with only pool set to vmThreads. Default concurrency is retained; each file receives a fresh VM context. Browser mode is excluded for this variant. Thread heaps share one process RSS, while fork workers occupy separate processes; maxrss ratios cannot be interpreted as total-memory ratios between these pools.',
+    'Rstest vmThreads uses the same published core package as Rstest, with only pool set to vmThreads. Default concurrency is retained; each file receives a fresh VM context. Browser mode is excluded for this variant. Thread heaps share one process while fork workers occupy separate processes; the process-tree footprint sum counts both.',
     '',
   )
   if (
@@ -97,7 +100,7 @@ export function renderReport(record) {
     '',
     'CV is shown with absolute standard deviation and range; CV alone does not establish a meaningful fluctuation or regression.',
     '',
-    '| Cache / case | Framework | n | Time median | Time min–max | Time SD | Time CV | RSS median | RSS CV |',
+    '| Cache / case | Framework | n | Time median | Time min–max | Time SD | Time CV | Memory median (MiB) | Memory CV |',
     '| --- | --- | --- | --- | --- | --- | --- | --- | --- |',
   ]
   const mainTables = []
@@ -133,37 +136,40 @@ export function renderReport(record) {
   lines.push('')
   for (const condition of record.options.conditions) {
     const rows = groups.map((group) => {
-      const sets = runners.map((f) =>
-        record.samples.filter(
+      const timedFor = (list, f) =>
+        list.filter(
           (s) =>
             s.group === group &&
             s.condition === condition &&
             s.framework === f &&
             s.phase === 'timed',
-        ),
-      )
-      const stats = sets.map((ss) => ({
+        )
+      const sets = runners.map((f) => timedFor(record.samples, f))
+      const memorySets = runners.map((f) => timedFor(record.memorySamples, f))
+      const stats = sets.map((ss, i) => ({
         time: statistics(
           ss.filter((s) => s.status === 'passed').map((s) => s.wallMs),
         ),
-        rss: statistics(
-          ss.filter((s) => s.status === 'passed').map((s) => s.rssBytes),
+        memory: statistics(
+          memorySets[i].filter((s) => s.status === 'passed').map((s) => s.memoryBytes),
         ),
         complete:
           ss.length === record.options.runs &&
-          ss.every((s) => s.status === 'passed'),
+          ss.every((s) => s.status === 'passed') &&
+          memorySets[i].length === record.options.runs &&
+          memorySets[i].every((s) => s.status === 'passed'),
       }))
       stats.forEach((s, i) => {
         if (s.time.n)
           detail.push(
-            `| ${condition} / ${caseName(group)} | ${names[i]} | ${s.time.n} | ${(s.time.median / 1000).toFixed(2)}s | ${(s.time.min / 1000).toFixed(2)}–${(s.time.max / 1000).toFixed(2)}s | ${s.time.sd == null ? '—' : (s.time.sd / 1000).toFixed(2) + 's'} | ${s.time.cv?.toFixed(2) ?? '—'}% | ${(s.rss.median / 1024 ** 2).toFixed(2)} MiB | ${s.rss.cv?.toFixed(2) ?? '—'}% |`,
+            `| ${condition} / ${caseName(group)} | ${names[i]} | ${s.time.n} | ${(s.time.median / 1000).toFixed(2)}s | ${(s.time.min / 1000).toFixed(2)}–${(s.time.max / 1000).toFixed(2)}s | ${s.time.sd == null ? '—' : (s.time.sd / 1000).toFixed(2) + 's'} | ${s.time.cv?.toFixed(2) ?? '—'}% | ${(s.memory.median / 1024 ** 2).toFixed(2)} MiB | ${s.memory.cv?.toFixed(2) ?? '—'}% |`,
           )
       })
       return { group, sets, stats }
     })
     lines.push(`## ${condition === 'warm' ? 'Warm' : 'Cold'} framework cache`, '')
-    for (const metric of ['time', 'rss']) {
-      const title = metric === 'time' ? 'Elapsed time' : 'RSS (MiB)'
+    for (const metric of ['time', 'memory']) {
+      const title = metric === 'time' ? 'Elapsed time' : 'Memory (MiB, process-tree footprint peak)'
       const header = `| Case | ${names.join(' | ')} |`
       const separator = `| --- | ${names.map(() => '---:').join(' | ')} |`
       const main = [`**Main suite · ${condition} cache · ${metric === 'time' ? 'elapsed time' : title}**`, '', header, separator]
@@ -178,7 +184,7 @@ export function renderReport(record) {
           return (['🥇 ', '🥈 '][ranked.indexOf(s[metric].median)] ?? '') +
             (metric === 'time'
               ? `${(s.time.median / 1000).toFixed(2)}s`
-              : (s.rss.median / 1024 ** 2).toFixed(2))
+              : (s.memory.median / 1024 ** 2).toFixed(2))
         })
         lines.push(`| ${caseName(group)} | ${cells.join(' | ')} |`)
         if (group.startsWith('main/')) {
