@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import { heatColor, heatEndpoints, heatFullGap, longestBars, renderChart, renderTable } from '../../frameworks/charts.mjs'
+import { textWidth, heatColor, heatEndpoints, heatFullGap, longestBars, renderChart, renderTable } from '../../frameworks/charts.mjs'
 import { buildSummary } from '../../frameworks/summary.mjs'
 import { readFileSync } from 'node:fs'
 
@@ -91,11 +91,7 @@ test('values and gaps are right-aligned in two sub-columns of every cell', () =>
     assert.equal(values.length, 2)
     assert.equal(svg.match(new RegExp(`<text x="${gapX}" y="\\d+"[^>]*font-size="10"`, 'g'))?.length, index === 0 ? 1 : index === 1 ? 1 : 2)
   }
-  // The first column and the header labels start at fixed offsets from their column edge.
   assert.match(svg, /<text x="0" y="45" /)
-  assert.equal(svg.match(/<circle cx="(\d+)\.00"/g).length, 3)
-  const labels = [...svg.matchAll(/<circle cx="([\d.]+)" cy="15" r="4.5" fill="#[0-9a-f]+"\/>\n<text x="([\d.]+)"/g)].map((m) => Number(m[2]) - Number(m[1]))
-  assert.deepEqual(labels, [10, 10, 10])
 })
 
 test('cells are separated by a gap and have rounded corners; there are no separator lines', () => {
@@ -154,4 +150,21 @@ test('summary lists medians per case, condition and framework', () => {
   const row = summary.results.find((r) => r.case === 'main/barrel/none' && r.condition === 'cold' && r.framework === 'rstest')
   assert.equal(row.timedSamples, 5)
   assert(row.elapsedMsMedian > 0 && row.memoryBytesMedian > 0)
+})
+
+test('each header unit (dot, 10 px gap, label) is centered on its column center', () => {
+  const columns = [{ framework: 'jest', label: 'Jest + SWC' }, { framework: 'vitest', label: 'Vitest vmForks' }, { framework: 'rstest', label: 'Rstest' }]
+  const svg = renderTable({ ...tableInput([{ name: 'A', cells: columns.map(() => cell('1s', null, 0, true)) }]), columns })
+  const units = [...svg.matchAll(/<circle cx="([\d.]+)" cy="15" r="4.5" fill="#[0-9a-f]+"\/>\n<text x="([\d.]+)" y="15"[^>]*>([^<]*)<\/text>/g)]
+  assert.equal(units.length, 3)
+  const columnWidth = (760 - 130) / 3
+  units.forEach((m, index) => {
+    const dotLeft = Number(m[1]) - 4.5
+    assert.equal(Number(m[2]) - (dotLeft + 9), 10) // fixed gap between dot and label
+    const unitCenter = (dotLeft + Number(m[2]) + textWidth(m[3])) / 2
+    assert(Math.abs(unitCenter - (130 + (index + 0.5) * columnWidth)) <= 1)
+  })
+  // The width estimate matches widths measured in Chromium (within 1 px).
+  for (const [label, measured] of Object.entries({ 'Jest + SWC': 60.22, Vitest: 29.77, 'Vitest vmForks': 78.67, Rstest: 33.63, 'Rstest vmForks': 82.55 }))
+    assert(Math.abs(textWidth(label) - measured) <= 1, label)
 })

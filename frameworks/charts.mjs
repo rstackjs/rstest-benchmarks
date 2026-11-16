@@ -123,6 +123,19 @@ export function heatColor(t) {
   return fromOklch({ L: bestLch.L + (worstLch.L - bestLch.L) * x, C: bestLch.C + (worstLch.C - bestLch.C) * x, h: bestLch.h + dh * x })
 }
 
+// Text width in px at 11 px / weight 600, measured in Chromium with the table font stack
+// (letters and digits; anything else uses the fallback). Used to center header units.
+const glyphWidths = { ' ': 3.06, '+': 6.42, '-': 3.66, '.': 3.06, '/': 3.06, '(': 3.66, ')': 3.66, '·': 3.06 }
+const letterWidths = '0123456789'.split('').map((c) => [c, 6.12]).concat(Object.entries({
+  A: 7.94, B: 7.94, C: 7.94, D: 7.94, E: 7.34, F: 6.72, G: 8.56, H: 7.94, I: 3.06, J: 6.12, K: 7.94, L: 6.72, M: 9.16, N: 7.94, O: 8.56, P: 7.34, Q: 8.56, R: 7.94, S: 7.34, T: 6.72, U: 7.94, V: 7.34, W: 10.38, X: 7.34, Y: 7.34, Z: 6.72,
+  a: 6.12, b: 6.72, c: 6.12, d: 6.72, e: 6.12, f: 3.66, g: 6.72, h: 6.72, i: 3.06, j: 3.06, k: 6.12, l: 3.06, m: 9.78, n: 6.72, o: 6.72, p: 6.72, q: 6.72, r: 4.28, s: 6.12, t: 3.66, u: 6.72, v: 6.12, w: 8.56, x: 6.12, y: 6.12, z: 5.5,
+}))
+for (const [char, width] of letterWidths) glyphWidths[char] = width
+export const textWidth = (text) => [...text].reduce((sum, char) => sum + (glyphWidths[char] ?? 6.3), 0)
+
+const dotDiameter = 9
+const dotLabelGap = 10
+
 // `columns`: [{ framework, label }]; `rows`: [{ name, cells: [{ state, text, best, diff, gap }] }].
 // `theme` selects the text colors ('light' or 'dark'); the fills are the same.
 export function renderTable({ title, columns, rows, theme = 'light' }) {
@@ -131,10 +144,11 @@ export function renderTable({ title, columns, rows, theme = 'light' }) {
   const parts = []
   const headerY = rowTableHeight / 2
   columns.forEach(({ framework, label }, index) => {
-    const left = nameColumn + index * columnWidth
-    // Dot at a fixed offset from the label, which starts at a fixed offset from the column edge.
-    parts.push(`<circle cx="${fixed(left + 12)}" cy="${headerY}" r="4.5" fill="${palette[framework] ?? fallbackColor}"/>`)
-    parts.push(`<text x="${fixed(left + 22)}" y="${headerY}" dominant-baseline="central" fill="${valueColor}" font-weight="600" ${font}>${escape(label)}</text>`)
+    // The dot and the label form one unit, centered on the column's cell center.
+    const center = nameColumn + (index + 0.5) * columnWidth
+    const start = center - (dotDiameter + dotLabelGap + textWidth(label)) / 2
+    parts.push(`<circle cx="${fixed(start + dotDiameter / 2)}" cy="${headerY}" r="${dotDiameter / 2}" fill="${palette[framework] ?? fallbackColor}"/>`)
+    parts.push(`<text x="${fixed(start + dotDiameter + dotLabelGap)}" y="${headerY}" dominant-baseline="central" fill="${valueColor}" font-weight="600" ${font}>${escape(label)}</text>`)
   })
   rows.forEach((row, rowIndex) => {
     const top = rowTableHeight * (rowIndex + 1)
