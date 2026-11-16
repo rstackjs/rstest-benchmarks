@@ -60,7 +60,7 @@ export function publishedInput(source, name = 'framework result') {
   return record
 }
 
-const metricNames = { time: 'Elapsed time', memory: 'Memory (MiB, process-tree footprint peak)' }
+const metricNames = { time: 'Elapsed time', memory: 'Memory (MiB, peak process-tree footprint)' }
 const chartFile = { time: 'elapsed', memory: 'memory' }
 const chartPath = (condition, metric) => `frameworks/reports/charts/${condition}-${chartFile[metric]}.svg`
 
@@ -87,7 +87,7 @@ function context(record, rendered, command) {
   const { sections } = rendered
   const view = (condition, metric) => {
     const section = sections[condition]?.[metric]
-    return `![${condition} cache ${metricNames[metric]}](${chartPath(condition, metric)})\n\n${section.table}`
+    return `![${metricNames[metric]}, ${condition} cache](${chartPath(condition, metric)})\n\nBars are scaled per case; compare lengths only within a case.\n\n${section.table}`
   }
   const warm = ['time', 'memory'].map((metric) => `**Warm cache · ${metricNames[metric]}**\n\n${view('warm', metric)}`).join('\n\n')
   const browser = ['cold', 'warm'].flatMap((condition) => ['time', 'memory'].map((metric) => {

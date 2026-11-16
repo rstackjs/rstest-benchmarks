@@ -14,7 +14,7 @@ The comparisons have separate workflows, inputs and concurrency groups:
 
 The framework and coverage workflows are matrix workflows: a `Plan matrix` job turns the `cases` and `exclude_cases` inputs into one job per case, every `Benchmark (<case>)` job runs on its own `macos-15` runner, and a final `Merge results` job combines the per-case results (see [Matrix jobs and merging](#matrix-jobs-and-merging)). The Rstest version performance workflow stays a single job.
 
-Markdown and published-result-only changes do not trigger push/PR framework benchmarks. All workflows run on `macos-15` only; memory is measured with the macOS physical-footprint sampler (see [Memory methodology](../README.md#memory-methodology)). Choose the workflow under **Actions**, then **Run workflow**:
+Markdown and published-result-only changes do not trigger push/PR framework benchmarks. All workflows run on `macos-15` only; memory is measured with the macOS physical-footprint sampler (see [Memory methodology](../README.md#methodology)). Choose the workflow under **Actions**, then **Run workflow**:
 
 | Input | Framework workflow | Both Rstest version workflows |
 | --- | --- | --- |

@@ -66,7 +66,7 @@ All commands accept `--list` and `--runs`. See [workload design](../docs/workloa
 
 - Whole-process elapsed time, including CLI, build, workers/browser, tests, and reporting. By default, one warmup precedes five timed runs; the median is reported.
 - Node compile cache is disabled. Rstest caches are retained between timed runs, so these results do not represent a fresh CI job with no history.
-- Default worker concurrency and `forks + isolate:true` for Node/DOM, except in the pool suite. Coverage memory is the peak process-tree physical footprint on macOS (see [Memory methodology](../README.md#memory-methodology)).
+- Default worker concurrency and `forks + isolate:true` for Node/DOM, except in the pool suite. Coverage memory is the peak process-tree physical footprint on macOS (see [Memory methodology](../README.md#methodology)).
 - All samples are retained. Reports include variability and unsupported cases; small differences and results from different machines or workloads need separate verification.
 
 See [measurement details and result format](../docs/results.md) for cache policy, comparison checks, and statistics.
