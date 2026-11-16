@@ -15,14 +15,27 @@ export function formatDifference(value, best) {
 
 // `entries`: one per runner, { value, state } with state 'ok' (complete), 'incomplete'
 // or 'missing'. The best value is the lowest unrounded median among complete entries;
-// exact ties are all best.
-export function relativeCells(entries, format) {
+// exact ties are all best. Returns { state, text, best, diff, gap } per runner, where
+// `diff` is the formatted gap to the best and `gap` the unrounded fraction.
+export function relativeEntries(entries, format) {
   const complete = entries.filter((entry) => entry.state === 'ok').map((entry) => entry.value)
   const best = complete.length ? Math.min(...complete) : null
   return entries.map((entry) => {
-    if (entry.state === 'missing') return '—'
-    if (entry.state === 'incomplete') return 'INCOMPLETE'
-    if (entry.value === best) return `**${format(entry.value)}**`
-    return `${format(entry.value)} (${formatDifference(entry.value, best)})`
+    if (entry.state !== 'ok') return { state: entry.state, text: entry.state === 'missing' ? '—' : 'INCOMPLETE', best: false, diff: null, gap: 0 }
+    const isBest = entry.value === best
+    return {
+      state: 'ok',
+      text: format(entry.value),
+      best: isBest,
+      diff: isBest ? null : formatDifference(entry.value, best),
+      gap: isBest ? 0 : entry.value / best - 1,
+    }
   })
 }
+
+export const markdownCells = (cells) => cells.map((cell) => {
+  if (cell.state !== 'ok') return cell.text
+  return cell.best ? `**${cell.text}**` : `${cell.text} (${cell.diff})`
+})
+
+export const relativeCells = (entries, format) => markdownCells(relativeEntries(entries, format))

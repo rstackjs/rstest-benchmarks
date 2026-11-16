@@ -72,3 +72,69 @@ export function renderChart({ title, groups }) {
   const total = y - groupGap + rowGap
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${total}" viewBox="0 0 ${width} ${total}" role="img" aria-label="${escape(title)}">\n<title>${escape(title)}</title>\n${parts.join('\n')}\n</svg>\n`
 }
+
+// ---- SVG result tables ----
+const tableWidth = 760
+const nameColumn = 130
+const rowTableHeight = 30
+const gapColumn = 50 // room for "+1114%" in the muted difference column
+// Values need one color that reads on both light and dark GitHub themes.
+const valueColor = '#6e7781'
+// Heat scale for the gap to the row's best: strongest green for the best cell, then
+// green -> amber -> red over a log-scaled gap, capped at +300%. Fills are translucent so
+// the same SVG works on light and dark backgrounds.
+const bestFill = { color: [45, 164, 78], opacity: 0.45 }
+const heatStops = [
+  { color: [45, 164, 78], opacity: 0.28 }, // #2da44e
+  { color: [210, 153, 34], opacity: 0.3 }, // #d29922
+  { color: [229, 83, 75], opacity: 0.42 }, // #e5534b
+]
+const gapCap = 3 // +300%
+const hex = (rgb) => `#${rgb.map((channel) => Math.round(channel).toString(16).padStart(2, '0')).join('')}`
+
+export function heatFill(gap) {
+  const t = Math.min(Math.log1p(Math.max(gap, 0)) / Math.log1p(gapCap), 1) * (heatStops.length - 1)
+  const index = Math.min(Math.floor(t), heatStops.length - 2)
+  const f = t - index
+  const [from, to] = [heatStops[index], heatStops[index + 1]]
+  return { color: from.color.map((channel, i) => channel + (to.color[i] - channel) * f), opacity: from.opacity + (to.opacity - from.opacity) * f }
+}
+
+const tintOf = (cell) => {
+  if (cell.state !== 'ok') return null
+  return cell.best ? bestFill : heatFill(cell.gap)
+}
+
+// `columns`: [{ framework, label }]; `rows`: [{ name, cells: [{ state, text, best, diff, gap }] }].
+export function renderTable({ title, columns, rows }) {
+  const columnWidth = (tableWidth - nameColumn) / columns.length
+  const parts = []
+  const headerY = rowTableHeight / 2
+  columns.forEach(({ framework, label }, index) => {
+    const right = nameColumn + (index + 1) * columnWidth
+    parts.push(`<text x="${fixed(right - 8)}" y="${headerY}" dominant-baseline="central" text-anchor="end" fill="${valueColor}" font-weight="600" ${font}>${escape(label)}</text>`)
+    parts.push(`<circle cx="${fixed(right - 8 - label.length * 6.6 - 11)}" cy="${headerY}" r="4.5" fill="${palette[framework] ?? fallbackColor}"/>`)
+  })
+  parts.push(`<line x1="0" y1="${rowTableHeight}" x2="${tableWidth}" y2="${rowTableHeight}" stroke="${textColor}" stroke-opacity="0.5"/>`)
+  rows.forEach((row, rowIndex) => {
+    const top = rowTableHeight * (rowIndex + 1)
+    const middle = top + rowTableHeight / 2
+    parts.push(`<text x="0" y="${middle}" dominant-baseline="central" fill="${valueColor}" font-weight="600" ${font}>${escape(row.name)}</text>`)
+    row.cells.forEach((cell, index) => {
+      const left = nameColumn + index * columnWidth
+      const right = left + columnWidth
+      const tint = tintOf(cell)
+      if (tint) parts.push(`<rect x="${fixed(left + 3)}" y="${top + 3}" width="${fixed(columnWidth - 6)}" height="${rowTableHeight - 6}" rx="3" fill="${hex(tint.color)}" fill-opacity="${tint.opacity.toFixed(3)}"/>`)
+      if (cell.best) parts.push(`<text x="${fixed(left + 9)}" y="${middle}" dominant-baseline="central" font-size="10" ${font.replace(/ font-size="11"/, '')}>🏆</text>`)
+      if (cell.state !== 'ok') {
+        parts.push(`<text x="${fixed(right - 10)}" y="${middle}" dominant-baseline="central" text-anchor="end" fill="${textColor}" ${font}>${escape(cell.text)}</text>`)
+        return
+      }
+      parts.push(`<text x="${fixed(right - 10 - gapColumn)}" y="${middle}" dominant-baseline="central" text-anchor="end" fill="${valueColor}"${cell.best ? ' font-weight="700"' : ''} style="font-variant-numeric: tabular-nums" ${font}>${escape(cell.text)}</text>`)
+      if (cell.diff) parts.push(`<text x="${fixed(right - 10)}" y="${middle}" dominant-baseline="central" text-anchor="end" fill="${textColor}" font-size="10" style="font-variant-numeric: tabular-nums" ${font.replace(/ font-size="11"/, '')}>${escape(cell.diff)}</text>`)
+    })
+    parts.push(`<line x1="0" y1="${top + rowTableHeight}" x2="${tableWidth}" y2="${top + rowTableHeight}" stroke="${textColor}" stroke-opacity="0.25"/>`)
+  })
+  const total = rowTableHeight * (rows.length + 1) + 1
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${tableWidth}" height="${total}" viewBox="0 0 ${tableWidth} ${total}" role="img" aria-label="${escape(title)}">\n<title>${escape(title)}</title>\n${parts.join('\n')}\n</svg>\n`
+}

@@ -39,3 +39,12 @@ test('missing and incomplete entries are shown as such and never become the best
   assert.deepEqual(cells, ['INCOMPLETE', '—', '**5.00s**', '6.00s (+20%)'])
   assert.deepEqual(relativeCells([{ value: null, state: 'missing' }], formatElapsed), ['—'])
 })
+
+test('relative entries expose the best flag, difference text and unrounded gap', async () => {
+  const { relativeEntries } = await import('../../frameworks/format.mjs')
+  const [best, other, tie, missing] = relativeEntries([ok(100), ok(150), ok(100), { value: null, state: 'missing' }], (v) => String(v))
+  assert.deepEqual([best.best, best.diff, best.gap], [true, null, 0])
+  assert.deepEqual([other.best, other.diff, other.gap], [false, '+50%', 0.5])
+  assert.equal(tie.best, true)
+  assert.deepEqual([missing.text, missing.best], ['—', false])
+})
