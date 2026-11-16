@@ -78,8 +78,9 @@ const tableWidth = 760
 const nameColumn = 130
 const rowTableHeight = 30
 const gapColumn = 54 // room for "+1114%" in the muted difference column
-// Heatmap: one fixed scale for all rows. A cell's gap to its row's best (value / best - 1)
-// maps to t = min(gap / heatFullGap, 1): 0% is green, heatFullGap or more is red, and the
+// Heatmap: per-row log scale. With r = value / rowBest and D = max(rowWorstRatio, minRedRatio),
+// a cell gets t = ln(r) / ln(D) clamped to [0, 1]: the best is green, the row's worst (or 2x
+// the best when the whole row is within 2x) is full red, and the
 // colors in between are interpolated continuously in OKLCH (the hue runs through
 // yellow/amber, not brown). Fills are translucent so they work on
 // light and dark; text colors differ per theme variant because no single color reads on both.
@@ -89,7 +90,7 @@ const themes = {
 }
 export const heatEndpoints = { best: '#2da44e', worst: '#e5534b' }
 const heatOpacity = 0.5
-export const heatFullGap = 1 // +100% or more is full red
+export const MIN_RED_RATIO = 2 // a row never reaches full red below +100%
 const cellGap = 3 // space between neighbouring cells
 
 const toLinear = (c) => (c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4)
@@ -113,6 +114,12 @@ function fromOklch({ L, C, h }) {
   return `#${rgb.map((c) => Math.round(Math.min(Math.max(fromLinear(Math.min(Math.max(c, 0), 1)), 0), 1) * 255).toString(16).padStart(2, '0')).join('')}`
 }
 const bestLch = toOklch(heatEndpoints.best), worstLch = toOklch(heatEndpoints.worst)
+
+// Position of a cell on its row's log scale; `ratio` is value / rowBest, `rowWorstRatio` the row's largest.
+export function heatPosition(ratio, rowWorstRatio) {
+  const denominator = Math.log(Math.max(rowWorstRatio, MIN_RED_RATIO))
+  return Math.min(Math.max(Math.log(Math.max(ratio, 1)) / denominator, 0), 1)
+}
 
 // t = 0 gives the best color and t = 1 the worst; hue takes the short way round.
 export function heatColor(t) {
@@ -154,12 +161,13 @@ export function renderTable({ title, columns, rows, theme = 'light' }) {
     const top = rowTableHeight * (rowIndex + 1)
     const middle = top + rowTableHeight / 2
     parts.push(`<text x="0" y="${middle}" dominant-baseline="central" fill="${valueColor}" font-weight="600" ${font}>${escape(row.name)}</text>`)
+    const worstRatio = Math.max(1, ...row.cells.filter((cell) => cell.state === 'ok').map((cell) => 1 + cell.gap))
     row.cells.forEach((cell, index) => {
       const left = nameColumn + index * columnWidth
       const right = left + columnWidth
       if (cell.state === 'ok') {
         // Separated cells: a 3 px gap on every side and rounded corners.
-        const t = Math.min(cell.gap / heatFullGap, 1)
+        const t = heatPosition(1 + cell.gap, worstRatio)
         parts.push(`<rect x="${fixed(left + cellGap)}" y="${top + cellGap}" width="${fixed(columnWidth - 2 * cellGap)}" height="${rowTableHeight - 2 * cellGap}" rx="3" fill="${heatColor(t)}" fill-opacity="${heatOpacity}"/>`)
       }
       if (cell.best) parts.push(`<text x="${fixed(left + 9)}" y="${middle}" dominant-baseline="central" font-size="10" ${font.replace(/ font-size="11"/, '')}>🏆</text>`)

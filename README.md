@@ -6,7 +6,7 @@ For comparisons between Rstest releases or a local checkout, see [Rstest version
 
 ## Results
 
-In each row the best (lowest) result is green and marked 🏆. Other cells shade from green to red by their gap to it, reaching full red at +100% or more. Gaps do not indicate statistical significance. This publication covers the main and browser suites; cross-framework coverage is not included.
+In each row the best (lowest) result is green and marked 🏆. Other cells shade toward red on a log scale of their ratio to the best, reaching full red at the row's slowest or largest result (or at 2x the best if the whole row is within 2x). Colors compare cells within a row, not across rows. Gaps do not indicate statistical significance. This publication covers the main and browser suites; cross-framework coverage is not included.
 
 <!-- framework-results:start -->
 
