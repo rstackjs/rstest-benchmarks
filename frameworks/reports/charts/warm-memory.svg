@@ -11,91 +11,91 @@
 <rect x="384" y="0" width="10" height="10" rx="2" fill="#8fb5f7"/>
 <text x="399" y="5" dominant-baseline="central" fill="#848d97" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11">Rstest vmForks</text>
 <text x="0" y="36" dominant-baseline="central" fill="#848d97" font-weight="600" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11">Backend</text>
-<rect x="0" y="44" width="275.52" height="10" rx="2" fill="#d9644f"/>
-<text x="281.52" y="49" dominant-baseline="central" fill="#848d97" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11">207.73 MiB</text>
-<rect x="0" y="57" width="206.04" height="10" rx="2" fill="#6aa84f"/>
-<text x="212.04" y="62" dominant-baseline="central" fill="#848d97" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11">155.34 MiB</text>
-<rect x="0" y="70" width="391.12" height="10" rx="2" fill="#b3cc57"/>
-<text x="397.12" y="75" dominant-baseline="central" fill="#848d97" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11">294.88 MiB</text>
-<rect x="0" y="83" width="216.61" height="10" rx="2" fill="#3d7bf0"/>
-<text x="222.61" y="88" dominant-baseline="central" fill="#848d97" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11">163.31 MiB</text>
-<rect x="0" y="96" width="433.79" height="10" rx="2" fill="#8fb5f7"/>
-<text x="439.79" y="101" dominant-baseline="central" fill="#848d97" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11">327.05 MiB</text>
+<rect x="0" y="44" width="262.04" height="10" rx="2" fill="#d9644f"/>
+<text x="268.04" y="49" dominant-baseline="central" fill="#848d97" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11">193.08 MiB</text>
+<rect x="0" y="57" width="210.70" height="10" rx="2" fill="#6aa84f"/>
+<text x="216.70" y="62" dominant-baseline="central" fill="#848d97" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11">155.25 MiB</text>
+<rect x="0" y="70" width="399.29" height="10" rx="2" fill="#b3cc57"/>
+<text x="405.29" y="75" dominant-baseline="central" fill="#848d97" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11">294.21 MiB</text>
+<rect x="0" y="83" width="211.27" height="10" rx="2" fill="#3d7bf0"/>
+<text x="217.27" y="88" dominant-baseline="central" fill="#848d97" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11">155.67 MiB</text>
+<rect x="0" y="96" width="440.64" height="10" rx="2" fill="#8fb5f7"/>
+<text x="446.64" y="101" dominant-baseline="central" fill="#848d97" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11">324.68 MiB</text>
 <text x="0" y="142" dominant-baseline="central" fill="#848d97" font-weight="600" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11">Barrel</text>
-<rect x="0" y="150" width="571.55" height="10" rx="2" fill="#d9644f"/>
-<text x="577.55" y="155" dominant-baseline="central" fill="#848d97" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11">845.15 MiB</text>
-<rect x="0" y="163" width="334.27" height="10" rx="2" fill="#6aa84f"/>
-<text x="340.27" y="168" dominant-baseline="central" fill="#848d97" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11">494.29 MiB</text>
+<rect x="0" y="150" width="609.62" height="10" rx="2" fill="#d9644f"/>
+<text x="615.62" y="155" dominant-baseline="central" fill="#848d97" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11">841.72 MiB</text>
+<rect x="0" y="163" width="355.82" height="10" rx="2" fill="#6aa84f"/>
+<text x="361.82" y="168" dominant-baseline="central" fill="#848d97" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11">491.29 MiB</text>
 <rect x="0" y="176" width="670.00" height="10" rx="2" fill="#b3cc57"/>
-<text x="676.00" y="181" dominant-baseline="central" fill="#848d97" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11">990.74 MiB</text>
-<rect x="0" y="189" width="96.36" height="10" rx="2" fill="#3d7bf0"/>
-<text x="102.36" y="194" dominant-baseline="central" fill="#848d97" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11">142.49 MiB</text>
-<rect x="0" y="202" width="112.71" height="10" rx="2" fill="#8fb5f7"/>
-<text x="118.71" y="207" dominant-baseline="central" fill="#848d97" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11">166.67 MiB</text>
+<text x="676.00" y="181" dominant-baseline="central" fill="#848d97" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11">925.09 MiB</text>
+<rect x="0" y="189" width="101.78" height="10" rx="2" fill="#3d7bf0"/>
+<text x="107.78" y="194" dominant-baseline="central" fill="#848d97" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11">140.54 MiB</text>
+<rect x="0" y="202" width="122.14" height="10" rx="2" fill="#8fb5f7"/>
+<text x="128.14" y="207" dominant-baseline="central" fill="#848d97" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11">168.64 MiB</text>
 <text x="0" y="248" dominant-baseline="central" fill="#848d97" font-weight="600" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11">Many files</text>
-<rect x="0" y="256" width="471.44" height="10" rx="2" fill="#d9644f"/>
-<text x="477.44" y="261" dominant-baseline="central" fill="#848d97" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11">449.71 MiB</text>
-<rect x="0" y="269" width="163.99" height="10" rx="2" fill="#6aa84f"/>
-<text x="169.99" y="274" dominant-baseline="central" fill="#848d97" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11">156.43 MiB</text>
-<rect x="0" y="282" width="500.25" height="10" rx="2" fill="#b3cc57"/>
-<text x="506.25" y="287" dominant-baseline="central" fill="#848d97" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11">477.19 MiB</text>
-<rect x="0" y="295" width="231.44" height="10" rx="2" fill="#3d7bf0"/>
-<text x="237.44" y="300" dominant-baseline="central" fill="#848d97" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11">220.77 MiB</text>
-<rect x="0" y="308" width="524.32" height="10" rx="2" fill="#8fb5f7"/>
-<text x="530.32" y="313" dominant-baseline="central" fill="#848d97" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11">500.15 MiB</text>
+<rect x="0" y="256" width="491.37" height="10" rx="2" fill="#d9644f"/>
+<text x="497.37" y="261" dominant-baseline="central" fill="#848d97" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11">449.38 MiB</text>
+<rect x="0" y="269" width="171.69" height="10" rx="2" fill="#6aa84f"/>
+<text x="177.69" y="274" dominant-baseline="central" fill="#848d97" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11">157.02 MiB</text>
+<rect x="0" y="282" width="527.30" height="10" rx="2" fill="#b3cc57"/>
+<text x="533.30" y="287" dominant-baseline="central" fill="#848d97" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11">482.24 MiB</text>
+<rect x="0" y="295" width="234.77" height="10" rx="2" fill="#3d7bf0"/>
+<text x="240.77" y="300" dominant-baseline="central" fill="#848d97" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11">214.70 MiB</text>
+<rect x="0" y="308" width="480.63" height="10" rx="2" fill="#8fb5f7"/>
+<text x="486.63" y="313" dominant-baseline="central" fill="#848d97" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11">439.56 MiB</text>
 <text x="0" y="354" dominant-baseline="central" fill="#848d97" font-weight="600" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11">Node · 2 files</text>
-<rect x="0" y="362" width="87.91" height="10" rx="2" fill="#d9644f"/>
-<text x="93.91" y="367" dominant-baseline="central" fill="#848d97" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11">48.13 MiB</text>
-<rect x="0" y="375" width="195.34" height="10" rx="2" fill="#6aa84f"/>
-<text x="201.34" y="380" dominant-baseline="central" fill="#848d97" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11">106.94 MiB</text>
-<rect x="0" y="388" width="230.91" height="10" rx="2" fill="#b3cc57"/>
-<text x="236.91" y="393" dominant-baseline="central" fill="#848d97" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11">126.41 MiB</text>
-<rect x="0" y="401" width="205.09" height="10" rx="2" fill="#3d7bf0"/>
-<text x="211.09" y="406" dominant-baseline="central" fill="#848d97" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11">112.28 MiB</text>
+<rect x="0" y="362" width="93.04" height="10" rx="2" fill="#d9644f"/>
+<text x="99.04" y="367" dominant-baseline="central" fill="#848d97" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11">50.27 MiB</text>
+<rect x="0" y="375" width="200.60" height="10" rx="2" fill="#6aa84f"/>
+<text x="206.60" y="380" dominant-baseline="central" fill="#848d97" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11">108.38 MiB</text>
+<rect x="0" y="388" width="225.25" height="10" rx="2" fill="#b3cc57"/>
+<text x="231.25" y="393" dominant-baseline="central" fill="#848d97" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11">121.69 MiB</text>
+<rect x="0" y="401" width="206.76" height="10" rx="2" fill="#3d7bf0"/>
+<text x="212.76" y="406" dominant-baseline="central" fill="#848d97" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11">111.70 MiB</text>
 <rect x="0" y="414" width="234.50" height="10" rx="2" fill="#8fb5f7"/>
-<text x="240.50" y="419" dominant-baseline="central" fill="#848d97" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11">128.38 MiB</text>
+<text x="240.50" y="419" dominant-baseline="central" fill="#848d97" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11">126.69 MiB</text>
 <text x="0" y="460" dominant-baseline="central" fill="#848d97" font-weight="600" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11">React · 2 files</text>
-<rect x="0" y="468" width="162.29" height="10" rx="2" fill="#d9644f"/>
-<text x="168.29" y="473" dominant-baseline="central" fill="#848d97" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11">128.28 MiB</text>
-<rect x="0" y="481" width="297.13" height="10" rx="2" fill="#6aa84f"/>
-<text x="303.13" y="486" dominant-baseline="central" fill="#848d97" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11">234.86 MiB</text>
-<rect x="0" y="494" width="327.35" height="10" rx="2" fill="#b3cc57"/>
-<text x="333.35" y="499" dominant-baseline="central" fill="#848d97" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11">258.74 MiB</text>
-<rect x="0" y="507" width="453.19" height="10" rx="2" fill="#3d7bf0"/>
-<text x="459.19" y="512" dominant-baseline="central" fill="#848d97" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11">358.21 MiB</text>
-<rect x="0" y="520" width="449.59" height="10" rx="2" fill="#8fb5f7"/>
-<text x="455.59" y="525" dominant-baseline="central" fill="#848d97" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11">355.37 MiB</text>
+<rect x="0" y="468" width="158.76" height="10" rx="2" fill="#d9644f"/>
+<text x="164.76" y="473" dominant-baseline="central" fill="#848d97" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11">125.87 MiB</text>
+<rect x="0" y="481" width="293.98" height="10" rx="2" fill="#6aa84f"/>
+<text x="299.98" y="486" dominant-baseline="central" fill="#848d97" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11">233.08 MiB</text>
+<rect x="0" y="494" width="326.10" height="10" rx="2" fill="#b3cc57"/>
+<text x="332.10" y="499" dominant-baseline="central" fill="#848d97" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11">258.54 MiB</text>
+<rect x="0" y="507" width="471.53" height="10" rx="2" fill="#3d7bf0"/>
+<text x="477.53" y="512" dominant-baseline="central" fill="#848d97" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11">373.84 MiB</text>
+<rect x="0" y="520" width="463.74" height="10" rx="2" fill="#8fb5f7"/>
+<text x="469.74" y="525" dominant-baseline="central" fill="#848d97" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11">367.66 MiB</text>
 <text x="0" y="566" dominant-baseline="central" fill="#848d97" font-weight="600" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11">Module graph</text>
-<rect x="0" y="574" width="522.85" height="10" rx="2" fill="#d9644f"/>
-<text x="528.85" y="579" dominant-baseline="central" fill="#848d97" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11">533.59 MiB</text>
-<rect x="0" y="587" width="239.44" height="10" rx="2" fill="#6aa84f"/>
-<text x="245.44" y="592" dominant-baseline="central" fill="#848d97" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11">244.36 MiB</text>
-<rect x="0" y="600" width="548.21" height="10" rx="2" fill="#b3cc57"/>
-<text x="554.21" y="605" dominant-baseline="central" fill="#848d97" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11">559.47 MiB</text>
-<rect x="0" y="613" width="263.73" height="10" rx="2" fill="#3d7bf0"/>
-<text x="269.73" y="618" dominant-baseline="central" fill="#848d97" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11">269.15 MiB</text>
-<rect x="0" y="626" width="444.54" height="10" rx="2" fill="#8fb5f7"/>
-<text x="450.54" y="631" dominant-baseline="central" fill="#848d97" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11">453.67 MiB</text>
+<rect x="0" y="574" width="528.51" height="10" rx="2" fill="#d9644f"/>
+<text x="534.51" y="579" dominant-baseline="central" fill="#848d97" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11">529.18 MiB</text>
+<rect x="0" y="587" width="243.16" height="10" rx="2" fill="#6aa84f"/>
+<text x="249.16" y="592" dominant-baseline="central" fill="#848d97" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11">243.47 MiB</text>
+<rect x="0" y="600" width="560.54" height="10" rx="2" fill="#b3cc57"/>
+<text x="566.54" y="605" dominant-baseline="central" fill="#848d97" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11">561.25 MiB</text>
+<rect x="0" y="613" width="256.89" height="10" rx="2" fill="#3d7bf0"/>
+<text x="262.89" y="618" dominant-baseline="central" fill="#848d97" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11">257.22 MiB</text>
+<rect x="0" y="626" width="461.76" height="10" rx="2" fill="#8fb5f7"/>
+<text x="467.76" y="631" dominant-baseline="central" fill="#848d97" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11">462.35 MiB</text>
 <text x="0" y="672" dominant-baseline="central" fill="#848d97" font-weight="600" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11">React + jsdom</text>
-<rect x="0" y="680" width="470.09" height="10" rx="2" fill="#d9644f"/>
-<text x="476.09" y="685" dominant-baseline="central" fill="#848d97" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11">494.53 MiB</text>
-<rect x="0" y="693" width="238.18" height="10" rx="2" fill="#6aa84f"/>
-<text x="244.18" y="698" dominant-baseline="central" fill="#848d97" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11">250.57 MiB</text>
-<rect x="0" y="706" width="434.08" height="10" rx="2" fill="#b3cc57"/>
-<text x="440.08" y="711" dominant-baseline="central" fill="#848d97" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11">456.65 MiB</text>
-<rect x="0" y="719" width="370.84" height="10" rx="2" fill="#3d7bf0"/>
-<text x="376.84" y="724" dominant-baseline="central" fill="#848d97" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11">390.12 MiB</text>
-<rect x="0" y="732" width="558.73" height="10" rx="2" fill="#8fb5f7"/>
-<text x="564.73" y="737" dominant-baseline="central" fill="#848d97" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11">587.78 MiB</text>
+<rect x="0" y="680" width="468.58" height="10" rx="2" fill="#d9644f"/>
+<text x="474.58" y="685" dominant-baseline="central" fill="#848d97" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11">481.64 MiB</text>
+<rect x="0" y="693" width="244.50" height="10" rx="2" fill="#6aa84f"/>
+<text x="250.50" y="698" dominant-baseline="central" fill="#848d97" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11">251.32 MiB</text>
+<rect x="0" y="706" width="446.40" height="10" rx="2" fill="#b3cc57"/>
+<text x="452.40" y="711" dominant-baseline="central" fill="#848d97" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11">458.84 MiB</text>
+<rect x="0" y="719" width="397.25" height="10" rx="2" fill="#3d7bf0"/>
+<text x="403.25" y="724" dominant-baseline="central" fill="#848d97" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11">408.32 MiB</text>
+<rect x="0" y="732" width="569.91" height="10" rx="2" fill="#8fb5f7"/>
+<text x="575.91" y="737" dominant-baseline="central" fill="#848d97" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11">585.80 MiB</text>
 <text x="0" y="778" dominant-baseline="central" fill="#848d97" font-weight="600" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11">Node startup</text>
-<rect x="0" y="786" width="113.27" height="10" rx="2" fill="#d9644f"/>
-<text x="119.27" y="791" dominant-baseline="central" fill="#848d97" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11">62.72 MiB</text>
-<rect x="0" y="799" width="201.50" height="10" rx="2" fill="#6aa84f"/>
-<text x="207.50" y="804" dominant-baseline="central" fill="#848d97" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11">111.58 MiB</text>
-<rect x="0" y="812" width="242.85" height="10" rx="2" fill="#b3cc57"/>
-<text x="248.85" y="817" dominant-baseline="central" fill="#848d97" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11">134.48 MiB</text>
-<rect x="0" y="825" width="213.51" height="10" rx="2" fill="#3d7bf0"/>
-<text x="219.51" y="830" dominant-baseline="central" fill="#848d97" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11">118.24 MiB</text>
-<rect x="0" y="838" width="253.76" height="10" rx="2" fill="#8fb5f7"/>
-<text x="259.76" y="843" dominant-baseline="central" fill="#848d97" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11">140.53 MiB</text>
+<rect x="0" y="786" width="96.29" height="10" rx="2" fill="#d9644f"/>
+<text x="102.29" y="791" dominant-baseline="central" fill="#848d97" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11">52.49 MiB</text>
+<rect x="0" y="799" width="199.13" height="10" rx="2" fill="#6aa84f"/>
+<text x="205.13" y="804" dominant-baseline="central" fill="#848d97" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11">108.55 MiB</text>
+<rect x="0" y="812" width="233.71" height="10" rx="2" fill="#b3cc57"/>
+<text x="239.71" y="817" dominant-baseline="central" fill="#848d97" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11">127.40 MiB</text>
+<rect x="0" y="825" width="212.72" height="10" rx="2" fill="#3d7bf0"/>
+<text x="218.72" y="830" dominant-baseline="central" fill="#848d97" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11">115.96 MiB</text>
+<rect x="0" y="838" width="253.66" height="10" rx="2" fill="#8fb5f7"/>
+<text x="259.66" y="843" dominant-baseline="central" fill="#848d97" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11">138.27 MiB</text>
 </svg>
