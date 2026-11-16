@@ -78,22 +78,29 @@ const tableWidth = 760
 const nameColumn = 130
 const rowTableHeight = 30
 const gapColumn = 54 // room for "+1114%" in the muted difference column
-// Heatmap colors follow js-framework-benchmark (Apache-2.0, Stefan Krause):
-// https://krausest.github.io/js-framework-benchmark/ (results bundle, color function `x`).
+// Heatmap colors: computeColor from js-framework-benchmark (Apache-2.0, Stefan Krause),
+// https://github.com/krausest/js-framework-benchmark/blob/7ebdd8105e5416beb5a1736cf4eae13cf0bc3faa/webdriver-ts-results/src/Common.ts
 // `factor` is value / best in the row (>= 1): rgb(99,191,124) green at 1x, rgb(255,236,132)
 // yellow at 2x (linear RGB in between), then linear to rgb(249,105,108) red at 4x, capped there.
-export function heatColor(factor) {
-  const mix = (from, to, t) => from.map((channel, i) => ((1 - t) * channel + t * to[i]).toFixed(0))
-  const rgb = factor < 2
-    ? mix([99, 191, 124], [255, 236, 132], factor - 1)
-    : mix([255, 236, 132], [249, 105, 108], Math.min((factor - 2) / 2, 1))
-  return `rgb(${rgb.join(', ')})`
+export function computeColor(factor) {
+  if (factor < 2.0) {
+    const a = factor - 1.0
+    const r = (1.0 - a) * 99 + a * 255
+    const g = (1.0 - a) * 191 + a * 236
+    const b = (1.0 - a) * 124 + a * 132
+    return `rgb(${r.toFixed(0)}, ${g.toFixed(0)}, ${b.toFixed(0)})`
+  }
+  const a = Math.min((factor - 2.0) / 2.0, 1.0)
+  const r = (1.0 - a) * 255 + a * 249
+  const g = (1.0 - a) * 236 + a * 105
+  const b = (1.0 - a) * 132 + a * 108
+  return `rgb(${r.toFixed(0)}, ${g.toFixed(0)}, ${b.toFixed(0)})`
 }
 // Cells are opaque, so their text is dark in both variants; labels outside the cells
 // follow the theme (`value`, `muted`).
 const themes = {
-  light: { value: '#1f2328', muted: '#57606a', cell: '#1f2328', cellMuted: '#3d444d' },
-  dark: { value: '#f0f6fc', muted: '#b1bac4', cell: '#1f2328', cellMuted: '#3d444d' },
+  light: { value: '#1f2328', muted: '#57606a', cell: '#000', cellMuted: '#3d444d' },
+  dark: { value: '#f0f6fc', muted: '#b1bac4', cell: '#000', cellMuted: '#3d444d' },
 }
 
 // Text width in px at 11 px / weight 600, measured in Chromium with the table font stack
@@ -133,7 +140,7 @@ export function renderTable({ title, columns, rows, theme = 'light' }) {
       const right = left + columnWidth
       if (cell.state === 'ok') {
         // Separated cells: a 3 px gap on every side and rounded corners.
-        parts.push(`<rect x="${fixed(left + cellGap)}" y="${top + cellGap}" width="${fixed(columnWidth - 2 * cellGap)}" height="${rowTableHeight - 2 * cellGap}" rx="3" fill="${heatColor(1 + cell.gap)}"/>`)
+        parts.push(`<rect x="${fixed(left + cellGap)}" y="${top + cellGap}" width="${fixed(columnWidth - 2 * cellGap)}" height="${rowTableHeight - 2 * cellGap}" rx="3" fill="${computeColor(1 + cell.gap)}"/>`)
       }
       if (cell.best) parts.push(`<text x="${fixed(left + 9)}" y="${middle}" dominant-baseline="central" font-size="10" ${font.replace(/ font-size="11"/, '')}>🏆</text>`)
       if (cell.state !== 'ok') {

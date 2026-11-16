@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import { textWidth, heatColor, longestBars, renderChart, renderTable } from '../../frameworks/charts.mjs'
+import { textWidth, computeColor, longestBars, renderChart, renderTable } from '../../frameworks/charts.mjs'
 import { buildSummary } from '../../frameworks/summary.mjs'
 import { readFileSync } from 'node:fs'
 
@@ -67,7 +67,7 @@ test('table rendering is deterministic, with light and dark text variants and th
   const dark = renderTable({ ...tableInput(rows()), theme: 'dark' })
   assert.notEqual(dark, light)
   assert.deepEqual(fills(dark), fills(light))
-  assert.match(light, /fill="#1f2328"/)
+  assert.match(light, /fill="#000"/)
   assert.match(dark, /fill="#f0f6fc"/)
   assert.match(light, /^<svg xmlns=.* width="760"/)
   assert.match(light, /Backend &lt;1&gt;/)
@@ -119,10 +119,10 @@ test('heat colors match js-framework-benchmark: green 1x, yellow 2x, red 4x+, li
     const t = Math.min((e - 2) / 2, 1)
     return `rgb(${((1 - t) * 255 + t * 249).toFixed(0)}, ${((1 - t) * 236 + t * 105).toFixed(0)}, ${((1 - t) * 132 + t * 108).toFixed(0)})`
   }
-  for (const factor of [1, 1.5, 2, 3, 4, 10]) assert.equal(heatColor(factor), original(factor))
-  assert.deepEqual([1, 1.5, 2, 3, 4, 10].map(heatColor), ['rgb(99, 191, 124)', 'rgb(177, 214, 128)', 'rgb(255, 236, 132)', 'rgb(252, 171, 120)', 'rgb(249, 105, 108)', 'rgb(249, 105, 108)'])
+  for (const factor of [1, 1.5, 2, 3, 4, 10]) assert.equal(computeColor(factor), original(factor))
+  assert.deepEqual([1, 1.5, 2, 3, 4, 10].map(computeColor), ['rgb(99, 191, 124)', 'rgb(177, 214, 128)', 'rgb(255, 236, 132)', 'rgb(252, 171, 120)', 'rgb(249, 105, 108)', 'rgb(249, 105, 108)'])
   // Monotonic: green falls and red rises once past yellow; blue never moves much.
-  const channels = Array.from({ length: 61 }, (_, i) => heatColor(1 + i / 20).match(/\d+/g).map(Number))
+  const channels = Array.from({ length: 61 }, (_, i) => computeColor(1 + i / 20).match(/\d+/g).map(Number))
   for (let i = 1; i < channels.length; i++) assert(channels[i][1] <= channels[i - 1][1] + (i <= 20 ? 3 : 0) && (i <= 20 ? channels[i][0] >= channels[i - 1][0] : channels[i][0] <= channels[i - 1][0]))
   // Table: best and ties are green, fills are opaque, cell text is dark in both variants.
   const rows = [{ name: 'A', cells: [cell('1', null, 0, true), cell('2', '+100%', 1), cell('9', '+800%', 8)] }, { name: 'B', cells: [cell('1', null, 0, true), cell('1', null, 0, true), cell('1', null, 0, true)] }]
@@ -132,7 +132,7 @@ test('heat colors match js-framework-benchmark: green 1x, yellow 2x, red 4x+, li
   assert.doesNotMatch(svg, /fill-opacity/)
   const dark = renderTable({ ...tableInput(rows), theme: 'dark' })
   assert.deepEqual(fills(dark), fills(svg))
-  for (const variant of [svg, dark]) assert.match(variant, /text-anchor="end" fill="#1f2328"/)
+  for (const variant of [svg, dark]) assert.match(variant, /text-anchor="end" fill="#000"/)
   assert.match(dark, /fill="#f0f6fc" font-weight="600"/) // header and case labels follow the theme
 })
 
