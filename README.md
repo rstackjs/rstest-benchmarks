@@ -16,7 +16,7 @@ Run [43416806164](https://github.com/rstackjs/rstest-benchmarks/actions/runs/434
 
 ![Elapsed time, cold cache](frameworks/reports/charts/cold-elapsed.svg)
 
-Bars are scaled per case; compare lengths only within a case.
+Within a case, bar length is proportional to the value. Across cases, the longest bar grows with the case's largest value on a log scale, so compare lengths only within a case.
 
 | Case | Jest + SWC | Vitest | Vitest vmForks | Rstest | Rstest vmForks |
 | --- | ---: | ---: | ---: | ---: | ---: |
@@ -33,7 +33,7 @@ Bars are scaled per case; compare lengths only within a case.
 
 ![Memory (MiB, peak process-tree footprint), cold cache](frameworks/reports/charts/cold-memory.svg)
 
-Bars are scaled per case; compare lengths only within a case.
+Within a case, bar length is proportional to the value. Across cases, the longest bar grows with the case's largest value on a log scale, so compare lengths only within a case.
 
 | Case | Jest + SWC | Vitest | Vitest vmForks | Rstest | Rstest vmForks |
 | --- | ---: | ---: | ---: | ---: | ---: |
@@ -53,7 +53,7 @@ Bars are scaled per case; compare lengths only within a case.
 
 ![Elapsed time, warm cache](frameworks/reports/charts/warm-elapsed.svg)
 
-Bars are scaled per case; compare lengths only within a case.
+Within a case, bar length is proportional to the value. Across cases, the longest bar grows with the case's largest value on a log scale, so compare lengths only within a case.
 
 | Case | Jest + SWC | Vitest | Vitest vmForks | Rstest | Rstest vmForks |
 | --- | ---: | ---: | ---: | ---: | ---: |
@@ -70,7 +70,7 @@ Bars are scaled per case; compare lengths only within a case.
 
 ![Memory (MiB, peak process-tree footprint), warm cache](frameworks/reports/charts/warm-memory.svg)
 
-Bars are scaled per case; compare lengths only within a case.
+Within a case, bar length is proportional to the value. Across cases, the longest bar grows with the case's largest value on a log scale, so compare lengths only within a case.
 
 | Case | Jest + SWC | Vitest | Vitest vmForks | Rstest | Rstest vmForks |
 | --- | ---: | ---: | ---: | ---: | ---: |

@@ -87,7 +87,7 @@ function context(record, rendered, command) {
   const { sections } = rendered
   const view = (condition, metric) => {
     const section = sections[condition]?.[metric]
-    return `![${metricNames[metric]}, ${condition} cache](${chartPath(condition, metric)})\n\nBars are scaled per case; compare lengths only within a case.\n\n${section.table}`
+    return `![${metricNames[metric]}, ${condition} cache](${chartPath(condition, metric)})\n\nWithin a case, bar length is proportional to the value. Across cases, the longest bar grows with the case's largest value on a log scale, so compare lengths only within a case.\n\n${section.table}`
   }
   const warm = ['time', 'memory'].map((metric) => `**Warm cache · ${metricNames[metric]}**\n\n${view('warm', metric)}`).join('\n\n')
   const browser = ['cold', 'warm'].flatMap((condition) => ['time', 'memory'].map((metric) => {
