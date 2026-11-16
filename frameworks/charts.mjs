@@ -77,64 +77,85 @@ export function renderChart({ title, groups }) {
 const tableWidth = 760
 const nameColumn = 130
 const rowTableHeight = 30
-const gapColumn = 50 // room for "+1114%" in the muted difference column
-// Values need one color that reads on both light and dark GitHub themes.
-const valueColor = '#6e7781'
-// Heat scale for the gap to the row's best: strongest green for the best cell, then
-// green -> amber -> red over a log-scaled gap, capped at +300%. Fills are translucent so
-// the same SVG works on light and dark backgrounds.
-const bestFill = { color: [45, 164, 78], opacity: 0.45 }
-const heatStops = [
-  { color: [45, 164, 78], opacity: 0.28 }, // #2da44e
-  { color: [210, 153, 34], opacity: 0.3 }, // #d29922
-  { color: [229, 83, 75], opacity: 0.42 }, // #e5534b
-]
-const gapCap = 3 // +300%
-const hex = (rgb) => `#${rgb.map((channel) => Math.round(channel).toString(16).padStart(2, '0')).join('')}`
-
-export function heatFill(gap) {
-  const t = Math.min(Math.log1p(Math.max(gap, 0)) / Math.log1p(gapCap), 1) * (heatStops.length - 1)
-  const index = Math.min(Math.floor(t), heatStops.length - 2)
-  const f = t - index
-  const [from, to] = [heatStops[index], heatStops[index + 1]]
-  return { color: from.color.map((channel, i) => channel + (to.color[i] - channel) * f), opacity: from.opacity + (to.opacity - from.opacity) * f }
+const gapColumn = 54 // room for "+1114%" in the muted difference column
+// Row heatmap: the row's best cell is fixed green, its worst cell fixed red, and every
+// other cell is placed between them by gap / worst gap, interpolated continuously in OKLCH
+// (the hue runs through yellow/amber, not brown). Fills are translucent so they work on
+// light and dark; text colors differ per theme variant because no single color reads on both.
+const themes = {
+  light: { value: '#1f2328', muted: '#57606a' },
+  dark: { value: '#f0f6fc', muted: '#b1bac4' },
 }
+export const heatEndpoints = { best: '#2da44e', worst: '#e5534b' }
+const heatOpacity = 0.5
 
-const tintOf = (cell) => {
-  if (cell.state !== 'ok') return null
-  return cell.best ? bestFill : heatFill(cell.gap)
+const toLinear = (c) => (c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4)
+const fromLinear = (c) => (c <= 0.0031308 ? 12.92 * c : 1.055 * c ** (1 / 2.4) - 0.055)
+function toOklch(hexColor) {
+  const [r, g, b] = [1, 3, 5].map((i) => toLinear(parseInt(hexColor.slice(i, i + 2), 16) / 255))
+  const l = Math.cbrt(0.4122214708 * r + 0.5363325363 * g + 0.0514459929 * b)
+  const m = Math.cbrt(0.2119034982 * r + 0.6806995451 * g + 0.1073969566 * b)
+  const sCone = Math.cbrt(0.0883024619 * r + 0.2817188376 * g + 0.6299787005 * b)
+  const L = 0.2104542553 * l + 0.793617785 * m - 0.0040720468 * sCone
+  const a = 1.9779984951 * l - 2.428592205 * m + 0.4505937099 * sCone
+  const bb = 0.0259040371 * l + 0.7827717662 * m - 0.808675766 * sCone
+  return { L, C: Math.hypot(a, bb), h: Math.atan2(bb, a) }
+}
+function fromOklch({ L, C, h }) {
+  const a = C * Math.cos(h), b = C * Math.sin(h)
+  const l = (L + 0.3963377774 * a + 0.2158037573 * b) ** 3
+  const m = (L - 0.1055613458 * a - 0.0638541728 * b) ** 3
+  const sCone = (L - 0.0894841775 * a - 1.291485548 * b) ** 3
+  const rgb = [4.0767416621 * l - 3.3077115913 * m + 0.2309699292 * sCone, -1.2684380046 * l + 2.6097574011 * m - 0.3413193965 * sCone, -0.0041960863 * l - 0.7034186147 * m + 1.707614701 * sCone]
+  return `#${rgb.map((c) => Math.round(Math.min(Math.max(fromLinear(Math.min(Math.max(c, 0), 1)), 0), 1) * 255).toString(16).padStart(2, '0')).join('')}`
+}
+const bestLch = toOklch(heatEndpoints.best), worstLch = toOklch(heatEndpoints.worst)
+
+// t = 0 gives the best color and t = 1 the worst; hue takes the short way round.
+export function heatColor(t) {
+  const x = Math.min(Math.max(t, 0), 1)
+  let dh = worstLch.h - bestLch.h
+  if (dh > Math.PI) dh -= 2 * Math.PI
+  if (dh < -Math.PI) dh += 2 * Math.PI
+  return fromOklch({ L: bestLch.L + (worstLch.L - bestLch.L) * x, C: bestLch.C + (worstLch.C - bestLch.C) * x, h: bestLch.h + dh * x })
 }
 
 // `columns`: [{ framework, label }]; `rows`: [{ name, cells: [{ state, text, best, diff, gap }] }].
-export function renderTable({ title, columns, rows }) {
+// `theme` selects the text colors ('light' or 'dark'); the fills are the same.
+export function renderTable({ title, columns, rows, theme = 'light' }) {
+  const { value: valueColor, muted } = themes[theme]
   const columnWidth = (tableWidth - nameColumn) / columns.length
   const parts = []
   const headerY = rowTableHeight / 2
   columns.forEach(({ framework, label }, index) => {
-    const right = nameColumn + (index + 1) * columnWidth
-    parts.push(`<text x="${fixed(right - 8)}" y="${headerY}" dominant-baseline="central" text-anchor="end" fill="${valueColor}" font-weight="600" ${font}>${escape(label)}</text>`)
-    parts.push(`<circle cx="${fixed(right - 8 - label.length * 6.6 - 11)}" cy="${headerY}" r="4.5" fill="${palette[framework] ?? fallbackColor}"/>`)
+    const left = nameColumn + index * columnWidth
+    // Dot at a fixed offset from the label, which starts at a fixed offset from the column edge.
+    parts.push(`<circle cx="${fixed(left + 12)}" cy="${headerY}" r="4.5" fill="${palette[framework] ?? fallbackColor}"/>`)
+    parts.push(`<text x="${fixed(left + 22)}" y="${headerY}" dominant-baseline="central" fill="${valueColor}" font-weight="600" ${font}>${escape(label)}</text>`)
   })
-  parts.push(`<line x1="0" y1="${rowTableHeight}" x2="${tableWidth}" y2="${rowTableHeight}" stroke="${textColor}" stroke-opacity="0.5"/>`)
   rows.forEach((row, rowIndex) => {
     const top = rowTableHeight * (rowIndex + 1)
     const middle = top + rowTableHeight / 2
+    const gaps = row.cells.filter((cell) => cell.state === 'ok').map((cell) => cell.gap)
+    const worst = Math.max(0, ...gaps)
     parts.push(`<text x="0" y="${middle}" dominant-baseline="central" fill="${valueColor}" font-weight="600" ${font}>${escape(row.name)}</text>`)
     row.cells.forEach((cell, index) => {
       const left = nameColumn + index * columnWidth
       const right = left + columnWidth
-      const tint = tintOf(cell)
-      if (tint) parts.push(`<rect x="${fixed(left + 3)}" y="${top + 3}" width="${fixed(columnWidth - 6)}" height="${rowTableHeight - 6}" rx="3" fill="${hex(tint.color)}" fill-opacity="${tint.opacity.toFixed(3)}"/>`)
+      if (cell.state === 'ok') {
+        // Touching rectangles: no spacing, no rounded corners.
+        const t = worst > 0 ? cell.gap / worst : 0
+        parts.push(`<rect x="${fixed(left)}" y="${top}" width="${fixed(columnWidth)}" height="${rowTableHeight}" fill="${heatColor(t)}" fill-opacity="${heatOpacity}" shape-rendering="crispEdges"/>`)
+      }
       if (cell.best) parts.push(`<text x="${fixed(left + 9)}" y="${middle}" dominant-baseline="central" font-size="10" ${font.replace(/ font-size="11"/, '')}>🏆</text>`)
       if (cell.state !== 'ok') {
-        parts.push(`<text x="${fixed(right - 10)}" y="${middle}" dominant-baseline="central" text-anchor="end" fill="${textColor}" ${font}>${escape(cell.text)}</text>`)
+        parts.push(`<text x="${fixed(right - 10)}" y="${middle}" dominant-baseline="central" text-anchor="end" fill="${muted}" ${font}>${escape(cell.text)}</text>`)
         return
       }
       parts.push(`<text x="${fixed(right - 10 - gapColumn)}" y="${middle}" dominant-baseline="central" text-anchor="end" fill="${valueColor}"${cell.best ? ' font-weight="700"' : ''} style="font-variant-numeric: tabular-nums" ${font}>${escape(cell.text)}</text>`)
-      if (cell.diff) parts.push(`<text x="${fixed(right - 10)}" y="${middle}" dominant-baseline="central" text-anchor="end" fill="${textColor}" font-size="10" style="font-variant-numeric: tabular-nums" ${font.replace(/ font-size="11"/, '')}>${escape(cell.diff)}</text>`)
+      if (cell.diff) parts.push(`<text x="${fixed(right - 10)}" y="${middle}" dominant-baseline="central" text-anchor="end" fill="${muted}" font-size="10" style="font-variant-numeric: tabular-nums" ${font.replace(/ font-size="11"/, '')}>${escape(cell.diff)}</text>`)
     })
-    parts.push(`<line x1="0" y1="${top + rowTableHeight}" x2="${tableWidth}" y2="${top + rowTableHeight}" stroke="${textColor}" stroke-opacity="0.25"/>`)
   })
-  const total = rowTableHeight * (rows.length + 1) + 1
+  const total = rowTableHeight * (rows.length + 1)
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${tableWidth}" height="${total}" viewBox="0 0 ${tableWidth} ${total}" role="img" aria-label="${escape(title)}">\n<title>${escape(title)}</title>\n${parts.join('\n')}\n</svg>\n`
 }

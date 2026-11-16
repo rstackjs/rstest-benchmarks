@@ -6,7 +6,7 @@ For comparisons between Rstest releases or a local checkout, see [Rstest version
 
 ## Results
 
-In the tables, cell color shows the gap to the best (lowest) result in the row: green is the best, red is far from it (the scale stops at +300%), and 🏆 marks the best value. Gaps do not indicate statistical significance. This publication covers the main and browser suites; cross-framework coverage is not included.
+In each row of the tables the best (lowest) result is green and marked 🏆, and the worst is red. Other cells are shaded by their gap relative to the worst. Gaps do not indicate statistical significance. This publication covers the main and browser suites; cross-framework coverage is not included.
 
 <!-- framework-results:start -->
 
@@ -16,7 +16,10 @@ Rstest source: `https://pkg.pr.new/@rstest/core@fe5e00a`. The run records its re
 
 ### Elapsed time, cold cache
 
-![Elapsed time table, cold cache](frameworks/reports/charts/cold-elapsed-table.svg)
+<picture>
+<source media="(prefers-color-scheme: dark)" srcset="frameworks/reports/charts/cold-elapsed-table-dark.svg">
+<img alt="Elapsed time table, cold cache" src="frameworks/reports/charts/cold-elapsed-table.svg">
+</picture>
 
 <details>
 <summary>Table data</summary>
@@ -40,7 +43,10 @@ Within a case, bar length is proportional to the value. Across cases, the longes
 
 ### Memory, cold cache (MiB, peak process-tree footprint)
 
-![Memory (MiB, peak process-tree footprint) table, cold cache](frameworks/reports/charts/cold-memory-table.svg)
+<picture>
+<source media="(prefers-color-scheme: dark)" srcset="frameworks/reports/charts/cold-memory-table-dark.svg">
+<img alt="Memory (MiB, peak process-tree footprint) table, cold cache" src="frameworks/reports/charts/cold-memory-table.svg">
+</picture>
 
 <details>
 <summary>Table data</summary>
@@ -67,7 +73,10 @@ Within a case, bar length is proportional to the value. Across cases, the longes
 
 **Warm cache · Elapsed time**
 
-![Elapsed time table, warm cache](frameworks/reports/charts/warm-elapsed-table.svg)
+<picture>
+<source media="(prefers-color-scheme: dark)" srcset="frameworks/reports/charts/warm-elapsed-table-dark.svg">
+<img alt="Elapsed time table, warm cache" src="frameworks/reports/charts/warm-elapsed-table.svg">
+</picture>
 
 <details>
 <summary>Table data</summary>
@@ -91,7 +100,10 @@ Within a case, bar length is proportional to the value. Across cases, the longes
 
 **Warm cache · Memory (MiB, peak process-tree footprint)**
 
-![Memory (MiB, peak process-tree footprint) table, warm cache](frameworks/reports/charts/warm-memory-table.svg)
+<picture>
+<source media="(prefers-color-scheme: dark)" srcset="frameworks/reports/charts/warm-memory-table-dark.svg">
+<img alt="Memory (MiB, peak process-tree footprint) table, warm cache" src="frameworks/reports/charts/warm-memory-table.svg">
+</picture>
 
 <details>
 <summary>Table data</summary>
@@ -120,7 +132,10 @@ Within a case, bar length is proportional to the value. Across cases, the longes
 
 **Browser mode · Elapsed time**
 
-![Browser mode Elapsed time table](frameworks/reports/charts/browser-elapsed-table.svg)
+<picture>
+<source media="(prefers-color-scheme: dark)" srcset="frameworks/reports/charts/browser-elapsed-table-dark.svg">
+<img alt="Browser mode Elapsed time table" src="frameworks/reports/charts/browser-elapsed-table.svg">
+</picture>
 
 <details>
 <summary>Table data</summary>
@@ -141,7 +156,10 @@ Within a case, bar length is proportional to the value. Across cases, the longes
 
 **Browser mode · Memory (MiB, peak process-tree footprint)**
 
-![Browser mode Memory (MiB, peak process-tree footprint) table](frameworks/reports/charts/browser-memory-table.svg)
+<picture>
+<source media="(prefers-color-scheme: dark)" srcset="frameworks/reports/charts/browser-memory-table-dark.svg">
+<img alt="Browser mode Memory (MiB, peak process-tree footprint) table" src="frameworks/reports/charts/browser-memory-table.svg">
+</picture>
 
 <details>
 <summary>Table data</summary>

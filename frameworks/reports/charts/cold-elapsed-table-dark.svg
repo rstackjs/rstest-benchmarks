@@ -1,0 +1,141 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="270" viewBox="0 0 760 270" role="img" aria-label="Elapsed time, cold cache">
+<title>Elapsed time, cold cache</title>
+<circle cx="142.00" cy="15" r="4.5" fill="#d9644f"/>
+<text x="152.00" y="15" dominant-baseline="central" fill="#f0f6fc" font-weight="600" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11">Jest + SWC</text>
+<circle cx="268.00" cy="15" r="4.5" fill="#6aa84f"/>
+<text x="278.00" y="15" dominant-baseline="central" fill="#f0f6fc" font-weight="600" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11">Vitest</text>
+<circle cx="394.00" cy="15" r="4.5" fill="#b3cc57"/>
+<text x="404.00" y="15" dominant-baseline="central" fill="#f0f6fc" font-weight="600" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11">Vitest vmForks</text>
+<circle cx="520.00" cy="15" r="4.5" fill="#3d7bf0"/>
+<text x="530.00" y="15" dominant-baseline="central" fill="#f0f6fc" font-weight="600" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11">Rstest</text>
+<circle cx="646.00" cy="15" r="4.5" fill="#8fb5f7"/>
+<text x="656.00" y="15" dominant-baseline="central" fill="#f0f6fc" font-weight="600" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11">Rstest vmForks</text>
+<text x="0" y="45" dominant-baseline="central" fill="#f0f6fc" font-weight="600" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11">Backend</text>
+<rect x="130.00" y="30" width="126.00" height="30" fill="#2da44e" fill-opacity="0.5" shape-rendering="crispEdges"/>
+<text x="139.00" y="45" dominant-baseline="central" font-size="10" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif">🏆</text>
+<text x="192.00" y="45" dominant-baseline="central" text-anchor="end" fill="#f0f6fc" font-weight="700" style="font-variant-numeric: tabular-nums" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11">1.03s</text>
+<rect x="256.00" y="30" width="126.00" height="30" fill="#e5534b" fill-opacity="0.5" shape-rendering="crispEdges"/>
+<text x="318.00" y="45" dominant-baseline="central" text-anchor="end" fill="#f0f6fc" style="font-variant-numeric: tabular-nums" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11">2.47s</text>
+<text x="372.00" y="45" dominant-baseline="central" text-anchor="end" fill="#b1bac4" font-size="10" style="font-variant-numeric: tabular-nums" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif">+140%</text>
+<rect x="382.00" y="30" width="126.00" height="30" fill="#7e9800" fill-opacity="0.5" shape-rendering="crispEdges"/>
+<text x="444.00" y="45" dominant-baseline="central" text-anchor="end" fill="#f0f6fc" style="font-variant-numeric: tabular-nums" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11">1.36s</text>
+<text x="498.00" y="45" dominant-baseline="central" text-anchor="end" fill="#b1bac4" font-size="10" style="font-variant-numeric: tabular-nums" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif">+32%</text>
+<rect x="508.00" y="30" width="126.00" height="30" fill="#b68100" fill-opacity="0.5" shape-rendering="crispEdges"/>
+<text x="570.00" y="45" dominant-baseline="central" text-anchor="end" fill="#f0f6fc" style="font-variant-numeric: tabular-nums" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11">1.74s</text>
+<text x="624.00" y="45" dominant-baseline="central" text-anchor="end" fill="#b1bac4" font-size="10" style="font-variant-numeric: tabular-nums" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif">+70%</text>
+<rect x="634.00" y="30" width="126.00" height="30" fill="#50a136" fill-opacity="0.5" shape-rendering="crispEdges"/>
+<text x="696.00" y="45" dominant-baseline="central" text-anchor="end" fill="#f0f6fc" style="font-variant-numeric: tabular-nums" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11">1.14s</text>
+<text x="750.00" y="45" dominant-baseline="central" text-anchor="end" fill="#b1bac4" font-size="10" style="font-variant-numeric: tabular-nums" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif">+11%</text>
+<text x="0" y="75" dominant-baseline="central" fill="#f0f6fc" font-weight="600" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11">Barrel</text>
+<rect x="130.00" y="60" width="126.00" height="30" fill="#cd7100" fill-opacity="0.5" shape-rendering="crispEdges"/>
+<text x="192.00" y="75" dominant-baseline="central" text-anchor="end" fill="#f0f6fc" style="font-variant-numeric: tabular-nums" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11">12.2s</text>
+<text x="246.00" y="75" dominant-baseline="central" text-anchor="end" fill="#b1bac4" font-size="10" style="font-variant-numeric: tabular-nums" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif">+1298%</text>
+<rect x="256.00" y="60" width="126.00" height="30" fill="#e5534b" fill-opacity="0.5" shape-rendering="crispEdges"/>
+<text x="318.00" y="75" dominant-baseline="central" text-anchor="end" fill="#f0f6fc" style="font-variant-numeric: tabular-nums" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11">18.1s</text>
+<text x="372.00" y="75" dominant-baseline="central" text-anchor="end" fill="#b1bac4" font-size="10" style="font-variant-numeric: tabular-nums" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif">+1975%</text>
+<rect x="382.00" y="60" width="126.00" height="30" fill="#dc6200" fill-opacity="0.5" shape-rendering="crispEdges"/>
+<text x="444.00" y="75" dominant-baseline="central" text-anchor="end" fill="#f0f6fc" style="font-variant-numeric: tabular-nums" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11">14.8s</text>
+<text x="498.00" y="75" dominant-baseline="central" text-anchor="end" fill="#b1bac4" font-size="10" style="font-variant-numeric: tabular-nums" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif">+1597%</text>
+<rect x="508.00" y="60" width="126.00" height="30" fill="#47a23e" fill-opacity="0.5" shape-rendering="crispEdges"/>
+<text x="570.00" y="75" dominant-baseline="central" text-anchor="end" fill="#f0f6fc" style="font-variant-numeric: tabular-nums" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11">1.79s</text>
+<text x="624.00" y="75" dominant-baseline="central" text-anchor="end" fill="#b1bac4" font-size="10" style="font-variant-numeric: tabular-nums" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif">+105%</text>
+<rect x="634.00" y="60" width="126.00" height="30" fill="#2da44e" fill-opacity="0.5" shape-rendering="crispEdges"/>
+<text x="643.00" y="75" dominant-baseline="central" font-size="10" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif">🏆</text>
+<text x="696.00" y="75" dominant-baseline="central" text-anchor="end" fill="#f0f6fc" font-weight="700" style="font-variant-numeric: tabular-nums" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11">0.87s</text>
+<text x="0" y="105" dominant-baseline="central" fill="#f0f6fc" font-weight="600" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11">Many files</text>
+<rect x="130.00" y="90" width="126.00" height="30" fill="#4ba13a" fill-opacity="0.5" shape-rendering="crispEdges"/>
+<text x="192.00" y="105" dominant-baseline="central" text-anchor="end" fill="#f0f6fc" style="font-variant-numeric: tabular-nums" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11">5.77s</text>
+<text x="246.00" y="105" dominant-baseline="central" text-anchor="end" fill="#b1bac4" font-size="10" style="font-variant-numeric: tabular-nums" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif">+45%</text>
+<rect x="256.00" y="90" width="126.00" height="30" fill="#e5534b" fill-opacity="0.5" shape-rendering="crispEdges"/>
+<text x="318.00" y="105" dominant-baseline="central" text-anchor="end" fill="#f0f6fc" style="font-variant-numeric: tabular-nums" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11">31.5s</text>
+<text x="372.00" y="105" dominant-baseline="central" text-anchor="end" fill="#b1bac4" font-size="10" style="font-variant-numeric: tabular-nums" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif">+690%</text>
+<rect x="382.00" y="90" width="126.00" height="30" fill="#6b9c0b" fill-opacity="0.5" shape-rendering="crispEdges"/>
+<text x="444.00" y="105" dominant-baseline="central" text-anchor="end" fill="#f0f6fc" style="font-variant-numeric: tabular-nums" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11">8.39s</text>
+<text x="498.00" y="105" dominant-baseline="central" text-anchor="end" fill="#b1bac4" font-size="10" style="font-variant-numeric: tabular-nums" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif">+110%</text>
+<rect x="508.00" y="90" width="126.00" height="30" fill="#ca7300" fill-opacity="0.5" shape-rendering="crispEdges"/>
+<text x="570.00" y="105" dominant-baseline="central" text-anchor="end" fill="#f0f6fc" style="font-variant-numeric: tabular-nums" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11">21.4s</text>
+<text x="624.00" y="105" dominant-baseline="central" text-anchor="end" fill="#b1bac4" font-size="10" style="font-variant-numeric: tabular-nums" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif">+435%</text>
+<rect x="634.00" y="90" width="126.00" height="30" fill="#2da44e" fill-opacity="0.5" shape-rendering="crispEdges"/>
+<text x="643.00" y="105" dominant-baseline="central" font-size="10" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif">🏆</text>
+<text x="696.00" y="105" dominant-baseline="central" text-anchor="end" fill="#f0f6fc" font-weight="700" style="font-variant-numeric: tabular-nums" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11">3.99s</text>
+<text x="0" y="135" dominant-baseline="central" fill="#f0f6fc" font-weight="600" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11">Node · 2 files</text>
+<rect x="130.00" y="120" width="126.00" height="30" fill="#e5534b" fill-opacity="0.5" shape-rendering="crispEdges"/>
+<text x="192.00" y="135" dominant-baseline="central" text-anchor="end" fill="#f0f6fc" style="font-variant-numeric: tabular-nums" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11">0.56s</text>
+<text x="246.00" y="135" dominant-baseline="central" text-anchor="end" fill="#b1bac4" font-size="10" style="font-variant-numeric: tabular-nums" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif">+62%</text>
+<rect x="256.00" y="120" width="126.00" height="30" fill="#a78900" fill-opacity="0.5" shape-rendering="crispEdges"/>
+<text x="318.00" y="135" dominant-baseline="central" text-anchor="end" fill="#f0f6fc" style="font-variant-numeric: tabular-nums" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11">0.43s</text>
+<text x="372.00" y="135" dominant-baseline="central" text-anchor="end" fill="#b1bac4" font-size="10" style="font-variant-numeric: tabular-nums" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif">+26%</text>
+<rect x="382.00" y="120" width="126.00" height="30" fill="#da6400" fill-opacity="0.5" shape-rendering="crispEdges"/>
+<text x="444.00" y="135" dominant-baseline="central" text-anchor="end" fill="#f0f6fc" style="font-variant-numeric: tabular-nums" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11">0.51s</text>
+<text x="498.00" y="135" dominant-baseline="central" text-anchor="end" fill="#b1bac4" font-size="10" style="font-variant-numeric: tabular-nums" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif">+48%</text>
+<rect x="508.00" y="120" width="126.00" height="30" fill="#2da44e" fill-opacity="0.5" shape-rendering="crispEdges"/>
+<text x="517.00" y="135" dominant-baseline="central" font-size="10" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif">🏆</text>
+<text x="570.00" y="135" dominant-baseline="central" text-anchor="end" fill="#f0f6fc" font-weight="700" style="font-variant-numeric: tabular-nums" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11">0.34s</text>
+<rect x="634.00" y="120" width="126.00" height="30" fill="#ab8700" fill-opacity="0.5" shape-rendering="crispEdges"/>
+<text x="696.00" y="135" dominant-baseline="central" text-anchor="end" fill="#f0f6fc" style="font-variant-numeric: tabular-nums" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11">0.44s</text>
+<text x="750.00" y="135" dominant-baseline="central" text-anchor="end" fill="#b1bac4" font-size="10" style="font-variant-numeric: tabular-nums" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif">+27%</text>
+<text x="0" y="165" dominant-baseline="central" fill="#f0f6fc" font-weight="600" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11">React · 2 files</text>
+<rect x="130.00" y="150" width="126.00" height="30" fill="#a28b00" fill-opacity="0.5" shape-rendering="crispEdges"/>
+<text x="192.00" y="165" dominant-baseline="central" text-anchor="end" fill="#f0f6fc" style="font-variant-numeric: tabular-nums" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11">0.87s</text>
+<text x="246.00" y="165" dominant-baseline="central" text-anchor="end" fill="#b1bac4" font-size="10" style="font-variant-numeric: tabular-nums" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif">+5%</text>
+<rect x="256.00" y="150" width="126.00" height="30" fill="#a88900" fill-opacity="0.5" shape-rendering="crispEdges"/>
+<text x="318.00" y="165" dominant-baseline="central" text-anchor="end" fill="#f0f6fc" style="font-variant-numeric: tabular-nums" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11">0.87s</text>
+<text x="372.00" y="165" dominant-baseline="central" text-anchor="end" fill="#b1bac4" font-size="10" style="font-variant-numeric: tabular-nums" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif">+5%</text>
+<rect x="382.00" y="150" width="126.00" height="30" fill="#2da44e" fill-opacity="0.5" shape-rendering="crispEdges"/>
+<text x="391.00" y="165" dominant-baseline="central" font-size="10" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif">🏆</text>
+<text x="444.00" y="165" dominant-baseline="central" text-anchor="end" fill="#f0f6fc" font-weight="700" style="font-variant-numeric: tabular-nums" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11">0.83s</text>
+<rect x="508.00" y="150" width="126.00" height="30" fill="#e5534b" fill-opacity="0.5" shape-rendering="crispEdges"/>
+<text x="570.00" y="165" dominant-baseline="central" text-anchor="end" fill="#f0f6fc" style="font-variant-numeric: tabular-nums" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11">0.93s</text>
+<text x="624.00" y="165" dominant-baseline="central" text-anchor="end" fill="#b1bac4" font-size="10" style="font-variant-numeric: tabular-nums" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif">+12%</text>
+<rect x="634.00" y="150" width="126.00" height="30" fill="#789a00" fill-opacity="0.5" shape-rendering="crispEdges"/>
+<text x="696.00" y="165" dominant-baseline="central" text-anchor="end" fill="#f0f6fc" style="font-variant-numeric: tabular-nums" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11">0.85s</text>
+<text x="750.00" y="165" dominant-baseline="central" text-anchor="end" fill="#b1bac4" font-size="10" style="font-variant-numeric: tabular-nums" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif">+2%</text>
+<text x="0" y="195" dominant-baseline="central" fill="#f0f6fc" font-weight="600" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11">Module graph</text>
+<rect x="130.00" y="180" width="126.00" height="30" fill="#979000" fill-opacity="0.5" shape-rendering="crispEdges"/>
+<text x="192.00" y="195" dominant-baseline="central" text-anchor="end" fill="#f0f6fc" style="font-variant-numeric: tabular-nums" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11">5.33s</text>
+<text x="246.00" y="195" dominant-baseline="central" text-anchor="end" fill="#b1bac4" font-size="10" style="font-variant-numeric: tabular-nums" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif">+137%</text>
+<rect x="256.00" y="180" width="126.00" height="30" fill="#e5534b" fill-opacity="0.5" shape-rendering="crispEdges"/>
+<text x="318.00" y="195" dominant-baseline="central" text-anchor="end" fill="#f0f6fc" style="font-variant-numeric: tabular-nums" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11">11.5s</text>
+<text x="372.00" y="195" dominant-baseline="central" text-anchor="end" fill="#b1bac4" font-size="10" style="font-variant-numeric: tabular-nums" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif">+410%</text>
+<rect x="382.00" y="180" width="126.00" height="30" fill="#a98800" fill-opacity="0.5" shape-rendering="crispEdges"/>
+<text x="444.00" y="195" dominant-baseline="central" text-anchor="end" fill="#f0f6fc" style="font-variant-numeric: tabular-nums" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11">6.15s</text>
+<text x="498.00" y="195" dominant-baseline="central" text-anchor="end" fill="#b1bac4" font-size="10" style="font-variant-numeric: tabular-nums" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif">+173%</text>
+<rect x="508.00" y="180" width="126.00" height="30" fill="#819700" fill-opacity="0.5" shape-rendering="crispEdges"/>
+<text x="570.00" y="195" dominant-baseline="central" text-anchor="end" fill="#f0f6fc" style="font-variant-numeric: tabular-nums" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11">4.48s</text>
+<text x="624.00" y="195" dominant-baseline="central" text-anchor="end" fill="#b1bac4" font-size="10" style="font-variant-numeric: tabular-nums" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif">+99%</text>
+<rect x="634.00" y="180" width="126.00" height="30" fill="#2da44e" fill-opacity="0.5" shape-rendering="crispEdges"/>
+<text x="643.00" y="195" dominant-baseline="central" font-size="10" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif">🏆</text>
+<text x="696.00" y="195" dominant-baseline="central" text-anchor="end" fill="#f0f6fc" font-weight="700" style="font-variant-numeric: tabular-nums" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11">2.25s</text>
+<text x="0" y="225" dominant-baseline="central" fill="#f0f6fc" font-weight="600" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11">React + jsdom</text>
+<rect x="130.00" y="210" width="126.00" height="30" fill="#48a23d" fill-opacity="0.5" shape-rendering="crispEdges"/>
+<text x="192.00" y="225" dominant-baseline="central" text-anchor="end" fill="#f0f6fc" style="font-variant-numeric: tabular-nums" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11">2.49s</text>
+<text x="246.00" y="225" dominant-baseline="central" text-anchor="end" fill="#b1bac4" font-size="10" style="font-variant-numeric: tabular-nums" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif">+19%</text>
+<rect x="256.00" y="210" width="126.00" height="30" fill="#e5534b" fill-opacity="0.5" shape-rendering="crispEdges"/>
+<text x="318.00" y="225" dominant-baseline="central" text-anchor="end" fill="#f0f6fc" style="font-variant-numeric: tabular-nums" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11">9.20s</text>
+<text x="372.00" y="225" dominant-baseline="central" text-anchor="end" fill="#b1bac4" font-size="10" style="font-variant-numeric: tabular-nums" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif">+341%</text>
+<rect x="382.00" y="210" width="126.00" height="30" fill="#3ba346" fill-opacity="0.5" shape-rendering="crispEdges"/>
+<text x="444.00" y="225" dominant-baseline="central" text-anchor="end" fill="#f0f6fc" style="font-variant-numeric: tabular-nums" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11">2.27s</text>
+<text x="498.00" y="225" dominant-baseline="central" text-anchor="end" fill="#b1bac4" font-size="10" style="font-variant-numeric: tabular-nums" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif">+9%</text>
+<rect x="508.00" y="210" width="126.00" height="30" fill="#cd7200" fill-opacity="0.5" shape-rendering="crispEdges"/>
+<text x="570.00" y="225" dominant-baseline="central" text-anchor="end" fill="#f0f6fc" style="font-variant-numeric: tabular-nums" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11">6.70s</text>
+<text x="624.00" y="225" dominant-baseline="central" text-anchor="end" fill="#b1bac4" font-size="10" style="font-variant-numeric: tabular-nums" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif">+222%</text>
+<rect x="634.00" y="210" width="126.00" height="30" fill="#2da44e" fill-opacity="0.5" shape-rendering="crispEdges"/>
+<text x="643.00" y="225" dominant-baseline="central" font-size="10" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif">🏆</text>
+<text x="696.00" y="225" dominant-baseline="central" text-anchor="end" fill="#f0f6fc" font-weight="700" style="font-variant-numeric: tabular-nums" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11">2.08s</text>
+<text x="0" y="255" dominant-baseline="central" fill="#f0f6fc" font-weight="600" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11">Node startup</text>
+<rect x="130.00" y="240" width="126.00" height="30" fill="#e5534b" fill-opacity="0.5" shape-rendering="crispEdges"/>
+<text x="192.00" y="255" dominant-baseline="central" text-anchor="end" fill="#f0f6fc" style="font-variant-numeric: tabular-nums" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11">0.93s</text>
+<text x="246.00" y="255" dominant-baseline="central" text-anchor="end" fill="#b1bac4" font-size="10" style="font-variant-numeric: tabular-nums" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif">+60%</text>
+<rect x="256.00" y="240" width="126.00" height="30" fill="#e05d14" fill-opacity="0.5" shape-rendering="crispEdges"/>
+<text x="318.00" y="255" dominant-baseline="central" text-anchor="end" fill="#f0f6fc" style="font-variant-numeric: tabular-nums" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11">0.88s</text>
+<text x="372.00" y="255" dominant-baseline="central" text-anchor="end" fill="#b1bac4" font-size="10" style="font-variant-numeric: tabular-nums" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif">+52%</text>
+<rect x="382.00" y="240" width="126.00" height="30" fill="#998f00" fill-opacity="0.5" shape-rendering="crispEdges"/>
+<text x="444.00" y="255" dominant-baseline="central" text-anchor="end" fill="#f0f6fc" style="font-variant-numeric: tabular-nums" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11">0.70s</text>
+<text x="498.00" y="255" dominant-baseline="central" text-anchor="end" fill="#b1bac4" font-size="10" style="font-variant-numeric: tabular-nums" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif">+21%</text>
+<rect x="508.00" y="240" width="126.00" height="30" fill="#bd7d00" fill-opacity="0.5" shape-rendering="crispEdges"/>
+<text x="570.00" y="255" dominant-baseline="central" text-anchor="end" fill="#f0f6fc" style="font-variant-numeric: tabular-nums" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11">0.77s</text>
+<text x="624.00" y="255" dominant-baseline="central" text-anchor="end" fill="#b1bac4" font-size="10" style="font-variant-numeric: tabular-nums" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif">+32%</text>
+<rect x="634.00" y="240" width="126.00" height="30" fill="#2da44e" fill-opacity="0.5" shape-rendering="crispEdges"/>
+<text x="643.00" y="255" dominant-baseline="central" font-size="10" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif">🏆</text>
+<text x="696.00" y="255" dominant-baseline="central" text-anchor="end" fill="#f0f6fc" font-weight="700" style="font-variant-numeric: tabular-nums" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11">0.58s</text>
+</svg>

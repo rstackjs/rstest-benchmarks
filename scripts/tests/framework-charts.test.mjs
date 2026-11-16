@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import { heatFill, longestBars, renderChart, renderTable } from '../../frameworks/charts.mjs'
+import { heatColor, heatEndpoints, longestBars, renderChart, renderTable } from '../../frameworks/charts.mjs'
 import { buildSummary } from '../../frameworks/summary.mjs'
 import { readFileSync } from 'node:fs'
 
@@ -47,56 +47,101 @@ test('longest-bar lengths use a log scale between 35% and 100% of the width', ()
   assert.deepEqual(longestBars([group(5), group(5)]), [670, 670])
 })
 
+const cell = (text, diff, gap, best = false) => ({ state: 'ok', text, diff, gap, best })
+const tableInput = (rows) => ({
+  title: 'Elapsed time, cold cache',
+  columns: [{ framework: 'jest', label: 'Jest + SWC' }, { framework: 'rstest', label: 'Rstest' }, { framework: 'vitest', label: 'Vitest' }],
+  rows,
+})
+const hexToRgb = (hex) => [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16))
+const fills = (svg) => [...svg.matchAll(/<rect x="([\d.]+)" y="(\d+)" width="([\d.]+)" height="(\d+)" fill="(#[0-9a-f]{6})" fill-opacity="([\d.]+)"/g)]
+  .map((m) => ({ x: Number(m[1]), y: Number(m[2]), width: Number(m[3]), height: Number(m[4]), color: m[5], opacity: Number(m[6]) }))
+
+test('table rendering is deterministic, with light and dark text variants and the same fills', () => {
+  const rows = () => [
+    { name: 'Backend <1>', cells: [cell('1.03s', null, 0, true), cell('2.06s', '+100%', 1), cell('9.00s', '+773%', 7.73)] },
+    { name: 'Tie', cells: [cell('1.00s', null, 0, true), cell('1.00s', null, 0, true), { state: 'missing', text: '—', best: false, diff: null, gap: 0 }] },
+  ]
+  const light = renderTable(tableInput(rows()))
+  assert.equal(renderTable(tableInput(rows())), light)
+  const dark = renderTable({ ...tableInput(rows()), theme: 'dark' })
+  assert.notEqual(dark, light)
+  assert.deepEqual(fills(dark), fills(light))
+  assert.match(light, /fill="#1f2328"/)
+  assert.match(dark, /fill="#f0f6fc"/)
+  assert.match(light, /^<svg xmlns=.* width="760"/)
+  assert.match(light, /Backend &lt;1&gt;/)
+  assert.equal(light.match(/🏆/g).length, 3) // ties are all best
+  assert.equal(light.match(/font-weight="700"/g).length, 3)
+  assert.match(light, /tabular-nums/)
+  assert.doesNotMatch(light, /NaN|undefined/)
+})
+
+test('values and gaps are right-aligned in two sub-columns of every cell', () => {
+  const rows = [
+    { name: 'A', cells: [cell('1.03s', null, 0, true), cell('2.06s', '+100%', 1), cell('9.00s', '+773%', 7.73)] },
+    { name: 'B', cells: [cell('12.1s', '+15%', 0.15), cell('1.05s', null, 0, true), cell('3.00s', '+186%', 1.86)] },
+  ]
+  const svg = renderTable(tableInput(rows))
+  const right = (index) => 130 + (index + 1) * ((760 - 130) / 3)
+  for (let index = 0; index < 3; index++) {
+    // Every value in a column ends at one x; every gap at another.
+    const valueX = (right(index) - 10 - 54).toFixed(2), gapX = (right(index) - 10).toFixed(2)
+    const values = [...svg.matchAll(new RegExp(`<text x="${valueX}" y="(\\d+)"`, 'g'))]
+    assert.equal(values.length, 2)
+    assert.equal(svg.match(new RegExp(`<text x="${gapX}" y="\\d+"[^>]*font-size="10"`, 'g'))?.length, index === 0 ? 1 : index === 1 ? 1 : 2)
+  }
+  // The first column and the header labels start at fixed offsets from their column edge.
+  assert.match(svg, /<text x="0" y="45" /)
+  assert.equal(svg.match(/<circle cx="(\d+)\.00"/g).length, 3)
+  const labels = [...svg.matchAll(/<circle cx="([\d.]+)" cy="15" r="4.5" fill="#[0-9a-f]+"\/>\n<text x="([\d.]+)"/g)].map((m) => Number(m[2]) - Number(m[1]))
+  assert.deepEqual(labels, [10, 10, 10])
+})
+
+test('cell fills touch each other: no spacing and no rounded corners', () => {
+  const rows = [{ name: 'A', cells: [cell('1s', null, 0, true), cell('2s', '+100%', 1), cell('3s', '+200%', 2)] }, { name: 'B', cells: [cell('1s', null, 0, true), cell('1s', null, 0, true), cell('1s', null, 0, true)] }]
+  const svg = renderTable(tableInput(rows))
+  const all = fills(svg)
+  assert.equal(all.length, 6)
+  const columnWidth = (760 - 130) / 3
+  all.slice(0, 3).forEach((fill, index) => {
+    assert.equal(fill.x, 130 + index * columnWidth)
+    assert.equal(fill.width, columnWidth)
+    assert.equal(fill.height, 30)
+  })
+  assert.equal(all[0].x + all[0].width, all[1].x) // neighbours share an edge
+  assert.equal(all[0].y + all[0].height, all[3].y) // and so do rows
+  assert.doesNotMatch(svg, /rx=/)
+  assert.doesNotMatch(svg, /<line /)
+})
+
+test('row colors: best is green, worst is red, others are continuous by gap / worst gap', () => {
+  const gaps = [0, 0.1, 0.3, 0.7, 1.5]
+  const rows = [{ name: 'A', cells: gaps.map((gap) => cell(`${gap}`, gap ? `+${gap}` : null, gap, gap === 0)) }]
+  const svg = renderTable({ ...tableInput(rows), columns: gaps.map((_, i) => ({ framework: 'jest', label: `c${i}` })) })
+  const colors = fills(svg).map((fill) => fill.color)
+  assert.equal(colors[0], heatEndpoints.best)
+  assert.equal(colors[4], heatEndpoints.worst)
+  // Interpolation is continuous in the gap: different gaps give different colors, and the
+  // middle passes through yellow/amber (red and green both high), not brown.
+  assert.equal(new Set(colors).size, 5)
+  const [r, g] = hexToRgb(heatColor(0.5))
+  assert(r > 150 && g > 100, `midpoint ${heatColor(0.5)} should be amber/yellow`)
+  // Red grows and green shrinks along the whole scale.
+  const channels = Array.from({ length: 21 }, (_, i) => hexToRgb(heatColor(i / 20)))
+  for (let i = 1; i < channels.length; i++) assert(channels[i][0] >= channels[i - 1][0] - 1 && channels[i][1] <= channels[i - 1][1] + 12)
+  // A row where every value ties is entirely green.
+  const tied = renderTable(tableInput([{ name: 'T', cells: [cell('1s', null, 0, true), cell('1s', null, 0, true), cell('1s', null, 0, true)] }]))
+  assert.deepEqual([...new Set(fills(tied).map((fill) => fill.color))], [heatEndpoints.best])
+})
+
 test('summary lists medians per case, condition and framework', () => {
   const record = JSON.parse(readFileSync(new URL('../../frameworks/reports/result.json', import.meta.url), 'utf8'))
   const summary = buildSummary(record)
   assert.equal(summary.schemaVersion, 1)
   assert.equal(summary.run.url, record.ci.url)
-  // 8 main cases x 5 frameworks + browser x 2 frameworks, for two cache conditions.
   assert.equal(summary.results.length, 2 * (8 * 5 + 2))
   const row = summary.results.find((r) => r.case === 'main/barrel/none' && r.condition === 'cold' && r.framework === 'rstest')
   assert.equal(row.timedSamples, 5)
   assert(row.elapsedMsMedian > 0 && row.memoryBytesMedian > 0)
-})
-
-test('table rendering is deterministic and tints cells by their gap to the best', () => {
-  const cell = (text, diff, gap, best = false) => ({ state: 'ok', text, diff, gap, best })
-  const input = () => ({
-    title: 'Elapsed time, cold cache',
-    columns: [{ framework: 'jest', label: 'Jest + SWC' }, { framework: 'rstest', label: 'Rstest' }, { framework: 'vitest', label: 'Vitest' }],
-    rows: [
-      { name: 'Backend <1>', cells: [cell('1.03s', null, 0, true), cell('2.06s', '+100%', 1), cell('9.00s', '+773%', 7.73)] },
-      { name: 'Tie', cells: [cell('1.00s', null, 0, true), cell('1.00s', null, 0, true), { state: 'missing', text: '—', best: false, diff: null, gap: 0 }] },
-    ],
-  })
-  const svg = renderTable(input())
-  assert.equal(renderTable(input()), svg)
-  assert.match(svg, /^<svg xmlns=.* width="760"/)
-  assert.match(svg, /Backend &lt;1&gt;/)
-  // Best cells: strongest green with a champion marker; ties are all best (3 best cells).
-  assert.equal(svg.match(/fill="#2da44e" fill-opacity="0.450"/g).length, 3)
-  assert.equal(svg.match(/🏆/g).length, 3)
-  assert.equal(svg.match(/font-weight="700"/g).length, 3)
-  // Values and gaps sit in two sub-columns: every value ends at one x, every gap at another.
-  const cellRight = (index) => 130 + (index + 1) * ((760 - 130) / 3)
-  assert(svg.includes(`<text x="${(cellRight(1) - 60).toFixed(2)}"`)) // value of the 2nd column
-  assert(svg.includes(`<text x="${(cellRight(1) - 10).toFixed(2)}"`)) // gap of the 2nd column
-  // Differences appear in the muted column; missing cells have no tint and no difference.
-  assert.match(svg, /font-size="10"[^>]*>\+773%</)
-  assert.match(svg, /tabular-nums/)
-  assert.doesNotMatch(svg, /NaN|undefined/)
-  // The first column and the header start at x = 0.
-  assert.match(svg, /<text x="0" y="45" /)
-})
-
-test('heat scale moves from green through amber to red as the gap grows, and stops at +300%', () => {
-  const gaps = [0, 0.05, 0.15, 0.5, 1, 2, 3, 10]
-  const fills = gaps.map(heatFill)
-  for (let i = 1; i < fills.length; i++) {
-    assert(fills[i].color[0] >= fills[i - 1].color[0], 'red channel never decreases')
-    assert(fills[i].color[1] <= fills[i - 1].color[1] + 1e-9, 'green channel never increases')
-  }
-  assert.deepEqual(fills[6], fills[7]) // capped at +300%
-  assert.deepEqual(heatFill(0).color, [45, 164, 78])
-  assert.deepEqual(heatFill(3).color, [229, 83, 75])
 })
