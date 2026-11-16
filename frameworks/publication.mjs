@@ -5,8 +5,8 @@ import { dirname, join } from 'node:path'
 import { cases } from './fixtures.mjs'
 import { selectedFor } from './order.mjs'
 import { renderReport } from './report.mjs'
+import { summaryJson } from './summary.mjs'
 import { verifySamples } from './verify.mjs'
-import { formatCpu } from '../scripts/lib/host.mjs'
 
 function validate(record, source) {
   assert.equal(record.schemaVersion, 1, 'Unsupported framework result schema')
@@ -60,17 +60,51 @@ export function publishedInput(source, name = 'framework result') {
   return record
 }
 
-function context(record) {
+const metricNames = { time: 'Elapsed time', memory: 'Memory (MiB, process-tree footprint peak)' }
+const chartFile = { time: 'elapsed', memory: 'memory' }
+const chartPath = (condition, metric) => `frameworks/reports/charts/${condition}-${chartFile[metric]}.svg`
+
+// One short line: where the numbers come from. Full runner details stay in report.md.
+function provenance(record) {
+  const parts = []
+  if (record.ci) parts.push(`Run [${record.ci.url.split('/').pop()}](${record.ci.url}) (attempt ${record.ci.attempt}), commit \`${record.ci.sha.slice(0, 7)}\``)
+  parts.push(record.startedAt.slice(0, 10))
+  parts.push(`${record.host.cpu}, ${record.host.logicalCpuCount ?? 'unknown'} CPUs${record.ci?.image ? `, GitHub-hosted macOS runner image ${record.ci.image}` : ''}`)
+  parts.push(`Node ${record.host.node}`)
+  parts.push(Object.entries(record.versions).map(([name, version]) => `${name} **${version}**`).join(', ') + `, @swc/jest **${record.dependencies['@swc/jest']}**`)
+  return parts.join(' · ')
+}
+
+function details(summary, body) {
+  return `<details>\n<summary>${summary}</summary>\n\n${body}\n\n</details>`
+}
+
+function context(record, rendered, command) {
   const summary = {
     measured: record.samples.filter((sample) => sample.phase === 'timed').length,
     warmups: record.samples.filter((sample) => sample.phase === 'warmup').length,
   }
-  let source = record.ci
-    ? `Source: [GitHub Actions](${record.ci.url}), commit \`${record.ci.sha}\`, attempt ${record.ci.attempt}. Runner ${record.ci.runner}; image ${record.ci.image ?? 'unknown'}.\n\n`
-    : ''
-  if (record.rstestSource) source += `Rstest source: \`${record.rstestSource.requested}\`. The run records its resolved versions and dependency lockfile.\n\n`
-  const versions = Object.entries(record.versions).map(([name, version]) => `${name} **${version}**`).join(', ')
-  return `${source}Measured ${record.startedAt.slice(0, 10)} (UTC) on ${formatCpu(record.host)}; ${record.host.platform}, Node ${record.host.node}. ${versions}; @swc/jest **${record.dependencies['@swc/jest']}**.\n\n${record.options.runs} timed runs per supported case and cache condition; all **${summary.measured} timed samples and ${summary.warmups} warmups passed**. Node compile cache is disabled. Default concurrency; named Rstest pool variants change only the pool. Cold and warm framework caches are reported separately; OS page cache and background load are uncontrolled. Browser mode compares Vitest against default Rstest only.`
+  const { sections } = rendered
+  const view = (condition, metric) => {
+    const section = sections[condition]?.[metric]
+    return `![${condition} cache ${metricNames[metric]}](${chartPath(condition, metric)})\n\n${section.table}`
+  }
+  const warm = ['time', 'memory'].map((metric) => `**Warm cache · ${metricNames[metric]}**\n\n${view('warm', metric)}`).join('\n\n')
+  const browser = ['cold', 'warm'].flatMap((condition) => ['time', 'memory'].map((metric) => {
+    const table = sections[condition]?.[metric]?.browser
+    return table && `**Browser mode · ${condition} cache · ${metricNames[metric]}**\n\n${table}`
+  })).filter(Boolean).join('\n\n')
+  const run = `${record.options.runs} timed runs per supported case and cache condition; all **${summary.measured} timed samples and ${summary.warmups} warmups passed**. Node compile cache is disabled. Default concurrency; named Rstest pool variants change only the pool. Cold and warm framework caches are reported separately; OS page cache and background load are uncontrolled. Browser mode compares Vitest against default Rstest only.`
+  const rstest = record.rstestSource ? `Rstest source: \`${record.rstestSource.requested}\`. The run records its resolved versions and dependency lockfile.\n\n` : ''
+  return [
+    provenance(record),
+    rstest.trim(),
+    `### Elapsed time, cold cache\n\n${view('cold', 'time')}`,
+    `### Memory, cold cache (MiB, peak process-tree footprint)\n\n${view('cold', 'memory')}`,
+    details('Warm cache', warm),
+    ...(browser ? [details('Browser mode', browser)] : []),
+    details('Run details and reproduction', `${run}\n\nReproduce this matrix using the matching source checkout and pinned dependencies:\n\n\`\`\`sh\n${command}\n\`\`\`\n\nThe full runner list is in the [complete report](frameworks/reports/report.md).`),
+  ].filter(Boolean).join('\n\n')
 }
 
 export function refreshReport({ root, input = join(root, 'frameworks/reports/result.json'), check = false }) {
@@ -83,12 +117,15 @@ export function refreshReport({ root, input = join(root, 'frameworks/reports/res
   const start = readme.indexOf(startMarker), end = readme.indexOf(endMarker)
   assert(start >= 0 && end > start && readme.lastIndexOf(startMarker) === start && readme.lastIndexOf(endMarker) === end, 'Missing, duplicate or invalid framework result markers')
   const command = `pnpm compare:frameworks --suites ${record.options.suites.join(',')} --cases ${cases.map((item) => item.id).join(',')} --frameworks ${record.options.frameworks.join(',')} --runs ${record.options.runs}${record.rstestSource ? ` --rstest-version ${record.rstestSource.requested}` : ''}`
-  const body = `\n\n${context(record)}\n\nReproduce this matrix using the matching source checkout and pinned dependencies:\n\n\`\`\`sh\n${command}\n\`\`\`\n\n${rendered.tables}\n\n`
+  const body = `\n\n${context(record, rendered, command)}\n\n`
   const updates = new Map([
     ['README.md', readme.slice(0, start + startMarker.length) + body + readme.slice(end)],
     ['frameworks/reports/report.md', rendered.markdown],
     ['frameworks/reports/variability.md', rendered.variability],
+    ['frameworks/reports/summary.json', summaryJson(record)],
   ])
+  for (const [condition, metrics] of Object.entries(rendered.sections))
+    for (const [metric, section] of Object.entries(metrics)) updates.set(chartPath(condition, metric), section.chart)
   // Keep a published input byte-for-byte when only regenerating its presentation.
   if (input !== join(root, 'frameworks/reports/result.json'))
     updates.set('frameworks/reports/result.json', JSON.stringify(record, null, 2) + '\n')

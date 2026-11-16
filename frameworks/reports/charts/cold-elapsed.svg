@@ -1,0 +1,101 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="799" viewBox="0 0 760 799" role="img" aria-label="Cold cache elapsed time, median per case">
+<title>Cold cache elapsed time, median per case</title>
+<rect x="10" y="10" width="10" height="10" rx="2" fill="#d9644f"/>
+<text x="25" y="19" fill="#848d97" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12">Jest + SWC</text>
+<rect x="113" y="10" width="10" height="10" rx="2" fill="#6aa84f"/>
+<text x="128" y="19" fill="#848d97" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12">Vitest</text>
+<rect x="188" y="10" width="10" height="10" rx="2" fill="#b3cc57"/>
+<text x="203" y="19" fill="#848d97" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12">Vitest vmForks</text>
+<rect x="319" y="10" width="10" height="10" rx="2" fill="#3d7bf0"/>
+<text x="334" y="19" fill="#848d97" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12">Rstest</text>
+<rect x="394" y="10" width="10" height="10" rx="2" fill="#8fb5f7"/>
+<text x="409" y="19" fill="#848d97" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12">Rstest vmForks</text>
+<text x="140" y="79" text-anchor="end" fill="#848d97" font-weight="600" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12">Backend</text>
+<rect x="150" y="34" width="226.81" height="14" rx="3" fill="#d9644f"/>
+<text x="382.81" y="45" fill="#848d97" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12">1.17s</text>
+<rect x="150" y="51" width="470.00" height="14" rx="3" fill="#6aa84f"/>
+<text x="626.00" y="62" fill="#848d97" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12">2.43s</text>
+<rect x="150" y="68" width="250.61" height="14" rx="3" fill="#b3cc57"/>
+<text x="406.61" y="79" fill="#848d97" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12">1.30s</text>
+<rect x="150" y="85" width="377.32" height="14" rx="3" fill="#3d7bf0"/>
+<text x="533.32" y="96" fill="#848d97" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12">1.95s</text>
+<rect x="150" y="102" width="198.06" height="14" rx="3" fill="#8fb5f7"/>
+<text x="354.06" y="113" fill="#848d97" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12">1.03s</text>
+<text x="140" y="175" text-anchor="end" fill="#848d97" font-weight="600" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12">Barrel</text>
+<rect x="150" y="130" width="288.72" height="14" rx="3" fill="#d9644f"/>
+<text x="444.72" y="141" fill="#848d97" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12">12.11s</text>
+<rect x="150" y="147" width="470.00" height="14" rx="3" fill="#6aa84f"/>
+<text x="626.00" y="158" fill="#848d97" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12">19.71s</text>
+<rect x="150" y="164" width="335.63" height="14" rx="3" fill="#b3cc57"/>
+<text x="491.63" y="175" fill="#848d97" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12">14.08s</text>
+<rect x="150" y="181" width="40.68" height="14" rx="3" fill="#3d7bf0"/>
+<text x="196.68" y="192" fill="#848d97" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12">1.71s</text>
+<rect x="150" y="198" width="18.38" height="14" rx="3" fill="#8fb5f7"/>
+<text x="174.38" y="209" fill="#848d97" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12">0.77s</text>
+<text x="140" y="271" text-anchor="end" fill="#848d97" font-weight="600" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12">Many files</text>
+<rect x="150" y="226" width="93.81" height="14" rx="3" fill="#d9644f"/>
+<text x="249.81" y="237" fill="#848d97" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12">6.02s</text>
+<rect x="150" y="243" width="470.00" height="14" rx="3" fill="#6aa84f"/>
+<text x="626.00" y="254" fill="#848d97" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12">30.15s</text>
+<rect x="150" y="260" width="157.69" height="14" rx="3" fill="#b3cc57"/>
+<text x="313.69" y="271" fill="#848d97" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12">10.12s</text>
+<rect x="150" y="277" width="331.88" height="14" rx="3" fill="#3d7bf0"/>
+<text x="487.88" y="288" fill="#848d97" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12">21.29s</text>
+<rect x="150" y="294" width="62.98" height="14" rx="3" fill="#8fb5f7"/>
+<text x="218.98" y="305" fill="#848d97" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12">4.04s</text>
+<text x="140" y="367" text-anchor="end" fill="#848d97" font-weight="600" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12">Node · 2 files</text>
+<rect x="150" y="322" width="470.00" height="14" rx="3" fill="#d9644f"/>
+<text x="626.00" y="333" fill="#848d97" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12">0.65s</text>
+<rect x="150" y="339" width="362.40" height="14" rx="3" fill="#6aa84f"/>
+<text x="518.40" y="350" fill="#848d97" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12">0.50s</text>
+<rect x="150" y="356" width="408.94" height="14" rx="3" fill="#b3cc57"/>
+<text x="564.94" y="367" fill="#848d97" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12">0.56s</text>
+<rect x="150" y="373" width="319.47" height="14" rx="3" fill="#3d7bf0"/>
+<text x="475.47" y="384" fill="#848d97" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12">0.44s</text>
+<rect x="150" y="390" width="343.44" height="14" rx="3" fill="#8fb5f7"/>
+<text x="499.44" y="401" fill="#848d97" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12">0.47s</text>
+<text x="140" y="463" text-anchor="end" fill="#848d97" font-weight="600" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12">React · 2 files</text>
+<rect x="150" y="418" width="422.76" height="14" rx="3" fill="#d9644f"/>
+<text x="578.76" y="429" fill="#848d97" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12">0.88s</text>
+<rect x="150" y="435" width="404.40" height="14" rx="3" fill="#6aa84f"/>
+<text x="560.40" y="446" fill="#848d97" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12">0.84s</text>
+<rect x="150" y="452" width="419.12" height="14" rx="3" fill="#b3cc57"/>
+<text x="575.12" y="463" fill="#848d97" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12">0.87s</text>
+<rect x="150" y="469" width="470.00" height="14" rx="3" fill="#3d7bf0"/>
+<text x="626.00" y="480" fill="#848d97" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12">0.98s</text>
+<rect x="150" y="486" width="434.84" height="14" rx="3" fill="#8fb5f7"/>
+<text x="590.84" y="497" fill="#848d97" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12">0.91s</text>
+<text x="140" y="559" text-anchor="end" fill="#848d97" font-weight="600" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12">Module graph</text>
+<rect x="150" y="514" width="226.74" height="14" rx="3" fill="#d9644f"/>
+<text x="382.74" y="525" fill="#848d97" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12">5.32s</text>
+<rect x="150" y="531" width="470.00" height="14" rx="3" fill="#6aa84f"/>
+<text x="626.00" y="542" fill="#848d97" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12">11.02s</text>
+<rect x="150" y="548" width="287.30" height="14" rx="3" fill="#b3cc57"/>
+<text x="443.30" y="559" fill="#848d97" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12">6.74s</text>
+<rect x="150" y="565" width="172.54" height="14" rx="3" fill="#3d7bf0"/>
+<text x="328.54" y="576" fill="#848d97" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12">4.05s</text>
+<rect x="150" y="582" width="110.13" height="14" rx="3" fill="#8fb5f7"/>
+<text x="266.13" y="593" fill="#848d97" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12">2.58s</text>
+<text x="140" y="655" text-anchor="end" fill="#848d97" font-weight="600" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12">React + jsdom</text>
+<rect x="150" y="610" width="124.66" height="14" rx="3" fill="#d9644f"/>
+<text x="280.66" y="621" fill="#848d97" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12">1.80s</text>
+<rect x="150" y="627" width="470.00" height="14" rx="3" fill="#6aa84f"/>
+<text x="626.00" y="638" fill="#848d97" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12">6.79s</text>
+<rect x="150" y="644" width="132.39" height="14" rx="3" fill="#b3cc57"/>
+<text x="288.39" y="655" fill="#848d97" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12">1.91s</text>
+<rect x="150" y="661" width="398.45" height="14" rx="3" fill="#3d7bf0"/>
+<text x="554.45" y="672" fill="#848d97" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12">5.76s</text>
+<rect x="150" y="678" width="122.16" height="14" rx="3" fill="#8fb5f7"/>
+<text x="278.16" y="689" fill="#848d97" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12">1.77s</text>
+<text x="140" y="751" text-anchor="end" fill="#848d97" font-weight="600" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12">Node startup</text>
+<rect x="150" y="706" width="391.42" height="14" rx="3" fill="#d9644f"/>
+<text x="547.42" y="717" fill="#848d97" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12">0.68s</text>
+<rect x="150" y="723" width="470.00" height="14" rx="3" fill="#6aa84f"/>
+<text x="626.00" y="734" fill="#848d97" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12">0.81s</text>
+<rect x="150" y="740" width="448.69" height="14" rx="3" fill="#b3cc57"/>
+<text x="604.69" y="751" fill="#848d97" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12">0.78s</text>
+<rect x="150" y="757" width="387.19" height="14" rx="3" fill="#3d7bf0"/>
+<text x="543.19" y="768" fill="#848d97" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12">0.67s</text>
+<rect x="150" y="774" width="312.83" height="14" rx="3" fill="#8fb5f7"/>
+<text x="468.83" y="785" fill="#848d97" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12">0.54s</text>
+</svg>
