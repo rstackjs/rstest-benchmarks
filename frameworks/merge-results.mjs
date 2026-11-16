@@ -1,11 +1,12 @@
 // Usage: node frameworks/merge-results.mjs --output results/<dir> <input>...
 // Each input is a per-case result directory (or result.json) from the CI matrix.
-import { basename, dirname, resolve } from 'node:path'
+import { basename, dirname, join, resolve } from 'node:path'
 import { parseArgs } from 'node:util'
 import { writeFileSync } from 'node:fs'
 import { mergeResults, writeMerged } from './merge.mjs'
 import { verify } from './verify.mjs'
 import { report } from './report.mjs'
+import { summaryJson } from './summary.mjs'
 import { root } from './fixtures.mjs'
 import { ciResultDirectory, findArtifactFile } from '../scripts/lib/ci.mjs'
 
@@ -26,5 +27,6 @@ const file = writeMerged(outDir, result)
 result.merged.verification = verify(result.merged, outDir, file)
 writeFileSync(file, JSON.stringify(result.merged, null, 2))
 report(result.merged, outDir)
+writeFileSync(join(outDir, 'summary.json'), summaryJson(result.merged))
 ciResultDirectory(root, outDir)
 console.log(JSON.stringify({ output: file, inputs: inputs.map((input) => input.name), verification: result.merged.verification }))

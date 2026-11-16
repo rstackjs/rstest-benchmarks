@@ -64,21 +64,49 @@ export function extractFrameworkArchive(zip, scratch) {
   return output
 }
 
-export async function downloadFrameworkArtifacts({ repository, runId, attempt, cases, token, output, apiUrl = 'https://api.github.com', fetchImpl = fetch, wait = sleep, log = console.log }) {
+const apiHeaders = (token) => ({ Authorization: `Bearer ${token}`, Accept: 'application/vnd.github+json', 'X-GitHub-Api-Version': '2022-11-28' })
+
+export async function githubJson(url, { token, fetchImpl = fetch, wait = sleep, log = console.log, what }) {
+  return retry(async () => {
+    const response = await fetchImpl(url, { headers: apiHeaders(token), signal: AbortSignal.timeout(60000) })
+    if (!response.ok) throw new Error(`${what}: HTTP ${response.status}`)
+    return response.json()
+  }, { wait, log })
+}
+
+export async function listRunArtifacts({ repository, runId, token, apiUrl = 'https://api.github.com', fetchImpl = fetch, wait = sleep, log = console.log }) {
   assert(/^[\w.-]+\/[\w.-]+$/.test(repository), 'Invalid repository')
   assert(/^\d+$/.test(String(runId)), 'Invalid run ID')
   assert(token, 'GITHUB_TOKEN is required to download run artifacts')
-  const headers = { Authorization: `Bearer ${token}`, Accept: 'application/vnd.github+json', 'X-GitHub-Api-Version': '2022-11-28' }
   const artifacts = []
   for (let page = 1; ; page++) {
-    const data = await retry(async () => {
-      const response = await fetchImpl(`${apiUrl}/repos/${repository}/actions/runs/${runId}/artifacts?per_page=100&page=${page}`, { headers, signal: AbortSignal.timeout(60000) })
-      if (!response.ok) throw new Error(`List run artifacts: HTTP ${response.status}`)
-      return response.json()
-    }, { wait, log })
+    const data = await githubJson(`${apiUrl}/repos/${repository}/actions/runs/${runId}/artifacts?per_page=100&page=${page}`, { token, fetchImpl, wait, log, what: 'List run artifacts' })
     artifacts.push(...data.artifacts)
     if (data.artifacts.length < 100) break
   }
+  return artifacts
+}
+
+// Downloads one artifact ZIP to `zip` and checks its SHA-256 digest. The token is
+// sent to the GitHub API only, never to the blob storage host it redirects to.
+export async function downloadArtifactZip({ artifact, repository, token, zip, apiUrl = 'https://api.github.com', fetchImpl = fetch }) {
+  assert(/^sha256:[a-f\d]{64}$/.test(artifact.digest ?? ''), `Missing SHA-256 digest for ${artifact.name}`)
+  const response = await fetchImpl(`${apiUrl}/repos/${repository}/actions/artifacts/${artifact.id}/zip`, { headers: apiHeaders(token), redirect: 'manual', signal: AbortSignal.timeout(60000) })
+  let download = response
+  if ([301, 302, 303, 307, 308].includes(response.status)) {
+    const url = response.headers.get('location')
+    assert(url?.startsWith('https://'), 'Artifact redirect must use HTTPS')
+    download = await fetchImpl(url, { signal: AbortSignal.timeout(60000) })
+  }
+  if (!download.ok || !download.body) throw new Error(`Download ${artifact.name}: HTTP ${download.status}`)
+  await pipeline(Readable.fromWeb(download.body), createWriteStream(zip))
+  const hash = createHash('sha256')
+  for await (const chunk of createReadStream(zip)) hash.update(chunk)
+  assert.equal(`sha256:${hash.digest('hex')}`, artifact.digest, `Digest mismatch for ${artifact.name}`)
+}
+
+export async function downloadFrameworkArtifacts({ repository, runId, attempt, cases, token, output, apiUrl = 'https://api.github.com', fetchImpl = fetch, wait = sleep, log = console.log }) {
+  const artifacts = await listRunArtifacts({ repository, runId, token, apiUrl, fetchImpl, wait, log })
   const selected = selectFrameworkArtifacts(artifacts, { runId, attempt, cases })
   // A fresh directory prevents a previous invocation's older attempt from being
   // included by merge-results.mjs's case-results/* glob.
@@ -86,25 +114,12 @@ export async function downloadFrameworkArtifacts({ repository, runId, attempt, c
   mkdirSync(output, { recursive: true })
   // Download and extract sequentially, instead of fanning out all case archives.
   for (const artifact of selected) {
-    assert(/^sha256:[a-f\d]{64}$/.test(artifact.digest ?? ''), `Missing SHA-256 digest for ${artifact.name}`)
     log(`Downloading ${artifact.name} (${artifact.size_in_bytes} bytes, source attempt ${artifact.sourceAttempt})`)
     await retry(async () => {
       const scratch = mkdtempSync(join(output, '.download-'))
       try {
-        const response = await fetchImpl(`${apiUrl}/repos/${repository}/actions/artifacts/${artifact.id}/zip`, { headers, redirect: 'manual', signal: AbortSignal.timeout(60000) })
-        let download = response
-        if ([301, 302, 303, 307, 308].includes(response.status)) {
-          const url = response.headers.get('location')
-          assert(url?.startsWith('https://'), 'Artifact redirect must use HTTPS')
-          // Never forward the GitHub token to the blob storage host.
-          download = await fetchImpl(url, { signal: AbortSignal.timeout(60000) })
-        }
-        if (!download.ok || !download.body) throw new Error(`Download ${artifact.name}: HTTP ${download.status}`)
         const zip = join(scratch, 'artifact.zip')
-        await pipeline(Readable.fromWeb(download.body), createWriteStream(zip))
-        const hash = createHash('sha256')
-        for await (const chunk of createReadStream(zip)) hash.update(chunk)
-        assert.equal(`sha256:${hash.digest('hex')}`, artifact.digest, `Digest mismatch for ${artifact.name}`)
+        await downloadArtifactZip({ artifact, repository, token, zip, apiUrl, fetchImpl })
         const extracted = extractFrameworkArchive(zip, scratch)
         const record = JSON.parse(readFileSync(join(extracted, 'result.json'), 'utf8'))
         assert.equal(record.status, 'completed', `${artifact.name}: benchmark did not complete`)

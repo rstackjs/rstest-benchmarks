@@ -42,8 +42,8 @@ test('framework publication updates tables and provenance together, with repeata
   refreshReport({ root, input })
   const readme = readFileSync(join(root, 'README.md'), 'utf8')
   assert.match(readme, /actions\/runs\/123/)
-  assert.match(readme, /commit `abc123`, attempt 2/)
-  assert.match(readme, /logical CPUs: 8; available parallelism: 2/)
+  assert.match(readme, /Run \[123\]\(https:\/\/github.com\/example\/benchmarks\/actions\/runs\/123\) \(attempt 2\), commit `abc123`/)
+  assert.match(readme, /Apple M1 \(Virtual\), 8 CPUs/)
   const measured = original.samples.filter((s) => s.phase === 'timed').length
   const warmups = original.samples.filter((s) => s.phase === 'warmup').length
   assert(readme.includes(`${measured} timed samples and ${warmups} warmups`))
@@ -59,7 +59,16 @@ test('framework publication updates tables and provenance together, with repeata
   assert.equal(record.host.parallelism, 2)
   assert.equal(record.publication.sourceSha256, createHash('sha256').update(readFileSync(input)).digest('hex'))
   refreshReport({ root, check: true })
+  // Charts and the summary are generated and checked like the tables.
+  const charts = ['cold', 'warm'].flatMap((c) => ['elapsed', 'memory'].map((m) => `frameworks/reports/charts/${c}-${m}.svg`))
+  for (const chart of charts) assert.match(readFileSync(join(root, chart), 'utf8'), /^<svg /)
+  assert.equal(JSON.parse(readFileSync(join(root, 'frameworks/reports/summary.json'), 'utf8')).run.url, original.ci.url)
+  const chartFile = join(root, charts[0])
+  const chartSvg = readFileSync(chartFile, 'utf8')
+  writeFileSync(chartFile, chartSvg.replace('<rect', '<rect data-stale="1"'))
+  assert.throws(() => refreshReport({ root, check: true }), /Stale framework report: frameworks\/reports\/charts\/cold-elapsed.svg/)
   refreshReport({ root })
+  assert.equal(readFileSync(chartFile, 'utf8'), chartSvg)
   assert.equal(readFileSync(join(root, 'frameworks/reports/result.json'), 'utf8'), exported)
   writeFileSync(join(root, 'README.md'), readme.replace(`${measured} timed samples`, 'invalid timed samples'))
   assert.throws(() => refreshReport({ root, check: true }), /Stale framework report/)

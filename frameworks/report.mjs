@@ -4,6 +4,7 @@ import { writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { workerLabel } from './workers.mjs'
 import { assertNoLegacyMemory } from '../scripts/lib/legacy.mjs'
+import { renderChart } from './charts.mjs'
 
 function caseName(group) {
   const [suite, name, provider] = group.split('/')
@@ -104,6 +105,8 @@ export function renderReport(record, source = 'framework result') {
     '| --- | --- | --- | --- | --- | --- | --- | --- | --- |',
   ]
   const mainTables = []
+  const chartGroups = {}
+  const sections = {}
   const mainCaseNames = {
     'minimal-node': 'Node',
     'minimal-react': 'React',
@@ -174,6 +177,8 @@ export function renderReport(record, source = 'framework result') {
       const separator = `| --- | ${names.map(() => '---:').join(' | ')} |`
       const main = [`**Main suite · ${condition} cache · ${metric === 'time' ? 'elapsed time' : title}**`, '', header, separator]
       lines.push(`### ${title}`, '', header, separator)
+      const chart = []
+      const browser = [header, separator]
       for (const { group, sets, stats } of rows) {
         const ranked = [...new Set(
           stats.filter((s) => s.complete).map((s) => s[metric].median),
@@ -190,9 +195,31 @@ export function renderReport(record, source = 'framework result') {
         if (group.startsWith('main/')) {
           const id = group.split('/')[1]
           main.push(`| ${mainCaseNames[id] ?? id} | ${cells.join(' | ')} |`)
+          chart.push({
+            name: mainCaseNames[id] ?? id,
+            bars: stats.map((s, i) => ({
+              framework: runners[i],
+              label: names[i],
+              value: s.complete ? s[metric].median : null,
+              text: metric === 'time' ? `${(s.time.median / 1000).toFixed(2)}s` : `${(s.memory.median / 1024 ** 2).toFixed(2)} MiB`,
+            })),
+          })
+        } else if (group.startsWith('browser/')) {
+          browser.push(`| ${mainCaseNames[group.split('/')[1]] ?? group.split('/')[1]} · browser | ${cells.join(' | ')} |`)
         }
       }
       if (main.length > 4) mainTables.push(main.join('\n'))
+      if (chart.length) {
+        sections[condition] ??= {}
+        sections[condition][metric] = {
+          table: main.slice(2).join('\n'),
+          browser: browser.length > 2 ? browser.join('\n') : null,
+          chart: renderChart({
+            title: `${condition === 'warm' ? 'Warm' : 'Cold'} cache ${metric === 'time' ? 'elapsed time' : 'memory (MiB, process-tree footprint peak)'}, median per case`,
+            groups: chart,
+          }),
+        }
+      }
       lines.push('')
     }
   }
@@ -234,7 +261,7 @@ export function renderReport(record, source = 'framework result') {
         : 'Logs and final reporter output are under logs/. Workspaces and generated source are retained alongside this report.'),
     '',
   )
-  return { markdown: lines.join('\n'), summary, variability: detail.join('\n') + '\n', tables: mainTables.join('\n\n') }
+  return { markdown: lines.join('\n'), summary, variability: detail.join('\n') + '\n', tables: mainTables.join('\n\n'), sections }
 }
 
 export function report(record, directory) {
