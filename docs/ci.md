@@ -96,9 +96,55 @@ The framework summary (per case job, and the merged one) shows environment infor
 
 Artifacts are uploaded even after failure when a result directory exists. Failed or partial runs are diagnostic evidence, not publishable benchmark results. Full raw samples retain the run URL, commit, attempt and runner information. Download artifacts you need before retention expires.
 
-The workflows do not write to Git or open PRs. They need read access to repository contents; the framework downloader also needs `actions: read` to retrieve artifacts from the current workflow run.
+The benchmark workflows do not write to Git or open PRs; only [Publish results](#publish-a-finished-run) does (manual dispatch only). They need read access to repository contents; the framework downloader also needs `actions: read` to retrieve artifacts from the current workflow run.
+
+## Publish a finished run
+
+The **Publish results** workflow ([publish-results.yml](../.github/workflows/publish-results.yml)) updates the README, reports and charts on `main` from a finished run, without downloading artifacts by hand. Use **Actions → Publish results → Run workflow** and enter:
+
+- `run_id`: the ID of a successful **Frameworks benchmark**, **Rstest coverage benchmark** or **Rstest version benchmark** run (the number at the end of the run URL).
+- `dry_run`: when set, the job regenerates everything, prints the diff summary to the job summary and discards it without committing.
+
+The same logic runs locally with a token that can read Actions artifacts:
+
+```sh
+GITHUB_TOKEN=$(gh auth token) node scripts/publish-run.mjs --run <run id> --dry-run
+GITHUB_TOKEN=$(gh auth token) node scripts/publish-run.mjs --run <run id>          # update the working tree
+```
+
+The script detects the benchmark from the run's workflow, then:
+
+1. Refuses runs that are not completed, did not conclude with `success`, belong to another workflow, or whose artifacts are missing or expired (artifacts are kept for 30 days).
+2. Downloads the artifacts with their SHA-256 digests checked. The GitHub token is sent to the GitHub API only. Framework runs use the compact per-case `benchmark-frameworks-result-*` artifacts, which the CI merge job also uses; the script merges them in the same order and verifies the merged record. Coverage and version runs use `benchmark-version-coverage-merged-*` or `benchmark-versions-*`.
+3. Publishes with the same code as `pnpm report:frameworks --input …` or `pnpm report:versions --input …`. Partial selections (for example a run with fewer than all eight cases) are rejected by that code.
+4. Runs the checks (`report:frameworks:check`, `report:check`).
+5. With `--push` (the workflow's default), commits `docs: publish <framework|version coverage|version> results from run <id>` and pushes it to `main`. If `main` moved, it rebases once and pushes again. If nothing changed, it says so and exits successfully.
+
+The workflow needs the job permissions `contents: write` and `actions: read`. The repository default token permission is read, so these are granted in the job. It pushes directly to `main` as a fast-forward and does not open a PR, because opening PRs from Actions is disabled in this repository. Pushes made with `GITHUB_TOKEN` do not start other workflows. The framework workflows also ignore `**/*.md`, `reports/**` and `frameworks/reports/**` (which includes the charts). The publication paths must be clean before the script starts.
+
+## Structured results
+
+Every run produces structured JSON:
+
+- Framework runs: `result.json` (all samples, verified; the input for publication) and `summary.json` next to it in the merged artifact. The published copy is `frameworks/reports/summary.json`, regenerated and checked by `pnpm report:frameworks`.
+- Coverage and version runs: `comparison.json` with one `result.json` per side.
+
+`summary.json` is for readers and tools; publication always verifies the full `result.json`. Schema (`schemaVersion: 1`):
+
+| Field | Meaning |
+| --- | --- |
+| `run` | `{ url, sha, attempt }` of the CI run, or `null` for a local run |
+| `date` | UTC date the run started |
+| `host` | `{ cpu, logicalCpuCount, platform, node }` |
+| `memoryMetric` | The memory metric, for example `macOS phys_footprint process-tree sum, 50 ms samples` |
+| `runsPerCondition` | Timed runs per case and cache condition |
+| `versions` | Installed framework versions |
+| `results[]` | One entry per `case` (`suite/case/provider`), `condition` (`cold` or `warm`) and `framework`: `elapsedMsMedian`, `memoryBytesMedian` (medians of passed timed samples), `timedSamples`, `passedTimedSamples`, `memorySamples`, `passedMemorySamples` |
 
 ## Update the framework homepage
+
+The quickest way is [Publish a finished run](#publish-a-finished-run). To do it by hand:
+
 
 Download the merged artifact (`benchmark-frameworks-merged-...`) from a successful **Frameworks benchmark** run with all eight cases and browser mode. The default CI selection is sufficient; coverage is not required. Extract its contents into the repository's ignored `results/` directory. The expected layout is `results/ci-frameworks-merged-<run ID>/result.json`, with its reports alongside it.
 

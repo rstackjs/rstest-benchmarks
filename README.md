@@ -261,6 +261,8 @@ pnpm report:frameworks --input results/<run>/result.json
 pnpm report:frameworks:check
 ```
 
+To publish without downloading anything, run **Actions → Publish results → Run workflow** with the run ID. It regenerates the README, reports and charts from that run and commits them to `main` (`dry_run` shows the diff only).
+
 The updater checks the complete matrix and samples, then updates the tables, versions, machine details and CI source link together. See [CI and report publication](docs/ci.md) for artifact layout, partial runs and version reports.
 
 </details>

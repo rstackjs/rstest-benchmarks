@@ -96,7 +96,8 @@ export async function publishRun({ root, repository, runId, token, apiUrl = 'htt
       const inputs = join(work, 'case-results')
       await downloadFrameworkArtifacts({ repository, runId, attempt: run.run_attempt, cases: selected.map((a) => a.caseName), token, output: inputs, apiUrl, fetchImpl, log })
       const merged = join(work, 'merged')
-      const result = mergeResults(selected.map((a) => ({ name: a.name, file: join(inputs, a.name, 'result.json') })))
+      // The CI merge job reads its inputs in sorted glob order; do the same.
+      const result = mergeResults(selected.map((a) => a.name).sort().map((name) => ({ name, file: join(inputs, name, 'result.json') })))
       const file = writeMerged(merged, result)
       result.merged.verification = verify(result.merged, merged, file)
       writeFileSync(file, JSON.stringify(result.merged, null, 2))
@@ -105,7 +106,6 @@ export async function publishRun({ root, repository, runId, token, apiUrl = 'htt
     } else {
       const [artifact] = selected
       const zip = join(work, 'artifact.zip')
-      mkdirSync(join(root, 'results'), { recursive: true })
       await downloadArtifactZip({ artifact, repository, token, zip, apiUrl, fetchImpl })
       const input = extractComparisonArchive(zip, join(root, 'results'))
       publishComparison(root, dirname(input), JSON.parse(readFileSync(input, 'utf8')))
