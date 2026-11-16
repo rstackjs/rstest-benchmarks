@@ -1,8 +1,10 @@
 # Frameworks benchmark
 
-Status: **completed**. 2026-11-16T06:27:03.724Z. Node v26.13.0; Apple M1 (Virtual); logical CPUs: 3; available parallelism: 3; darwin arm64.
+Status: **completed**. 2026-11-16T06:37:15.083Z. Node v26.13.0; Apple M1 (Virtual); logical CPUs: 3; available parallelism: 3; darwin arm64.
 
-Source: [GitHub Actions](https://github.com/rstackjs/rstest-benchmarks/actions/runs/43816713360), commit `8fa5cbf07ea8507371f84be42ddb4a9926562b08`, attempt 1; runner GitHub Actions 1000236301, GitHub Actions 1000236299, GitHub Actions 1000236300, GitHub Actions 1000236303, GitHub Actions 1000236295, GitHub Actions 1000236298, GitHub Actions 1000236302, GitHub Actions 1000236297, GitHub Actions 1000236296, image 20261112.0539.3, 20261104.0514.1.
+Rstest source: `https://pkg.pr.new/@rstest/core@fe5e00a`. Resolved versions are listed below; the dependency lockfile is recorded with the run.
+
+Source: [GitHub Actions](https://github.com/rstackjs/rstest-benchmarks/actions/runs/43817845441), commit `8fa5cbf07ea8507371f84be42ddb4a9926562b08`, attempt 1; runner GitHub Actions 1000236305, GitHub Actions 1000236329, GitHub Actions 1000236306, GitHub Actions 1000236328, GitHub Actions 1000236307, GitHub Actions 1000236308, GitHub Actions 1000236309, GitHub Actions 1000236326, GitHub Actions 1000236327, image 20261104.0514.1, 20261112.0539.3.
 
 Published packages: jest 30.5.2, vitest 5.1.0, vitest-vmForks 5.1.0, rstest 0.12.6, rstest-vmForks 0.12.6.
 
@@ -38,7 +40,7 @@ Distinct worker slots that executed test setup in each invocation, read from fra
 | Case | Jest + SWC | Vitest | Vitest vmForks | Rstest | Rstest vmForks |
 | --- | ---: | ---: | ---: | ---: | ---: |
 | backend | 1–2 | 2 | 2 | 2 | 2 |
-| barrel | 2 | 2 | 2 | 2 | 2 |
+| barrel | 1–2 | 2 | 2 | 2 | 2 |
 | many-files | 2 | 2 | 2 | 2 | 2 |
 | minimal-node | 1–2 | 2 | 2 | 2 | 2 |
 | minimal-react | 1–2 | 2 | 2 | 2 | 2 |
@@ -53,29 +55,29 @@ Distinct worker slots that executed test setup in each invocation, read from fra
 
 | Case | Jest + SWC | Vitest | Vitest vmForks | Rstest | Rstest vmForks |
 | --- | ---: | ---: | ---: | ---: | ---: |
-| backend | 0.99s | 1.76s | 🥈 0.99s | 1.50s | 🥇 0.80s |
-| barrel | 15.79s | 23.83s | 16.11s | 🥈 2.36s | 🥇 1.09s |
-| many-files | 🥈 5.93s | 30.53s | 7.91s | 21.19s | 🥇 4.03s |
-| minimal-node | 0.52s | 0.41s | 0.49s | 🥈 0.39s | 🥇 0.38s |
-| minimal-react | 🥇 0.67s | 0.92s | 0.87s | 0.85s | 🥈 0.79s |
-| module-graph | 5.11s | 11.33s | 5.12s | 🥈 3.37s | 🥇 1.76s |
-| react | 🥇 2.17s | 9.69s | 2.29s | 6.94s | 🥈 2.20s |
-| react (browser) | — | 🥇 4.15s | — | 🥈 5.89s | — |
-| startup | 🥈 0.40s | 0.49s | 0.46s | 0.41s | 🥇 0.37s |
+| backend | 🥇 1.03s | 2.47s | 1.36s | 1.74s | 🥈 1.14s |
+| barrel | 12.21s | 18.13s | 14.82s | 🥈 1.79s | 🥇 0.87s |
+| many-files | 🥈 5.77s | 31.52s | 8.39s | 21.36s | 🥇 3.99s |
+| minimal-node | 0.56s | 🥈 0.43s | 0.51s | 🥇 0.34s | 0.44s |
+| minimal-react | 0.87s | 0.87s | 🥇 0.83s | 0.93s | 🥈 0.85s |
+| module-graph | 5.33s | 11.47s | 6.15s | 🥈 4.48s | 🥇 2.25s |
+| react | 2.49s | 9.20s | 🥈 2.27s | 6.70s | 🥇 2.08s |
+| react (browser) | — | 🥇 6.22s | — | 🥈 7.01s | — |
+| startup | 0.93s | 0.88s | 🥈 0.70s | 0.77s | 🥇 0.58s |
 
 ### Memory (MiB, process-tree footprint peak)
 
 | Case | Jest + SWC | Vitest | Vitest vmForks | Rstest | Rstest vmForks |
 | --- | ---: | ---: | ---: | ---: | ---: |
-| backend | 382.25 | 🥈 164.32 | 300.16 | 🥇 156.40 | 326.37 |
-| barrel | 1090.76 | 584.18 | 1073.41 | 🥇 140.91 | 🥈 168.39 |
-| many-files | 455.42 | 🥇 187.76 | 504.62 | 🥈 216.86 | 494.73 |
-| minimal-node | 119.90 | 🥇 110.80 | 126.60 | 🥈 116.72 | 128.83 |
-| minimal-react | 🥇 236.36 | 🥈 238.09 | 264.16 | 355.94 | 350.94 |
-| module-graph | 563.20 | 🥈 302.25 | 622.13 | 🥇 281.37 | 453.97 |
-| react | 515.02 | 🥇 266.48 | 475.95 | 🥈 416.44 | 578.88 |
-| react (browser) | — | 🥈 914.90 | — | 🥇 363.46 | — |
-| startup | 129.43 | 🥈 114.85 | 136.01 | 🥇 113.67 | 138.56 |
+| backend | 368.57 | 🥈 159.03 | 301.48 | 🥇 156.51 | 325.40 |
+| barrel | 1097.44 | 586.41 | 1065.72 | 🥇 135.36 | 🥈 166.01 |
+| many-files | 457.11 | 🥇 190.81 | 482.04 | 🥈 222.10 | 447.28 |
+| minimal-node | 118.30 | 🥈 110.83 | 129.17 | 🥇 106.59 | 128.52 |
+| minimal-react | 🥇 230.00 | 🥈 249.14 | 260.76 | 283.78 | 293.05 |
+| module-graph | 560.56 | 🥈 289.23 | 622.11 | 🥇 269.45 | 513.34 |
+| react | 525.73 | 🥇 269.42 | 477.10 | 🥈 337.85 | 531.41 |
+| react (browser) | — | 🥈 919.54 | — | 🥇 363.44 | — |
+| startup | 132.84 | 🥇 115.40 | 138.62 | 🥈 118.96 | 139.21 |
 
 ## Warm framework cache
 
@@ -83,29 +85,29 @@ Distinct worker slots that executed test setup in each invocation, read from fra
 
 | Case | Jest + SWC | Vitest | Vitest vmForks | Rstest | Rstest vmForks |
 | --- | ---: | ---: | ---: | ---: | ---: |
-| backend | 🥈 0.79s | 1.72s | 0.82s | 1.35s | 🥇 0.74s |
-| barrel | 8.37s | 15.53s | 9.57s | 🥈 2.13s | 🥇 0.90s |
-| many-files | 🥈 4.05s | 25.38s | 7.64s | 22.08s | 🥇 3.72s |
-| minimal-node | 🥇 0.29s | 0.36s | 0.44s | 🥈 0.30s | 0.38s |
-| minimal-react | 🥇 0.58s | 🥈 0.76s | 0.98s | 0.84s | 0.77s |
-| module-graph | 🥈 3.30s | 8.95s | 3.45s | 4.34s | 🥇 2.17s |
-| react | 🥇 2.13s | 8.65s | 2.23s | 7.25s | 🥈 2.15s |
-| react (browser) | — | 🥇 4.38s | — | 🥈 6.30s | — |
-| startup | 🥇 0.26s | 0.44s | 0.38s | 0.43s | 🥈 0.33s |
+| backend | 1.00s | 1.64s | 🥈 0.86s | 1.58s | 🥇 0.80s |
+| barrel | 4.73s | 8.78s | 4.97s | 🥈 1.44s | 🥇 0.55s |
+| many-files | 🥈 5.69s | 33.40s | 7.38s | 23.70s | 🥇 4.19s |
+| minimal-node | 🥇 0.31s | 0.40s | 0.45s | 🥈 0.37s | 0.45s |
+| minimal-react | 🥈 0.62s | 0.79s | 0.86s | 🥇 0.60s | 0.66s |
+| module-graph | 🥈 2.89s | 8.72s | 4.39s | 4.32s | 🥇 2.15s |
+| react | 🥇 2.23s | 9.67s | 2.62s | 6.87s | 🥈 2.46s |
+| react (browser) | — | 🥇 4.64s | — | 🥈 6.18s | — |
+| startup | 🥇 0.42s | 0.81s | 0.61s | 0.69s | 🥈 0.50s |
 
 ### Memory (MiB, process-tree footprint peak)
 
 | Case | Jest + SWC | Vitest | Vitest vmForks | Rstest | Rstest vmForks |
 | --- | ---: | ---: | ---: | ---: | ---: |
-| backend | 193.08 | 🥇 155.25 | 294.21 | 🥈 155.67 | 324.68 |
-| barrel | 841.72 | 491.29 | 925.09 | 🥇 140.54 | 🥈 168.64 |
-| many-files | 449.38 | 🥇 157.02 | 482.24 | 🥈 214.70 | 439.56 |
-| minimal-node | 🥇 50.27 | 🥈 108.38 | 121.69 | 111.70 | 126.69 |
-| minimal-react | 🥇 125.87 | 🥈 233.08 | 258.54 | 373.84 | 367.66 |
-| module-graph | 529.18 | 🥇 243.47 | 561.25 | 🥈 257.22 | 462.35 |
-| react | 481.64 | 🥇 251.32 | 458.84 | 🥈 408.32 | 585.80 |
-| react (browser) | — | 🥈 799.58 | — | 🥇 357.91 | — |
-| startup | 🥇 52.49 | 🥈 108.55 | 127.40 | 115.96 | 138.27 |
+| backend | 224.96 | 🥈 155.92 | 294.32 | 🥇 153.89 | 324.47 |
+| barrel | 850.84 | 492.83 | 941.59 | 🥇 137.85 | 🥈 167.19 |
+| many-files | 452.49 | 🥇 156.11 | 468.53 | 🥈 222.49 | 449.20 |
+| minimal-node | 🥇 48.94 | 🥈 106.70 | 124.13 | 116.85 | 131.15 |
+| minimal-react | 🥇 131.29 | 🥈 245.36 | 254.40 | 278.85 | 286.72 |
+| module-graph | 531.51 | 🥇 235.44 | 557.13 | 🥈 262.30 | 516.08 |
+| react | 512.99 | 🥇 253.68 | 455.20 | 🥈 340.90 | 527.04 |
+| react (browser) | — | 🥈 796.67 | — | 🥇 357.22 | — |
+| startup | 🥇 62.01 | 🥈 111.35 | 131.07 | 116.63 | 140.04 |
 
 ## Rstest phase timings
 
@@ -113,40 +115,40 @@ Medians in seconds from the reporter. Build includes run preparation and compila
 
 | Cache / case | Pool | n | Build | Runtime | Process wall time |
 | --- | --- | --- | --- | --- | --- |
-| cold / backend | Rstest | 5 | 0.04 | 1.28 | 1.50 |
-| cold / backend | Rstest vmForks | 5 | 0.04 | 0.56 | 0.80 |
-| cold / barrel | Rstest | 5 | 0.23 | 1.61 | 2.36 |
-| cold / barrel | Rstest vmForks | 5 | 0.19 | 0.49 | 1.09 |
-| cold / many-files | Rstest | 5 | 0.40 | 19.99 | 21.19 |
-| cold / many-files | Rstest vmForks | 5 | 0.36 | 3.30 | 4.03 |
-| cold / minimal-node | Rstest | 5 | 0.08 | 0.10 | 0.39 |
-| cold / minimal-node | Rstest vmForks | 5 | 0.03 | 0.15 | 0.38 |
-| cold / minimal-react | Rstest | 5 | 0.00 | 0.36 | 0.85 |
-| cold / minimal-react | Rstest vmForks | 5 | 0.00 | 0.39 | 0.79 |
-| cold / module-graph | Rstest | 5 | 0.28 | 2.90 | 3.37 |
-| cold / module-graph | Rstest vmForks | 5 | 0.29 | 1.33 | 1.76 |
-| cold / react | Rstest | 5 | 0.01 | 6.41 | 6.94 |
-| cold / react | Rstest vmForks | 5 | 0.01 | 1.67 | 2.20 |
-| cold / react (browser) | Rstest | 5 | 0.76 | 4.81 | 5.89 |
-| cold / startup | Rstest | 5 | 0.02 | 0.21 | 0.41 |
-| cold / startup | Rstest vmForks | 5 | 0.03 | 0.15 | 0.37 |
-| warm / backend | Rstest | 5 | 0.04 | 1.14 | 1.35 |
-| warm / backend | Rstest vmForks | 5 | 0.04 | 0.52 | 0.74 |
-| warm / barrel | Rstest | 5 | 0.22 | 1.50 | 2.13 |
-| warm / barrel | Rstest vmForks | 5 | 0.16 | 0.36 | 0.90 |
-| warm / many-files | Rstest | 5 | 0.59 | 21.22 | 22.08 |
-| warm / many-files | Rstest vmForks | 5 | 0.59 | 2.72 | 3.72 |
-| warm / minimal-node | Rstest | 5 | 0.03 | 0.09 | 0.30 |
-| warm / minimal-node | Rstest vmForks | 5 | 0.04 | 0.14 | 0.38 |
-| warm / minimal-react | Rstest | 5 | 0.00 | 0.43 | 0.84 |
-| warm / minimal-react | Rstest vmForks | 5 | 0.00 | 0.37 | 0.77 |
-| warm / module-graph | Rstest | 5 | 0.41 | 3.60 | 4.34 |
-| warm / module-graph | Rstest vmForks | 5 | 0.43 | 1.54 | 2.17 |
-| warm / react | Rstest | 5 | 0.01 | 6.21 | 7.25 |
-| warm / react | Rstest vmForks | 5 | 0.01 | 1.59 | 2.15 |
-| warm / react (browser) | Rstest | 5 | 0.84 | 4.91 | 6.30 |
-| warm / startup | Rstest | 5 | 0.03 | 0.23 | 0.43 |
-| warm / startup | Rstest vmForks | 5 | 0.03 | 0.14 | 0.33 |
+| cold / backend | Rstest | 5 | 0.24 | 1.27 | 1.74 |
+| cold / backend | Rstest vmForks | 5 | 0.32 | 0.59 | 1.14 |
+| cold / barrel | Rstest | 5 | 0.18 | 1.26 | 1.79 |
+| cold / barrel | Rstest vmForks | 5 | 0.17 | 0.38 | 0.87 |
+| cold / many-files | Rstest | 5 | 0.47 | 20.51 | 21.36 |
+| cold / many-files | Rstest vmForks | 5 | 0.41 | 3.26 | 3.99 |
+| cold / minimal-node | Rstest | 5 | 0.03 | 0.11 | 0.34 |
+| cold / minimal-node | Rstest vmForks | 5 | 0.04 | 0.17 | 0.44 |
+| cold / minimal-react | Rstest | 5 | 0.00 | 0.34 | 0.93 |
+| cold / minimal-react | Rstest vmForks | 5 | 0.00 | 0.38 | 0.85 |
+| cold / module-graph | Rstest | 5 | 0.62 | 3.57 | 4.48 |
+| cold / module-graph | Rstest vmForks | 5 | 0.31 | 1.58 | 2.25 |
+| cold / react | Rstest | 5 | 0.01 | 5.93 | 6.70 |
+| cold / react | Rstest vmForks | 5 | 0.00 | 1.52 | 2.08 |
+| cold / react (browser) | Rstest | 5 | 0.79 | 5.44 | 7.01 |
+| cold / startup | Rstest | 5 | 0.07 | 0.38 | 0.77 |
+| cold / startup | Rstest vmForks | 5 | 0.05 | 0.25 | 0.58 |
+| warm / backend | Rstest | 5 | 0.06 | 1.30 | 1.58 |
+| warm / backend | Rstest vmForks | 5 | 0.06 | 0.54 | 0.80 |
+| warm / barrel | Rstest | 5 | 0.07 | 1.01 | 1.44 |
+| warm / barrel | Rstest vmForks | 5 | 0.08 | 0.27 | 0.55 |
+| warm / many-files | Rstest | 5 | 0.54 | 22.64 | 23.70 |
+| warm / many-files | Rstest vmForks | 5 | 0.61 | 3.32 | 4.19 |
+| warm / minimal-node | Rstest | 5 | 0.04 | 0.12 | 0.37 |
+| warm / minimal-node | Rstest vmForks | 5 | 0.04 | 0.18 | 0.45 |
+| warm / minimal-react | Rstest | 5 | 0.06 | 0.32 | 0.60 |
+| warm / minimal-react | Rstest vmForks | 5 | 0.06 | 0.39 | 0.66 |
+| warm / module-graph | Rstest | 5 | 0.43 | 3.50 | 4.32 |
+| warm / module-graph | Rstest vmForks | 5 | 0.63 | 1.34 | 2.15 |
+| warm / react | Rstest | 5 | 0.31 | 6.25 | 6.87 |
+| warm / react | Rstest vmForks | 5 | 0.38 | 1.80 | 2.46 |
+| warm / react (browser) | Rstest | 5 | 0.95 | 5.03 | 6.18 |
+| warm / startup | Rstest | 5 | 0.06 | 0.34 | 0.69 |
+| warm / startup | Rstest vmForks | 5 | 0.04 | 0.20 | 0.50 |
 
 ## Samples and provenance
 
