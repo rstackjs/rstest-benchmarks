@@ -5,6 +5,7 @@ import { join } from 'node:path'
 import { workerLabel } from './workers.mjs'
 import { assertNoLegacyMemory } from '../scripts/lib/legacy.mjs'
 import { renderChart } from './charts.mjs'
+import { formatElapsed, formatMemory, relativeCells } from './format.mjs'
 
 function caseName(group) {
   const [suite, name, provider] = group.split('/')
@@ -176,6 +177,7 @@ export function renderReport(record, source = 'framework result') {
       const header = `| Case | ${names.join(' | ')} |`
       const separator = `| --- | ${names.map(() => '---:').join(' | ')} |`
       const main = [`**Main suite · ${condition} cache · ${metric === 'time' ? 'elapsed time' : title}**`, '', header, separator]
+      const readmeMain = []
       lines.push(`### ${title}`, '', header, separator)
       const chart = []
       const browser = [header, separator]
@@ -192,27 +194,33 @@ export function renderReport(record, source = 'framework result') {
               : (s.memory.median / 1024 ** 2).toFixed(2))
         })
         lines.push(`| ${caseName(group)} | ${cells.join(' | ')} |`)
+        // README tables: compact values, each cell's difference from the row's best.
+        const compact = relativeCells(
+          stats.map((s, i) => ({ value: s[metric].median, state: !sets[i].length ? 'missing' : s.complete ? 'ok' : 'incomplete' })),
+          metric === 'time' ? formatElapsed : formatMemory,
+        )
         if (group.startsWith('main/')) {
           const id = group.split('/')[1]
           main.push(`| ${mainCaseNames[id] ?? id} | ${cells.join(' | ')} |`)
+          readmeMain.push(`| ${mainCaseNames[id] ?? id} | ${compact.join(' | ')} |`)
           chart.push({
             name: mainCaseNames[id] ?? id,
             bars: stats.map((s, i) => ({
               framework: runners[i],
               label: names[i],
               value: s.complete ? s[metric].median : null,
-              text: metric === 'time' ? `${(s.time.median / 1000).toFixed(2)}s` : `${(s.memory.median / 1024 ** 2).toFixed(2)} MiB`,
+              text: metric === 'time' ? formatElapsed(s.time.median) : `${formatMemory(s.memory.median)} MiB`,
             })),
           })
         } else if (group.startsWith('browser/')) {
-          browser.push(`| ${mainCaseNames[group.split('/')[1]] ?? group.split('/')[1]} · browser | ${cells.join(' | ')} |`)
+          browser.push(`| ${mainCaseNames[group.split('/')[1]] ?? group.split('/')[1]} · browser | ${compact.join(' | ')} |`)
         }
       }
       if (main.length > 4) mainTables.push(main.join('\n'))
       if (chart.length) {
         sections[condition] ??= {}
         sections[condition][metric] = {
-          table: main.slice(2).join('\n'),
+          table: [header, separator, ...readmeMain].join('\n'),
           browser: browser.length > 2 ? browser.join('\n') : null,
           chart: renderChart({
             title: `${condition === 'warm' ? 'Warm' : 'Cold'} cache ${metric === 'time' ? 'elapsed time' : 'memory (MiB, process-tree footprint peak)'}, median per case`,
