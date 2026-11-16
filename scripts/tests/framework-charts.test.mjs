@@ -54,7 +54,7 @@ const tableInput = (rows) => ({
   rows,
 })
 const hexToRgb = (hex) => [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16))
-const fills = (svg) => [...svg.matchAll(/<rect x="([\d.]+)" y="(\d+)" width="([\d.]+)" height="(\d+)" fill="(#[0-9a-f]{6})" fill-opacity="([\d.]+)"/g)]
+const fills = (svg) => [...svg.matchAll(/<rect x="([\d.]+)" y="(\d+)" width="([\d.]+)" height="(\d+)"(?: rx="3")? fill="(#[0-9a-f]{6})" fill-opacity="([\d.]+)"/g)]
   .map((m) => ({ x: Number(m[1]), y: Number(m[2]), width: Number(m[3]), height: Number(m[4]), color: m[5], opacity: Number(m[6]) }))
 
 test('table rendering is deterministic, with light and dark text variants and the same fills', () => {
@@ -98,29 +98,22 @@ test('values and gaps are right-aligned in two sub-columns of every cell', () =>
   assert.deepEqual(labels, [10, 10, 10])
 })
 
-test('cell fills touch each other with no spacing or rounded corners, and 1 px separators sit on the borders', () => {
+test('cells are separated by a gap and have rounded corners; there are no separator lines', () => {
   const rows = [{ name: 'A', cells: [cell('1s', null, 0, true), cell('2s', '+100%', 1), cell('3s', '+200%', 2)] }, { name: 'B', cells: [cell('1s', null, 0, true), cell('1s', null, 0, true), cell('1s', null, 0, true)] }]
   const svg = renderTable(tableInput(rows))
   const all = fills(svg)
   assert.equal(all.length, 6)
   const columnWidth = (760 - 130) / 3
   all.slice(0, 3).forEach((fill, index) => {
-    assert.equal(fill.x, 130 + index * columnWidth)
-    assert.equal(fill.width, columnWidth)
-    assert.equal(fill.height, 30)
+    assert.equal(fill.x, 130 + index * columnWidth + 3)
+    assert.equal(fill.width, columnWidth - 6)
+    assert.equal(fill.height, 24)
   })
-  assert.equal(all[0].x + all[0].width, all[1].x) // neighbours share an edge
-  assert.equal(all[0].y + all[0].height, all[3].y) // and so do rows
-  assert.doesNotMatch(svg, /rx=/)
-  const lines = [...svg.matchAll(/<line x1="([\d.]+)" y1="([\d.]+)" x2="([\d.]+)" y2="([\d.]+)" stroke="(#[0-9a-f]+)" stroke-opacity="[\d.]+" stroke-width="1"/g)]
-    .map((m) => ({ x1: Number(m[1]), y1: Number(m[2]), x2: Number(m[3]), y2: Number(m[4]), stroke: m[5] }))
-  const horizontal = lines.filter((l) => l.y1 === l.y2), vertical = lines.filter((l) => l.x1 === l.x2)
-  assert.deepEqual(horizontal.map((l) => l.y1), [30, 60, 90]) // header bottom + every row bottom
-  assert.deepEqual(vertical.map((l) => l.x1), [0, 1, 2, 3].map((i) => 130 + i * columnWidth)) // every column border
-  // Separator color differs per theme variant.
-  const dark = renderTable({ ...tableInput(rows), theme: 'dark' })
-  assert.match(svg, /stroke="#8c959f"/)
-  assert.match(dark, /stroke="#6e7681"/)
+  assert.equal(all[1].x - (all[0].x + all[0].width), 6) // 6 px between neighbouring cells
+  assert.equal(all[3].y - (all[0].y + all[0].height), 6) // and between rows
+  assert.equal(svg.match(/<rect [^>]*rx="3"/g).length, 6)
+  assert.doesNotMatch(svg, /<line /)
+  assert.doesNotMatch(svg, /stroke/)
 })
 
 test('fixed scale: 0% is green, +100% or more is full red, monotonic in between; ties are green', () => {

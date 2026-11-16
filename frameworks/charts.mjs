@@ -84,13 +84,13 @@ const gapColumn = 54 // room for "+1114%" in the muted difference column
 // yellow/amber, not brown). Fills are translucent so they work on
 // light and dark; text colors differ per theme variant because no single color reads on both.
 const themes = {
-  light: { value: '#1f2328', muted: '#57606a', line: '#8c959f' },
-  dark: { value: '#f0f6fc', muted: '#b1bac4', line: '#6e7681' },
+  light: { value: '#1f2328', muted: '#57606a' },
+  dark: { value: '#f0f6fc', muted: '#b1bac4' },
 }
 export const heatEndpoints = { best: '#2da44e', worst: '#e5534b' }
 const heatOpacity = 0.5
 export const heatFullGap = 1 // +100% or more is full red
-const lineOpacity = 0.6
+const cellGap = 3 // space between neighbouring cells
 
 const toLinear = (c) => (c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4)
 const fromLinear = (c) => (c <= 0.0031308 ? 12.92 * c : 1.055 * c ** (1 / 2.4) - 0.055)
@@ -126,7 +126,7 @@ export function heatColor(t) {
 // `columns`: [{ framework, label }]; `rows`: [{ name, cells: [{ state, text, best, diff, gap }] }].
 // `theme` selects the text colors ('light' or 'dark'); the fills are the same.
 export function renderTable({ title, columns, rows, theme = 'light' }) {
-  const { value: valueColor, muted, line } = themes[theme]
+  const { value: valueColor, muted } = themes[theme]
   const columnWidth = (tableWidth - nameColumn) / columns.length
   const parts = []
   const headerY = rowTableHeight / 2
@@ -144,9 +144,9 @@ export function renderTable({ title, columns, rows, theme = 'light' }) {
       const left = nameColumn + index * columnWidth
       const right = left + columnWidth
       if (cell.state === 'ok') {
-        // Touching rectangles: no spacing, no rounded corners; separators sit on the borders.
+        // Separated cells: a 3 px gap on every side and rounded corners.
         const t = Math.min(cell.gap / heatFullGap, 1)
-        parts.push(`<rect x="${fixed(left)}" y="${top}" width="${fixed(columnWidth)}" height="${rowTableHeight}" fill="${heatColor(t)}" fill-opacity="${heatOpacity}" shape-rendering="crispEdges"/>`)
+        parts.push(`<rect x="${fixed(left + cellGap)}" y="${top + cellGap}" width="${fixed(columnWidth - 2 * cellGap)}" height="${rowTableHeight - 2 * cellGap}" rx="3" fill="${heatColor(t)}" fill-opacity="${heatOpacity}"/>`)
       }
       if (cell.best) parts.push(`<text x="${fixed(left + 9)}" y="${middle}" dominant-baseline="central" font-size="10" ${font.replace(/ font-size="11"/, '')}>🏆</text>`)
       if (cell.state !== 'ok') {
@@ -157,10 +157,6 @@ export function renderTable({ title, columns, rows, theme = 'light' }) {
       if (cell.diff) parts.push(`<text x="${fixed(right - 10)}" y="${middle}" dominant-baseline="central" text-anchor="end" fill="${muted}" font-size="10" style="font-variant-numeric: tabular-nums" ${font.replace(/ font-size="11"/, '')}>${escape(cell.diff)}</text>`)
     })
   })
-  // 1 px separators on the cell borders, drawn above the fills: between rows and between columns.
   const total = rowTableHeight * (rows.length + 1)
-  const stroke = `stroke="${line}" stroke-opacity="${lineOpacity}" stroke-width="1" shape-rendering="crispEdges"`
-  for (let r = 1; r <= rows.length + 1; r++) parts.push(`<line x1="${nameColumn}" y1="${rowTableHeight * r}" x2="${tableWidth}" y2="${rowTableHeight * r}" ${stroke}/>`)
-  for (let c = 0; c <= columns.length; c++) parts.push(`<line x1="${fixed(nameColumn + c * columnWidth)}" y1="${rowTableHeight}" x2="${fixed(nameColumn + c * columnWidth)}" y2="${total}" ${stroke}/>`)
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${tableWidth}" height="${total}" viewBox="0 0 ${tableWidth} ${total}" role="img" aria-label="${escape(title)}">\n<title>${escape(title)}</title>\n${parts.join('\n')}\n</svg>\n`
 }
