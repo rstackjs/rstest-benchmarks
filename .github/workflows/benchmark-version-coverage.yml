@@ -8,11 +8,11 @@ on:
         type: string
         default: '6'
       baseline:
-        description: Rstest baseline npm version
+        description: Baseline npm version or commit-addressed pkg.pr.new Rstest link
         type: string
         default: '0.11.0'
       candidate:
-        description: Rstest candidate npm version(s), comma-separated
+        description: Candidate npm versions or pkg.pr.new Rstest links, comma-separated
         type: string
         default: '0.12.6'
       cases:

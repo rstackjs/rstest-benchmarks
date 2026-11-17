@@ -6,16 +6,20 @@ Sources: baseline: **0.11.0** (npm); candidate: **0.12.6** (npm). Measured 2026-
 
 Sources run sequentially in rotating case/round order. For cases supported by all sources, each source occupies every order position equally often. Node compile cache is disabled. Rstest build and sequencing caches are cleared before each fixture's warmups and retained during measurement. Workload dependency graphs match. Background load and OS page cache are not controlled.
 
-Generated from raw samples. Change = (candidate / baseline − 1) × 100%; negative means faster. The first value column is the baseline; each Δ column shows the change relative to it. Values display two decimal places; changes use unrounded medians. All repetitions are retained; combined batches use the median of pooled samples, not the median of batch medians.
+Generated from raw samples. Change = (candidate / baseline − 1) × 100%; negative means faster. The first value column is the baseline. Values display two decimal places; changes use unrounded medians. All repetitions are retained; combined batches use the median of pooled samples, not the median of batch medians.
 
-| Case | baseline: 0.11.0 | candidate: 0.12.6 | Δ |
-| --- | --- | --- | --- |
-| barrel graph · small / default | 0.43s | 0.45s | +4.75% |
-| barrel graph · small / lazy-barrel disabled | 0.44s | 0.47s | +6.35% |
-| barrel graph · medium / default | 0.45s | 0.48s | +5.84% |
-| barrel graph · medium / lazy-barrel disabled | 0.60s | 0.63s | +4.02% |
-| barrel graph · large / default | 0.45s | 0.49s | +9.22% |
-| barrel graph · large / lazy-barrel disabled | 1.12s | 1.23s | +9.93% |
+🏆 marks the lowest comparable median in each row. Percentages show change from the baseline.
+
+### Elapsed time (s)
+
+| Case | baseline: 0.11.0 | candidate: 0.12.6 |
+| --- | --- | --- |
+| barrel graph · small / default | **🏆 0.43s** | 0.45s (+4.75%) |
+| barrel graph · small / lazy-barrel disabled | **🏆 0.44s** | 0.47s (+6.35%) |
+| barrel graph · medium / default | **🏆 0.45s** | 0.48s (+5.84%) |
+| barrel graph · medium / lazy-barrel disabled | **🏆 0.60s** | 0.63s (+4.02%) |
+| barrel graph · large / default | **🏆 0.45s** | 0.49s (+9.22%) |
+| barrel graph · large / lazy-barrel disabled | **🏆 1.12s** | 1.23s (+9.93%) |
 
 ## Variability
 

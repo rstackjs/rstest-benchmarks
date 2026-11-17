@@ -8,6 +8,9 @@ Use Node.js 26 and the pnpm version pinned in `package.json`. With nvm, run `nvm
 # Published releases
 pnpm compare --baseline 0.12.5 --candidate 0.12.6
 
+# Coverage against a preview (all four Rstest packages from the same commit)
+pnpm compare --baseline 0.12.6 --candidate https://pkg.pr.new/@rstest/core@bbf2195 --suites coverage
+
 # Published release vs a local checkout; paths are relative to this directory
 pnpm compare --baseline 0.12.6 --candidate local:../rstest
 
@@ -28,7 +31,7 @@ pnpm compare --baseline 0.12.6 --candidate local:../rstest \
 pnpm compare --baseline 0.12.5 --candidate 0.12.6 --dry-run
 ```
 
-One `--baseline` and one or more `--candidate` sources are required. Repeat `--candidate`, or separate npm versions with commas. Use repeated flags for local paths (a local path may contain commas). Duplicate candidates are rejected; a candidate may match the baseline for an A/A control. Both options accept an exact npm version (including prereleases) or `local:<path>` pointing to a Git checkout of the Rstest monorepo. `latest`, Git URLs, and package-directory paths are not accepted. The command requires Node.js 26 and pnpm on PATH; the local checkout must also support that runtime.
+One `--baseline` and one or more `--candidate` sources are required. Repeat `--candidate`, or separate npm versions or preview links with commas. Use repeated flags for local paths (a local path may contain commas). Duplicate candidates are rejected; a candidate may match the baseline for an A/A control. Both options accept an exact npm version (including prereleases), a commit-addressed pkg.pr.new Rstest link, or `local:<path>` pointing to a Git checkout of the Rstest monorepo. `latest`, Git URLs, and package-directory paths are not accepted. The command requires Node.js 26 and pnpm on PATH; the local checkout must also support that runtime.
 
 The command prepares all installations before starting measurements; no root `pnpm install` is needed for `compare`. Each side uses an independent benchmark workspace with the same fixtures and runner. Rstest core, browser, and coverage dependencies are overridden together, including transitive imports, and installed versions are checked before timing. The top-level benchmark installation and manifests are preserved.
 
@@ -42,8 +45,8 @@ The runner executes the same case/round across all sources before moving on. Ord
 
 | Option | Description | Default |
 | --- | --- | --- |
-| `--baseline` | One exact npm version or `local:<path>` | required |
-| `--candidate` | Repeatable source; comma-separated npm versions also accepted | at least one |
+| `--baseline` | One exact npm version, pkg.pr.new Rstest link, or `local:<path>` | required |
+| `--candidate` | Repeatable source; comma-separated npm versions and preview links also accepted | at least one |
 | `--update-readme` | Publish selected reports, samples, README tables and measurement context | off |
 | `--suites` | Comma-separated `main,scaling,barrel,pools,coverage`, or `all` | `main` |
 | `--apps` | Comma-separated app names; each must be valid in every selected suite | all |
@@ -51,6 +54,7 @@ The runner executes the same case/round across all sources before moving on. Ord
 | `--runs`, `--warmup` | Timed repetitions and untimed warmups per case | `5`, `1` |
 | `--label` | Prefix for the comparison directory | `compare` |
 | `--timeout-ms` | Timeout per generator or test process | `120000` |
+| `--memory` | Add a separate peak process-tree footprint pass on macOS | always on for coverage, otherwise off |
 | `--reverse` | Reverse the initial source and variant order | off |
 | `--dry-run` | Print sources and selected cases without executing | off |
 
@@ -142,6 +146,7 @@ pnpm bench --label rstest-0.12.6 --runs 5
 | `--label` | Prefix for a unique run directory | `rstest-<suite>` |
 | `--warmup` | Warmup repetitions per variant, excluded from statistics | `1` |
 | `--timeout-ms` | Timeout for each generator or test process | `120000` |
+| `--memory` | Add a separate peak process-tree footprint pass on macOS | always on for coverage, otherwise off |
 | `--reverse` | Reverse the initial variant order before rotating each round | off |
 | `--scales` | Pool, barrel and scaling suites: comma-separated sizes | `small,medium,large` |
 

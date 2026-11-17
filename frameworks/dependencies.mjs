@@ -3,23 +3,17 @@ import { cpSync, existsSync, mkdirSync, readFileSync, realpathSync, rmSync, writ
 import { join } from 'node:path'
 import { spawnSync } from 'node:child_process'
 import { createRequire } from 'node:module'
-import { exactVersion, rstestPackages } from '../scripts/lib/sources.mjs'
+import { exactVersion, parsePreview, rstestPackages, rstestSpecs } from '../scripts/lib/sources.mjs'
 
 export function parseRstestVersion(value) {
   if (value === undefined || value === '') return undefined
   if (exactVersion.test(value)) return { kind: 'npm', requested: value }
-  // A commit-addressed pkg.pr.new URL, including the optional owner/repo prefix.
-  const preview = /^https:\/\/pkg\.pr\.new\/((?:[\w.-]+\/[\w.-]+\/)?)@rstest\/core@([a-f\d]{7,40})$/.exec(value)
-  if (preview) return { kind: 'preview', requested: value, prefix: preview[1], commit: preview[2] }
+  const preview = parsePreview(value)
+  if (preview?.requested === value) return preview
   throw new Error('--rstest-version requires an exact npm version (including prereleases) or a commit-addressed https://pkg.pr.new/@rstest/core@<sha> URL')
 }
 
-export function rstestSpecs(source) {
-  return Object.fromEntries(rstestPackages.map(name => [
-    `@rstest/${name}`,
-    source.kind === 'npm' ? source.requested : `https://pkg.pr.new/${source.prefix}@rstest/${name}@${source.commit}`,
-  ]))
-}
+export { rstestSpecs }
 
 export function prepareDependencies(root, source, reinstall = false) {
   const pinned = join(root, 'frameworks')

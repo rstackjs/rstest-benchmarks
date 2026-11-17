@@ -13,6 +13,17 @@ test('framework total accounts for cold/warm, repeats and browser support', () =
   assert.deepEqual(frameworkRunCounts(groups, ['warm'], 1), { timed: 12, memory: 12, warmup: 12 })
 })
 
+test('optional memory adds one pass per supported timed case, including coverage only once', () => {
+  const cases = [...casesFor('main'), ...casesFor('coverage')]
+  const options = { runs: 2, warmup: 1 }
+  const version = () => '0.11.0'
+  const timing = versionRunCounts(cases, options, version)
+  assert.equal(timing.memory, casesFor('coverage').length * options.runs)
+  assert.deepEqual(versionRunCounts(cases, { ...options, memory: true }, version), {
+    ...timing, memory: timing.timed,
+  })
+})
+
 test('version total excludes unsupported VM pools and Vue browser', () => {
   const items = [...casesFor('main'), ...casesFor('pools', { scales: ['small'] })]
   assert.deepEqual(versionRunCounts(items, { runs: 6, warmup: 1 }, () => '0.11.0'), { timed: 66, memory: 0, warmup: 11 })

@@ -8,13 +8,13 @@ The comparisons have separate workflows, inputs and concurrency groups:
 
 | Workflow | Trigger | Default workload |
 | --- | --- | --- |
-| [Frameworks benchmark](../.github/workflows/benchmark-frameworks.yml) | Pull requests, pushes to `main`, merge queue, or manual dispatch | Jest + SWC, Vitest, Vitest vmForks, Rstest and Rstest vmForks; all eight main cases and browser mode; 5 timed runs per runner/case/cache condition, cold and warm caches |
+| [Frameworks benchmark](../.github/workflows/benchmark-frameworks.yml) | Pushes to `main`, merge queue, or manual dispatch | Jest + SWC, Vitest, Vitest vmForks, Rstest and Rstest vmForks; all eight main cases and browser mode; 5 timed runs per runner/case/cache condition, cold and warm caches |
 | [Rstest version benchmark](../.github/workflows/benchmark-versions.yml) | Manual dispatch | Rstest 0.11.0 vs 0.12.6; main (the README comparison); 1 warmup and 6 timed runs per supported case |
 | [Rstest coverage benchmark](../.github/workflows/benchmark-version-coverage.yml) | Manual dispatch | Rstest 0.11.0 vs 0.12.6; coverage only, with none/V8/Istanbul controls and process-tree memory; 1 warmup and 6 timed runs per case |
 
 The framework and coverage workflows are matrix workflows: a `Plan matrix` job turns the `cases` and `exclude_cases` inputs into one job per case, every `Benchmark (<case>)` job runs on its own `macos-15` runner, and a final `Merge results` job combines the per-case results (see [Matrix jobs and merging](#matrix-jobs-and-merging)). The Rstest version performance workflow stays a single job.
 
-Markdown and published-result-only changes do not trigger push/PR framework benchmarks. All workflows run on `macos-15` only; memory is measured with the macOS physical-footprint sampler (see [Memory methodology](../README.md#methodology)). Choose the workflow under **Actions**, then **Run workflow**:
+The push trigger skips changes limited to Markdown and published reports. All workflows run on `macos-15` only; memory is measured with the macOS physical-footprint sampler (see [Memory methodology](../README.md#methodology)). Choose the workflow under **Actions**, then **Run workflow**:
 
 | Input | Framework workflow | Both Rstest version workflows |
 | --- | --- | --- |
@@ -22,9 +22,10 @@ Markdown and published-result-only changes do not trigger push/PR framework benc
 | `suites` | Fixed main/browser | Performance defaults to `main`; optionally select `scaling,barrel,pools`. Coverage stays separate |
 | `cases` | Optional comma-separated case IDs; empty selects all eight | App names or full case IDs; empty selects all cases in the workflow |
 | `exclude_cases` | Comma-separated case IDs to skip | App names or full case IDs to skip |
+| `memory` | Always on | Version performance has an opt-in peak process-tree footprint pass. Coverage always measures footprint. |
 | `rstest_version` | Exact npm version or commit-addressed pkg.pr.new core URL; empty uses the lockfile | — |
-| `baseline` | — | Exact npm release, default `0.11.0` |
-| `candidate` | — | Exact npm release(s), comma-separated, default `0.12.6` |
+| `baseline` | — | Exact npm version or commit-addressed pkg.pr.new Rstest link, default `0.11.0` |
+| `candidate` | — | Npm versions or pkg.pr.new Rstest links, comma-separated, default `0.12.6` |
 
 Selection is applied before exclusion (in matrix workflows, by the planning job); exclusions win if both match. Whitespace around commas is ignored. Unknown IDs, duplicate entries and an empty final selection fail before benchmark preparation. Empty suites are skipped and progress totals reflect the remaining cases. Both versions and all selected frameworks use the same filtered workload.
 
@@ -49,7 +50,7 @@ With the default selections, the framework workflow has 420 timed invocations an
 
 Five rounds let each of the five Node/DOM runners occupy each order position once. Browser mode has two runners, so an odd repetition count gives one runner one extra first position; reports disclose this imbalance. Ten rounds balance both directions and browser order, but are optional. Each repetition is a separate invocation of every supported runner, not a shared repetition across runners.
 
-Local checkout comparison remains available through the local CLI; the version workflow inputs are for npm releases.
+To compare a preview, enter `0.12.6` as the baseline and `https://pkg.pr.new/@rstest/core@bbf2195` as the candidate. A pnpm install spec such as `@rstest/coverage-istanbul@https://pkg.pr.new/@rstest/coverage-istanbul@bbf2195` selects the same preview. One link selects core, browser, coverage-v8 and coverage-istanbul, each at its own package URL for that commit. All four must be available. Local checkout paths are available through the CLI.
 
 Node is pinned to 26.13.0 and pnpm comes from `package.json`. Node 24.11.1 reproduced a Jest worker SIGSEGV in V8 GC on macOS arm64, matching the stack in [nodejs/node#62393](https://github.com/nodejs/node/issues/62393). The Node 26 pin keeps every runner on the same runtime without disabling JIT or changing concurrency. Results collected on different Node versions must be reported separately.
 

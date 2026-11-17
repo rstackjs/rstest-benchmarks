@@ -6,22 +6,26 @@ Sources: baseline: **0.11.0** (npm); candidate: **0.12.6** (npm). Measured 2026-
 
 Sources run sequentially in rotating case/round order. For cases supported by all sources, each source occupies every order position equally often. Node compile cache is disabled. Rstest build and sequencing caches are cleared before each fixture's warmups and retained during measurement. Workload dependency graphs match. Background load and OS page cache are not controlled.
 
-Generated from raw samples. Change = (candidate / baseline − 1) × 100%; negative means faster. The first value column is the baseline; each Δ column shows the change relative to it. Values display two decimal places; changes use unrounded medians. All repetitions are retained; combined batches use the median of pooled samples, not the median of batch medians.
+Generated from raw samples. Change = (candidate / baseline − 1) × 100%; negative means faster. The first value column is the baseline. Values display two decimal places; changes use unrounded medians. All repetitions are retained; combined batches use the median of pooled samples, not the median of batch medians.
 
-| Case | baseline: 0.11.0 | candidate: 0.12.6 | Δ | Notes |
-| --- | --- | --- | --- | --- |
-| small module graph / forks | 0.33s | 0.35s | +8.28% | — |
-| small module graph / threads | 0.27s | 0.29s | +6.87% | — |
-| small module graph / vmForks | SKIPPED | 0.38s | — | skipped / passed |
-| small module graph / vmThreads | SKIPPED | 0.32s | — | skipped / passed |
-| medium module graph / forks | 0.69s | 0.72s | +4.77% | — |
-| medium module graph / threads | 0.53s | 0.56s | +6.12% | — |
-| medium module graph / vmForks | SKIPPED | 0.50s | — | skipped / passed |
-| medium module graph / vmThreads | SKIPPED | 0.43s | — | skipped / passed |
-| large module graph / forks | 1.57s | 1.70s | +8.39% | — |
-| large module graph / threads | 1.14s | 1.24s | +8.54% | — |
-| large module graph / vmForks | SKIPPED | 0.73s | — | skipped / passed |
-| large module graph / vmThreads | SKIPPED | 0.64s | — | skipped / passed |
+🏆 marks the lowest comparable median in each row. Percentages show change from the baseline.
+
+### Elapsed time (s)
+
+| Case | baseline: 0.11.0 | candidate: 0.12.6 | Notes |
+| --- | --- | --- | --- |
+| small module graph / forks | **🏆 0.33s** | 0.35s (+8.28%) | — |
+| small module graph / threads | **🏆 0.27s** | 0.29s (+6.87%) | — |
+| small module graph / vmForks | SKIPPED | 0.38s | skipped / passed |
+| small module graph / vmThreads | SKIPPED | 0.32s | skipped / passed |
+| medium module graph / forks | **🏆 0.69s** | 0.72s (+4.77%) | — |
+| medium module graph / threads | **🏆 0.53s** | 0.56s (+6.12%) | — |
+| medium module graph / vmForks | SKIPPED | 0.50s | skipped / passed |
+| medium module graph / vmThreads | SKIPPED | 0.43s | skipped / passed |
+| large module graph / forks | **🏆 1.57s** | 1.70s (+8.39%) | — |
+| large module graph / threads | **🏆 1.14s** | 1.24s (+8.54%) | — |
+| large module graph / vmForks | SKIPPED | 0.73s | skipped / passed |
+| large module graph / vmThreads | SKIPPED | 0.64s | skipped / passed |
 
 ## Variability
 

@@ -31,6 +31,7 @@ import { publishComparison } from './lib/publication.mjs'
 import {
   parseSources,
   rstestPackages,
+  rstestSpecs,
   localGit,
   builtFiles,
   verifyInstalled,
@@ -57,17 +58,19 @@ const { values } = parseArgs({
     label: { type: 'string', default: 'compare' },
     'timeout-ms': { type: 'string', default: '120000' },
     reverse: { type: 'boolean', default: false },
+    memory: { type: 'boolean', default: false },
     'dry-run': { type: 'boolean' },
     help: { type: 'boolean' },
   },
 })
 if (values.help) {
-  console.log(`Usage: pnpm compare --baseline <version|local:path> --candidate <version|local:path>
+  console.log(`Usage: pnpm compare --baseline <version|preview-url|local:path> --candidate <version|preview-url|local:path>
   --suites main|scaling|barrel|pools|coverage (comma-separated, or all; default main)
   --apps <names> --scales <sizes> --runs 5 --warmup 1 --label compare
   --cases <app names or full case IDs> --exclude-cases <app names or full case IDs>
   --timeout-ms 120000 --reverse --dry-run --update-readme
-Repeat --candidate or use comma-separated npm versions. README updates are off by default.
+  --memory adds a separate peak process-tree footprint pass (always on for coverage)
+Repeat --candidate or use comma-separated versions or preview links. README updates are off by default.
 Local sources are installed, freshly built and packed before timing. Outputs stay under results/.`)
 } else {
   await compareSources()
@@ -101,6 +104,7 @@ async function compareSources() {
   for (const name of ['apps', 'scales'])
     if (values[name]) args.push(`--${name}`, values[name])
   if (values.reverse) args.push('--reverse')
+  if (values.memory) args.push('--memory')
   const matrix = Object.fromEntries(
     selected.map((suite) => [
       suite,
@@ -117,11 +121,12 @@ async function compareSources() {
     if (!matrix[suite].length) delete matrix[suite]
   }
   selected = Object.keys(matrix)
-  if (selected.includes('coverage')) assertMemorySupported()
+  const memorySuites = selected.filter(suite => values.memory || suite === 'coverage')
+  if (memorySuites.length) assertMemorySupported()
   if (values['dry-run']) {
     console.log(
       JSON.stringify(
-        { sources, matrix, updateReadme: values['update-readme'] },
+        { sources, matrix, memorySuites, updateReadme: values['update-readme'] },
         null,
         2,
       ),
@@ -241,6 +246,7 @@ async function compareSources() {
           }
         }
       }
+      const overrides = rstestSpecs(source)
       const workspace = join(dir, 'workspaces', side)
       source.workspace = relative(dir, workspace)
       mkdirSync(workspace, { recursive: true })
@@ -268,20 +274,9 @@ async function compareSources() {
         ])
           for (const name of rstestPackages)
             if (manifest[type]?.[`@rstest/${name}`])
-              manifest[type][`@rstest/${name}`] =
-                source.kind === 'npm'
-                  ? source.version
-                  : `file:${source.packages[name].archive}`
+              manifest[type][`@rstest/${name}`] = overrides[`@rstest/${name}`]
         writeFileSync(file, JSON.stringify(manifest, null, 2) + '\n')
       }
-      const overrides = Object.fromEntries(
-        rstestPackages.map((name) => [
-          `@rstest/${name}`,
-          source.kind === 'npm'
-            ? source.version
-            : `file:${source.packages[name].archive}`,
-        ]),
-      )
       // JSON is valid YAML; fresh workspaces use explicit overrides for transitive imports too.
       writeFileSync(
         join(workspace, 'pnpm-workspace.yaml'),
@@ -351,10 +346,8 @@ async function compareSources() {
     const counts = sides.map((side) =>
       versionRunCounts(
         Object.values(matrix).flat(),
-        { runs: Number(values.runs), warmup: Number(values.warmup) },
-        () => sources[side].kind === 'npm'
-          ? sources[side].version
-          : sources[side].packages.core.version,
+        { runs: Number(values.runs), warmup: Number(values.warmup), memory: values.memory },
+        (item) => sources[side].installed[`${item.app}/@rstest/core`].version,
       ),
     )
     const progress = createProgress({

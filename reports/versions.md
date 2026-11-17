@@ -6,20 +6,24 @@ Sources: baseline: **0.11.0** (npm); candidate: **0.12.6** (npm). Measured 2026-
 
 Sources run sequentially in rotating case/round order. For cases supported by all sources, each source occupies every order position equally often. Node compile cache is disabled. Rstest build and sequencing caches are cleared before each fixture's warmups and retained during measurement. Workload dependency graphs match. Background load and OS page cache are not controlled.
 
-Generated from raw samples. Change = (candidate / baseline − 1) × 100%; negative means faster. The first value column is the baseline; each Δ column shows the change relative to it. Values display two decimal places; changes use unrounded medians. All repetitions are retained; combined batches use the median of pooled samples, not the median of batch medians.
+Generated from raw samples. Change = (candidate / baseline − 1) × 100%; negative means faster. The first value column is the baseline. Values display two decimal places; changes use unrounded medians. All repetitions are retained; combined batches use the median of pooled samples, not the median of batch medians.
 
-| Case | baseline: 0.11.0 | candidate: 0.12.6 | Δ | Notes |
-| --- | --- | --- | --- | --- |
-| Node startup and utilities | 0.25s | 0.27s | +8.42% | — |
-| Node module graph | 0.61s | 0.69s | +14.18% | — |
-| Node dependencies and service logic | 0.53s | 0.56s | +5.55% | — |
-| React + jsdom | 3.62s | 1.72s | -52.62% | — |
-| React + happy-dom | 1.96s | 1.02s | -47.84% | — |
-| React + browser mode | 1.38s | 1.42s | +2.92% | — |
-| Vue + jsdom | 2.63s | 1.48s | -43.73% | — |
-| Vue + happy-dom | 1.48s | 0.89s | -40.08% | — |
-| Vue + browser mode | SKIPPED | 1.31s | — | skipped / passed |
-| barrel graph · medium | 0.44s | 0.47s | +8.04% | — |
+🏆 marks the lowest comparable median in each row. Percentages show change from the baseline.
+
+### Elapsed time (s)
+
+| Case | baseline: 0.11.0 | candidate: 0.12.6 | Notes |
+| --- | --- | --- | --- |
+| Node startup and utilities | **🏆 0.25s** | 0.27s (+8.42%) | — |
+| Node module graph | **🏆 0.61s** | 0.69s (+14.18%) | — |
+| Node dependencies and service logic | **🏆 0.53s** | 0.56s (+5.55%) | — |
+| React + jsdom | 3.62s | **🏆 1.72s** (-52.62%) | — |
+| React + happy-dom | 1.96s | **🏆 1.02s** (-47.84%) | — |
+| React + browser mode | **🏆 1.38s** | 1.42s (+2.92%) | — |
+| Vue + jsdom | 2.63s | **🏆 1.48s** (-43.73%) | — |
+| Vue + happy-dom | 1.48s | **🏆 0.89s** (-40.08%) | — |
+| Vue + browser mode | SKIPPED | 1.31s | skipped / passed |
+| barrel graph · medium | **🏆 0.44s** | 0.47s (+8.04%) | — |
 
 ## Variability
 

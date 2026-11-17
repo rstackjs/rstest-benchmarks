@@ -3,6 +3,7 @@ import { assertNoLegacyMemory } from './legacy.mjs'
 import { createHash } from 'node:crypto'
 import { dirname, relative } from 'node:path'
 import { statistics, seconds, percent } from './stats.mjs'
+import { versionRow, tableLegend, readmeTable } from './version-tables.mjs'
 import { formatCpu } from './host.mjs'
 
 const escape = (value) =>
@@ -25,7 +26,8 @@ export function normalize(document, source = 'memory') {
   return document.results.map((row) => {
     const suite =
       document.suite ?? (row.provider ? 'coverage' : row.app ? 'main' : 'pools')
-    assertNoLegacyMemory(source, row, suite === 'coverage' && row.status === 'passed')
+    const expectsMemory = suite === 'coverage' || document.meta.options?.memory
+    assertNoLegacyMemory(source, row, expectsMemory && row.status === 'passed')
     const timed = legacy
       ? row.samples
       : row.samples
@@ -333,6 +335,22 @@ export function singleReport(document) {
   ].join('\n')
 }
 
+function metricRow(name, rows, format) {
+  const notes = new Set()
+  const entries = rows.map((row, index) => {
+    const { delta, note } = index ? compare(rows[0], row) : {}
+    if (note) notes.add(note)
+    const value = row?.stats.median
+    const text = row?.status === 'passed' ? format(value) : cell(row)
+    return { value, text, delta, diff: delta == null ? null : percent(delta) }
+  })
+  return {
+    ...versionRow(name, entries),
+    data: [name, ...entries.flatMap(({ text, diff }, index) => index ? [text, diff ?? '—'] : [text])],
+    note: [...notes].join('; ') || '—',
+  }
+}
+
 export function comparisonReport(
   spec,
   load = (path) => JSON.parse(readFileSync(path, 'utf8')),
@@ -369,6 +387,7 @@ export function comparisonReport(
     return { ...column, rows: mergeRows(rows, spec.axis) }
   })
   const ids = [...new Set(columns.flatMap((column) => [...column.rows.keys()]))]
+  const elapsed = [], memory = []
   const summaryRows = [],
     detailRows = [],
     memorySummaryRows = [],
@@ -385,14 +404,9 @@ export function comparisonReport(
             ? first.config === 'default' ? 'default' : 'lazy-barrel disabled'
             : null
     const name = `${first.name}${qualifier ? ` / ${qualifier}` : ''}`
-    const cells = [name, cell(values[0])]
-    const notes = new Set()
-    for (const value of values.slice(1)) {
-      const comparison = compare(values[0], value)
-      cells.push(cell(value), percent(comparison.delta))
-      if (comparison.note) notes.add(comparison.note)
-    }
-    summaryRows.push([...cells, [...notes].join('; ') || '—'])
+    const timeRow = metricRow(name, values, seconds)
+    elapsed.push(timeRow)
+    summaryRows.push([...timeRow.data, timeRow.note])
     if (values.some((row) => row?.memoryStats.n)) {
       const memoryValues = values.map((row) => row && ({
         ...row,
@@ -401,13 +415,9 @@ export function comparisonReport(
           ? 'incomplete'
           : row.status,
       }))
-      memorySummaryRows.push([name, ...memoryValues.flatMap((row, index) => {
-        if (!row || !row.stats.n) return index === 0 ? ['—'] : ['—', '—']
-        if (row.status !== 'passed') return index === 0 ? [row.status.toUpperCase()] : [row.status.toUpperCase(), '—']
-        const value = (row.stats.median / 1024 ** 2).toFixed(2)
-        const delta = index === 0 ? null : compare(memoryValues[0], row).delta
-        return index === 0 ? [value] : [value, percent(delta)]
-      })])
+      const row = metricRow(name, memoryValues, value => (value / 1024 ** 2).toFixed(2))
+      memory.push(row)
+      memorySummaryRows.push(row.data)
     }
     values.forEach((row, index) => {
       if (!row) return
@@ -448,9 +458,18 @@ export function comparisonReport(
   ]
   const published = inputs.some(([, meta]) => meta.publication)
   const memorySummary = memorySummaryRows.length ? table(headers, memorySummaryRows) : ''
+  const overview = [
+    tableLegend,
+    '',
+    '### Elapsed time (s)',
+    '',
+    rankedTable(columns, elapsed),
+    ...(memory.length ? ['', '### Memory comparison (MiB, peak process-tree footprint)', '', rankedTable(columns, memory)] : []),
+  ].join('\n')
   return {
     summary,
     memorySummary,
+    elapsed, memory,
     jobSummary: [
       `# ${spec.title ?? 'Benchmark comparison'}`,
       '',
@@ -463,9 +482,9 @@ export function comparisonReport(
       )),
       '',
       ...(spec.context ? [spec.context, ''] : []),
-      'Each Δ is relative to the baseline; negative means less elapsed time or memory. Values display two decimal places; changes use unrounded medians.',
+      'Negative percentages mean less elapsed time or memory. Changes use unrounded medians.',
       '',
-      compactTables({ summary, memorySummary }),
+      overview,
       '',
       'Full reports, variability, samples and execution details are available in the workflow artifact.',
       '',
@@ -481,9 +500,9 @@ export function comparisonReport(
       `# ${spec.title ?? 'Benchmark comparison'}`,
       '',
       ...(spec.context ? [spec.context, ''] : []),
-      'Generated from raw samples. Change = (candidate / baseline − 1) × 100%; negative means faster. The first value column is the baseline; each Δ column shows the change relative to it. Values display two decimal places; changes use unrounded medians. All repetitions are retained; combined batches use the median of pooled samples, not the median of batch medians.',
+      'Generated from raw samples. Change = (candidate / baseline − 1) × 100%; negative means faster. The first value column is the baseline. Values display two decimal places; changes use unrounded medians. All repetitions are retained; combined batches use the median of pooled samples, not the median of batch medians.',
       '',
-      summary,
+      overview,
       '',
       '## Variability',
       '',
@@ -555,14 +574,21 @@ export function comparisonReport(
   }
 }
 
-function compactTables(report) {
-  const memory = report.memorySummary
-    ? `\n\n### Memory comparison\n\nMedian of the per-run peak process-tree physical footprint in MiB; negative percentages mean less memory.\n\n${report.memorySummary}`
-    : ''
-  return `${report.summary}${memory}`
+function rankedTable(columns, rows) {
+  const hasNotes = rows.some(row => row.note !== '—')
+  const headers = ['Case', ...columns.map(column => column.label)]
+  if (hasNotes) headers.push('Notes')
+  return table(headers, rows.map(row => [
+    row.name,
+    ...row.cells.map(cell => {
+      const text = cell.best ? `**🏆 ${cell.text}**` : cell.text
+      return cell.diff ? `${text} (${cell.diff})` : text
+    }),
+    ...(hasNotes ? [row.note] : []),
+  ]))
 }
 
-export function readmeBlock(spec, report, load, readmePath = 'README.md') {
+export function readmeBlock(spec, report, load, readmePath = 'README.md', assets = new Map()) {
   if (spec.readme) {
     const indices = spec.readme.columns
     if (!Array.isArray(indices) || indices.length < 2 || indices[0] !== 0 ||
@@ -580,5 +606,10 @@ export function readmeBlock(spec, report, load, readmePath = 'README.md') {
     report = comparisonReport(spec, load)
   }
   const reportLink = relative(dirname(readmePath), spec.output).replaceAll('\\', '/')
-  return `\n\n${spec.context ? spec.context + '\n\n' : ''}${compactTables(report)}\n\n[Full report, variability and inputs](${reportLink}). ${report.provenanceNote}\n\n`
+  const labels = spec.columns.map(column => column.label)
+  const tables = [
+    readmeTable('elapsed', report.elapsed, labels, report.summary, spec.output, readmePath, assets),
+    readmeTable('memory', report.memory, labels, report.memorySummary, spec.output, readmePath, assets),
+  ].filter(Boolean).join('\n\n')
+  return `\n\n${spec.context ? spec.context + '\n\n' : ''}${tableLegend} Cell colors show the ratio to the lowest median, from green at 1× to yellow at 2× and red at 4×.\n\n${tables}\n\n[Full report, variability and inputs](${reportLink}). ${report.provenanceNote}\n\n`
 }
