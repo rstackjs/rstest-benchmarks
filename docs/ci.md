@@ -8,13 +8,13 @@ The comparisons have separate workflows, inputs and concurrency groups:
 
 | Workflow | Trigger | Default workload |
 | --- | --- | --- |
-| [Frameworks benchmark](../.github/workflows/benchmark-frameworks.yml) | Pull requests, pushes to `main`, merge queue, or manual dispatch | Jest + SWC, Vitest, Vitest vmForks, Rstest and Rstest vmForks; all eight main cases and browser mode; 5 timed runs per runner/case/cache condition, cold and warm caches |
+| [Frameworks benchmark](../.github/workflows/benchmark-frameworks.yml) | Pushes to `main`, merge queue, or manual dispatch | Jest + SWC, Vitest, Vitest vmForks, Rstest and Rstest vmForks; all eight main cases and browser mode; 5 timed runs per runner/case/cache condition, cold and warm caches |
 | [Rstest version benchmark](../.github/workflows/benchmark-versions.yml) | Manual dispatch | Rstest 0.11.0 vs 0.12.6; main (the README comparison); 1 warmup and 6 timed runs per supported case |
 | [Rstest coverage benchmark](../.github/workflows/benchmark-version-coverage.yml) | Manual dispatch | Rstest 0.11.0 vs 0.12.6; coverage only, with none/V8/Istanbul controls and process-tree memory; 1 warmup and 6 timed runs per case |
 
 The framework and coverage workflows are matrix workflows: a `Plan matrix` job turns the `cases` and `exclude_cases` inputs into one job per case, every `Benchmark (<case>)` job runs on its own `macos-15` runner, and a final `Merge results` job combines the per-case results (see [Matrix jobs and merging](#matrix-jobs-and-merging)). The Rstest version performance workflow stays a single job.
 
-Markdown and published-result-only changes do not trigger push/PR framework benchmarks. All workflows run on `macos-15` only; memory is measured with the macOS physical-footprint sampler (see [Memory methodology](../README.md#methodology)). Choose the workflow under **Actions**, then **Run workflow**:
+The push trigger skips changes limited to Markdown and published reports. All workflows run on `macos-15` only; memory is measured with the macOS physical-footprint sampler (see [Memory methodology](../README.md#methodology)). Choose the workflow under **Actions**, then **Run workflow**:
 
 | Input | Framework workflow | Both Rstest version workflows |
 | --- | --- | --- |
