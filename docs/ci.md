@@ -22,9 +22,10 @@ Markdown and published-result-only changes do not trigger push/PR framework benc
 | `suites` | Fixed main/browser | Performance defaults to `main`; optionally select `scaling,barrel,pools`. Coverage stays separate |
 | `cases` | Optional comma-separated case IDs; empty selects all eight | App names or full case IDs; empty selects all cases in the workflow |
 | `exclude_cases` | Comma-separated case IDs to skip | App names or full case IDs to skip |
+| `memory` | Always on | Version performance has an opt-in peak process-tree footprint pass. Coverage always measures footprint. |
 | `rstest_version` | Exact npm version or commit-addressed pkg.pr.new core URL; empty uses the lockfile | — |
-| `baseline` | — | Exact npm release, default `0.11.0` |
-| `candidate` | — | Exact npm release(s), comma-separated, default `0.12.6` |
+| `baseline` | — | Exact npm version or commit-addressed pkg.pr.new Rstest link, default `0.11.0` |
+| `candidate` | — | Npm versions or pkg.pr.new Rstest links, comma-separated, default `0.12.6` |
 
 Selection is applied before exclusion (in matrix workflows, by the planning job); exclusions win if both match. Whitespace around commas is ignored. Unknown IDs, duplicate entries and an empty final selection fail before benchmark preparation. Empty suites are skipped and progress totals reflect the remaining cases. Both versions and all selected frameworks use the same filtered workload.
 
@@ -49,7 +50,7 @@ With the default selections, the framework workflow has 420 timed invocations an
 
 Five rounds let each of the five Node/DOM runners occupy each order position once. Browser mode has two runners, so an odd repetition count gives one runner one extra first position; reports disclose this imbalance. Ten rounds balance both directions and browser order, but are optional. Each repetition is a separate invocation of every supported runner, not a shared repetition across runners.
 
-Local checkout comparison remains available through the local CLI; the version workflow inputs are for npm releases.
+To compare a preview, enter `0.12.6` as the baseline and `https://pkg.pr.new/@rstest/core@bbf2195` as the candidate. A pnpm install spec such as `@rstest/coverage-istanbul@https://pkg.pr.new/@rstest/coverage-istanbul@bbf2195` selects the same preview. One link selects core, browser, coverage-v8 and coverage-istanbul, each at its own package URL for that commit. All four must be available. Local checkout paths are available through the CLI.
 
 Node is pinned to 26.13.0 and pnpm comes from `package.json`. Node 24.11.1 reproduced a Jest worker SIGSEGV in V8 GC on macOS arm64, matching the stack in [nodejs/node#62393](https://github.com/nodejs/node/issues/62393). The Node 26 pin keeps every runner on the same runtime without disabling JIT or changing concurrency. Results collected on different Node versions must be reported separately.
 

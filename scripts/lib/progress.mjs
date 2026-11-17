@@ -15,15 +15,14 @@ export function frameworkRunCounts(groups, conditions, runs) {
 export function versionRunCounts(items, options, versionFor) {
   const supported = items.filter(
     (item) => !unsupportedReason(item, versionFor(item)),
-  ).length
-  // Coverage items (ids start with the suite name) also get a separate memory pass.
-  const withMemory = items.filter(
-    (item) => item.id.startsWith('coverage:') && !unsupportedReason(item, versionFor(item)),
+  )
+  const withMemory = supported.filter(
+    (item) => options.memory || item.id.startsWith('coverage:'),
   ).length
   return {
-    timed: supported * options.runs,
+    timed: supported.length * options.runs,
     memory: withMemory * options.runs,
-    warmup: supported * options.warmup,
+    warmup: supported.length * options.warmup,
   }
 }
 

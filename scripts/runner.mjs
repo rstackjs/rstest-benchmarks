@@ -59,6 +59,7 @@ export function parseOptions(suite, args) {
       apps: { type: 'string' },
       scales: { type: 'string' },
       reverse: { type: 'boolean', default: false },
+      memory: { type: 'boolean', default: false },
       'timeout-ms': { type: 'string', default: '120000' },
       help: { type: 'boolean', default: false },
       list: { type: 'boolean', default: false },
@@ -154,11 +155,12 @@ export async function* suiteSteps(
   const options = parseOptions(suite, args)
   if (options.help) {
     console.log(
-      `Suite: ${suite}\n--list --apps <names> --runs <n> --warmup <n> --label <name> --timeout-ms <ms> --reverse\nPools/barrel/scaling: --scales small,medium,large\nOutputs: results/<label>-<timestamp>-<id>/result.json and report.md`,
+      `Suite: ${suite}\n--list --memory --apps <names> --runs <n> --warmup <n> --label <name> --timeout-ms <ms> --reverse\nPools/barrel/scaling: --scales small,medium,large\nOutputs: results/<label>-<timestamp>-<id>/result.json and report.md`,
     )
     return
   }
-  if (suite === 'coverage') assertMemorySupported()
+  const measureMemory = suite === 'coverage' || options.memory
+  if (measureMemory) assertMemorySupported()
   const items = casesFor(suite, options).filter((item) => !caseIds || caseIds.includes(item.id))
   if (!items.length) throw new Error('No benchmark cases selected')
   if (caseIds) options.cases = caseIds
@@ -242,10 +244,9 @@ export async function* suiteSteps(
           cache:
             'Node compile cache disabled via NODE_DISABLE_COMPILE_CACHE=1; clear Rstest build and sequencing caches once per fixture before warmups; retain across variants and timed rounds',
           maxWorkers: 'Rstest default (unset)',
-          memory:
-            suite === 'coverage'
-              ? 'macOS phys_footprint summed over the command process tree every ~50 ms, excluding the benchmark driver; peak per run'
-              : null,
+          memory: measureMemory
+            ? 'macOS phys_footprint summed over the command process tree every ~50 ms, excluding the benchmark driver; peak per run'
+            : null,
           environment:
             'Inherited environment; BENCH_*, scale and Node compile-cache overrides cleared, then NODE_DISABLE_COMPILE_CACHE=1 enforced. Only documented non-secret controls saved.',
         },
@@ -513,7 +514,7 @@ export async function* suiteSteps(
           yield { kind: 'sample', id: item.id, phase: 'timed', round }
           const timing = await run(item, 'timed', round)
           // Memory pass: same preparation, rerun under the sampler.
-          if (suite === 'coverage' && timing?.status === 'passed')
+          if (measureMemory && timing?.status === 'passed')
             await run(item, 'timed', round, 'memory', timing)
         }
       for (const item of group)

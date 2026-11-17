@@ -13,6 +13,8 @@ import { fileURLToPath } from 'node:url'
 import { spawnSync } from 'node:child_process'
 import {
   parseSource,
+  parseSources,
+  rstestSpecs,
   rstestPackages,
   builtFiles,
   verifyInstalled,
@@ -27,6 +29,24 @@ const cli = (...args) =>
     cwd: root,
     encoding: 'utf8',
   })
+
+test('all package links for one preview select the same four commit-addressed tarballs', () => {
+  const prefix = 'https://pkg.pr.new/web-infra-dev/rstest/'
+  const core = parseSource(`${prefix}@rstest/core@bbf2195`, root)
+  for (const name of rstestPackages) {
+    const id = `@rstest/${name}`
+    const url = `${prefix}${id}@bbf2195`
+    assert.equal(rstestSpecs(core)[id], url)
+    assert.deepEqual(parseSource(url, root), core)
+    assert.deepEqual(parseSource(`${id}@${url}`, root), core)
+    assert.throws(() => parseSources('0.12.6', [core.requested, url], root), /Duplicate candidate/)
+  }
+  const other = parseSource(`${prefix}@rstest/core@bbf2196`, root)
+  assert.notEqual(sourceIdentity(core).fingerprint, sourceIdentity(other).fingerprint)
+  assert.equal(parseSources('0.12.6', [core.requested, other.requested], root)['candidate-2'].commit, 'bbf2196')
+  for (const input of [`@rstest/core@${prefix}@rstest/browser@bbf2195`, `${prefix}@rstest/core@main`, `${prefix}@rstest/unknown@bbf2195`])
+    assert.throws(() => parseSource(input, root), /commit-addressed/)
+})
 
 test('compare dry-run validates both sources and filters before installing or measuring', () => {
   const result = cli(

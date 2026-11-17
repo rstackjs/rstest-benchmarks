@@ -25,7 +25,8 @@ export function normalize(document, source = 'memory') {
   return document.results.map((row) => {
     const suite =
       document.suite ?? (row.provider ? 'coverage' : row.app ? 'main' : 'pools')
-    assertNoLegacyMemory(source, row, suite === 'coverage' && row.status === 'passed')
+    const expectsMemory = suite === 'coverage' || document.meta.options?.memory
+    assertNoLegacyMemory(source, row, expectsMemory && row.status === 'passed')
     const timed = legacy
       ? row.samples
       : row.samples
