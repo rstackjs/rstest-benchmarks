@@ -67,7 +67,7 @@ export function renderHeatmap({ title, columns, rows, theme = 'light', tableWidt
       const right = left + columnWidth
       if (cell.state === 'ok') {
         // Separated cells: a 3 px gap on every side and rounded corners.
-        parts.push(`<rect x="${fixed(left + cellGap)}" y="${top + cellGap}" width="${fixed(columnWidth - 2 * cellGap)}" height="${rowTableHeight - 2 * cellGap}" rx="3" fill="${computeColor(1 + cell.gap)}"/>`)
+        parts.push(`<rect x="${fixed(left + cellGap)}" y="${top + cellGap}" width="${fixed(columnWidth - 2 * cellGap)}" height="${rowTableHeight - 2 * cellGap}" rx="3" fill="${cell.fill ?? computeColor(1 + cell.gap)}"/>`)
       }
       if (cell.best) parts.push(`<text x="${fixed(left + 9)}" y="${middle}" dominant-baseline="central" font-size="10" ${font.replace(/ font-size="11"/, '')}>🏆</text>`)
       if (cell.state !== 'ok') {

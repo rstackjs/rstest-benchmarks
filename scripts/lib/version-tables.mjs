@@ -3,6 +3,11 @@ import { renderHeatmap, textWidth } from './heatmap.mjs'
 
 export const tableLegend = '🏆 marks the lowest comparable median in each row. Percentages show change from the baseline.'
 
+function pairColor(value, best) {
+  if (value === best) return '#63bf7c'
+  return value / best < 1.2 ? '#ffc078' : '#f28b88'
+}
+
 // Only rank values which passed the comparison checks against the baseline.
 // Preserve raw medians even when the row cannot support a ranking.
 export function versionRow(name, entries) {
@@ -14,6 +19,7 @@ export function versionRow(name, entries) {
       text, diff, state: ranked ? 'ok' : 'unranked',
       best: ranked && value === best,
       gap: ranked ? value / best - 1 : 0,
+      ...(ranked && entries.length === 2 ? { fill: pairColor(value, best) } : {}),
     }
   })
   return { name, cells }

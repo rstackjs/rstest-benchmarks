@@ -14,7 +14,7 @@ Sources: baseline: **0.11.0** (npm); candidate: **0.12.6** (npm). Measured 2026-
 
 Sources run sequentially in rotating case/round order. For cases supported by all sources, each source occupies every order position equally often. Node compile cache is disabled. Rstest build and sequencing caches are cleared before each fixture's warmups and retained during measurement. Workload dependency graphs match. Background load and OS page cache are not controlled.
 
-🏆 marks the lowest comparable median in each row. Percentages show change from the baseline. Cell colors show the ratio to the lowest median, from green at 1× to yellow at 2× and red at 4×.
+🏆 marks the lowest comparable median in each row. Percentages show change from the baseline. Green marks the row minimum, including ties. Higher values are orange for gaps under 20% and red for gaps of 20% or more.
 
 ### Elapsed time (s)
 
@@ -59,7 +59,7 @@ Sources: baseline: **0.11.0** (npm); candidate: **0.12.6** (npm). Measured 2026-
 
 Sources run sequentially in rotating case/round order. For cases supported by all sources, each source occupies every order position equally often. Node compile cache is disabled. Rstest build and sequencing caches are cleared before each fixture's warmups and retained during measurement. Workload dependency graphs match. Background load and OS page cache are not controlled.
 
-🏆 marks the lowest comparable median in each row. Percentages show change from the baseline. Cell colors show the ratio to the lowest median, from green at 1× to yellow at 2× and red at 4×.
+🏆 marks the lowest comparable median in each row. Percentages show change from the baseline. Green marks the row minimum, including ties. Higher values are orange for gaps under 20% and red for gaps of 20% or more.
 
 ### Elapsed time (s)
 
