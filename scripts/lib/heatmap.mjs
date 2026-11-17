@@ -26,8 +26,8 @@ export function computeColor(factor) {
 // Cells are opaque, so their text is dark in both variants; labels outside the cells
 // follow the theme (`value`, `muted`).
 const themes = {
-  light: { value: '#1f2328', muted: '#57606a', cell: '#000', cellMuted: '#3d444d' },
-  dark: { value: '#f0f6fc', muted: '#b1bac4', cell: '#000', cellMuted: '#3d444d' },
+  light: { value: '#1f2328', muted: '#57606a', cell: '#000', cellMuted: '#3d444d', rule: '#d1d9e0', increase: '#b42328', decrease: '#13743b' },
+  dark: { value: '#f0f6fc', muted: '#b1bac4', cell: '#000', cellMuted: '#3d444d', rule: '#3d444d', increase: '#ff9592', decrease: '#72d798' },
 }
 
 // Text width in px at 11 px / weight 600, measured in Chromium with the table font stack
@@ -46,37 +46,67 @@ const dotLabelGap = 10
 
 // `columns`: [{ framework, label }]; `rows`: [{ name, cells: [{ state, text, best, diff, gap }] }].
 // `theme` selects the text colors ('light' or 'dark'); the fills are the same.
-export function renderHeatmap({ title, columns, rows, theme = 'light', tableWidth = 760, nameColumn = 130 }) {
+export function renderHeatmap({ title, columns, rows, theme = 'light', tableWidth = 760, nameColumn = 130, changeColumnWidth = 0 }) {
   const { value: valueColor, muted, cell: cellColor, cellMuted } = themes[theme]
-  const columnWidth = (tableWidth - nameColumn) / columns.length
+  const defaultWidth = (tableWidth - nameColumn - changeColumnWidth) / columns.length
+  let nextLeft = nameColumn
+  const bounds = columns.map(({ width = defaultWidth }) => {
+    const left = nextLeft
+    nextLeft += width
+    return { left, width, right: nextLeft }
+  })
+  const inlineGap = changeColumnWidth ? 0 : gapColumn
   const parts = []
   const headerY = rowTableHeight / 2
   columns.forEach(({ color, label }, index) => {
+    if (changeColumnWidth) {
+      const right = bounds[index].right - 10
+      parts.push(`<text x="${fixed(right)}" y="${headerY}" dominant-baseline="central" text-anchor="end" fill="${valueColor}" font-weight="600" ${font}>${escape(label)}</text>`)
+      return
+    }
     // The dot and the label form one unit, centered on the column's cell center.
-    const center = nameColumn + (index + 0.5) * columnWidth
+    const center = bounds[index].left + bounds[index].width / 2
     const start = center - (dotDiameter + dotLabelGap + textWidth(label)) / 2
     parts.push(`<circle cx="${fixed(start + dotDiameter / 2)}" cy="${headerY}" r="${dotDiameter / 2}" fill="${color ?? '#999999'}"/>`)
     parts.push(`<text x="${fixed(start + dotDiameter + dotLabelGap)}" y="${headerY}" dominant-baseline="central" fill="${valueColor}" font-weight="600" ${font}>${escape(label)}</text>`)
   })
+  if (changeColumnWidth) {
+    parts.push(`<text x="${tableWidth - 8}" y="${headerY}" dominant-baseline="central" text-anchor="end" fill="${valueColor}" font-weight="600" ${font}>Candidate Δ</text>`)
+  }
   rows.forEach((row, rowIndex) => {
     const top = rowTableHeight * (rowIndex + 1)
     const middle = top + rowTableHeight / 2
     parts.push(`<text x="0" y="${middle}" dominant-baseline="central" fill="${valueColor}" font-weight="600" ${font}>${escape(row.name)}</text>`)
+    if (changeColumnWidth) parts.push(`<line x1="0" x2="${tableWidth}" y1="${top}" y2="${top}" stroke="${themes[theme].rule}"/>`)
     row.cells.forEach((cell, index) => {
-      const left = nameColumn + index * columnWidth
-      const right = left + columnWidth
-      if (cell.state === 'ok') {
+      const { left, right, width } = bounds[index]
+      if (!changeColumnWidth && cell.state === 'ok') {
         // Separated cells: a 3 px gap on every side and rounded corners.
-        parts.push(`<rect x="${fixed(left + cellGap)}" y="${top + cellGap}" width="${fixed(columnWidth - 2 * cellGap)}" height="${rowTableHeight - 2 * cellGap}" rx="3" fill="${cell.fill ?? computeColor(1 + cell.gap)}"/>`)
+        parts.push(`<rect x="${fixed(left + cellGap)}" y="${top + cellGap}" width="${fixed(width - 2 * cellGap)}" height="${rowTableHeight - 2 * cellGap}" rx="3" fill="${computeColor(1 + cell.gap)}"/>`)
       }
-      if (cell.best) parts.push(`<text x="${fixed(left + 9)}" y="${middle}" dominant-baseline="central" font-size="10" ${font.replace(/ font-size="11"/, '')}>🏆</text>`)
+      if (!changeColumnWidth && cell.best) parts.push(`<text x="${fixed(left + 9)}" y="${middle}" dominant-baseline="central" font-size="10" ${font.replace(/ font-size="11"/, '')}>🏆</text>`)
       if (cell.state !== 'ok') {
         parts.push(`<text x="${fixed(right - 10)}" y="${middle}" dominant-baseline="central" text-anchor="end" fill="${muted}" ${font}>${escape(cell.text)}</text>`)
         return
       }
-      parts.push(`<text x="${fixed(right - 10 - gapColumn)}" y="${middle}" dominant-baseline="central" text-anchor="end" fill="${cellColor}"${cell.best ? ' font-weight="700"' : ''} style="font-variant-numeric: tabular-nums" ${font}>${escape(cell.text)}</text>`)
-      if (cell.diff) parts.push(`<text x="${fixed(right - 10)}" y="${middle}" dominant-baseline="central" text-anchor="end" fill="${cellMuted}" font-size="10" style="font-variant-numeric: tabular-nums" ${font.replace(/ font-size="11"/, '')}>${escape(cell.diff)}</text>`)
+      parts.push(`<text x="${fixed(right - 10 - inlineGap)}" y="${middle}" dominant-baseline="central" text-anchor="end" fill="${changeColumnWidth ? valueColor : cellColor}"${cell.best ? ' font-weight="700"' : ''} style="font-variant-numeric: tabular-nums" ${font}>${escape(cell.text)}</text>`)
+      if (!changeColumnWidth && cell.diff) parts.push(`<text x="${fixed(right - 10)}" y="${middle}" dominant-baseline="central" text-anchor="end" fill="${cellMuted}" font-size="10" style="font-variant-numeric: tabular-nums" ${font.replace(/ font-size="11"/, '')}>${escape(cell.diff)}</text>`)
     })
+    if (changeColumnWidth) {
+      const { delta, diff, state } = row.cells[1]
+      let label = '—'
+      let color = muted
+      if (state === 'ok' && delta != null) {
+        if (delta === 0) {
+          label = '0.00%'
+        } else {
+          const magnitude = Math.abs(delta) < 0.005 ? '<0.01%' : diff
+          label = `${delta > 0 ? '▲' : '▼'} ${magnitude}`
+          color = delta > 0 ? themes[theme].increase : themes[theme].decrease
+        }
+      }
+      parts.push(`<text x="${tableWidth - 8}" y="${middle}" dominant-baseline="central" text-anchor="end" fill="${color}" font-weight="600" style="font-variant-numeric: tabular-nums" ${font}>${escape(label)}</text>`)
+    }
   })
   const total = rowTableHeight * (rows.length + 1)
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${tableWidth}" height="${total}" viewBox="0 0 ${tableWidth} ${total}" role="img" aria-label="${escape(title)}">\n<title>${escape(title)}</title>\n${parts.join('\n')}\n</svg>\n`

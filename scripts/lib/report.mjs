@@ -612,7 +612,7 @@ export function readmeBlock(spec, report, load, readmePath = 'README.md', assets
     readmeTable('memory', report.memory, labels, report.memorySummary, spec.output, readmePath, assets),
   ].filter(Boolean).join('\n\n')
   const colorLegend = labels.length === 2
-    ? 'Green marks the row minimum, including ties. Higher values are orange for gaps under 20% and red for gaps of 20% or more.'
-    : 'Cell colors show the ratio to the lowest median, from green at 1× to yellow at 2× and red at 4×.'
-  return `\n\n${spec.context ? spec.context + '\n\n' : ''}${tableLegend} ${colorLegend}\n\n${tables}\n\n[Full report, variability and inputs](${reportLink}). ${report.provenanceNote}\n\n`
+    ? 'Bold marks the lowest comparable median. Candidate Δ shows the change from baseline: red ▲ for higher values and green ▼ for lower values.'
+    : `${tableLegend} Cell colors show the ratio to the lowest median, from green at 1× to yellow at 2× and red at 4×.`
+  return `\n\n${spec.context ? spec.context + '\n\n' : ''}${colorLegend}\n\n${tables}\n\n[Full report, variability and inputs](${reportLink}). ${report.provenanceNote}\n\n`
 }
