@@ -5,18 +5,18 @@
       "title": "main: 0.12.6 vs preview 2869d12",
       "output": "reports/versions.md",
       "marker": "versions",
-      "context": "Source: [GitHub Actions](https://github.com/rstackjs/rstest-benchmarks/actions/runs/44030402016), commit `6ebc46edf65eadfe13d080f716d19ef4475f5d0e`, attempt 1.\n\nSources: baseline: **0.12.6** (npm); candidate: **preview 2869d12** (preview). Measured 2026-11-17 (UTC); Apple M1 (Virtual) × 3; logical CPUs: 3; available parallelism: 3; darwin arm64, Node v26.13.0.\n\n1 warmup(s) and **6 timed runs per supported case**; medians are reported. 10 selected cases. Every candidate percentage is relative to the baseline; negative means less elapsed time.\n\nSources run sequentially in rotating case/round order. For cases supported by all sources, each source occupies every order position equally often. Node compile cache is disabled. Rstest build and sequencing caches are cleared before each fixture's warmups and retained during measurement. Workload dependency graphs match. Background load and OS page cache are not controlled.",
+      "context": "Source: [GitHub Actions](https://github.com/rstackjs/rstest-benchmarks/actions/runs/44043587285), commit `969876e9fc43ca83e8a41e8e1873b6687fa45c16`, attempt 1.\n\nSources: baseline: **0.12.6** (npm); candidate: **preview 2869d12** (preview). Measured 2026-11-17 (UTC); Apple M1 (Virtual) × 3; logical CPUs: 3; available parallelism: 3; darwin arm64, Node v26.13.0.\n\n1 warmup(s) and **6 timed runs per supported case**; medians are reported. 10 selected cases. Every candidate percentage is relative to the baseline; negative means less elapsed time.\n\nSources run sequentially in rotating case/round order. For cases supported by all sources, each source occupies every order position equally often. Node compile cache is disabled. Rstest build and sequencing caches are cleared before each fixture's warmups and retained during measurement. Workload dependency graphs match. Background load and OS page cache are not controlled.",
       "columns": [
         {
           "label": "baseline: 0.12.6",
           "files": [
-            "reports/data/ci-versions-2026-11-17T06-28-33-087Z-b0a8577c-baseline-main.json"
+            "reports/data/ci-versions-2026-11-17T08-12-45-872Z-25eabb13-baseline-main.json"
           ]
         },
         {
           "label": "candidate: preview 2869d12",
           "files": [
-            "reports/data/ci-versions-2026-11-17T06-28-33-538Z-8c5bb046-candidate-main.json"
+            "reports/data/ci-versions-2026-11-17T08-12-46-521Z-041af128-candidate-main.json"
           ]
         }
       ]

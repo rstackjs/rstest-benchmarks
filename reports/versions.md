@@ -1,6 +1,6 @@
 # main: 0.12.6 vs preview 2869d12
 
-Source: [GitHub Actions](https://github.com/rstackjs/rstest-benchmarks/actions/runs/44030402016), commit `6ebc46edf65eadfe13d080f716d19ef4475f5d0e`, attempt 1.
+Source: [GitHub Actions](https://github.com/rstackjs/rstest-benchmarks/actions/runs/44043587285), commit `969876e9fc43ca83e8a41e8e1873b6687fa45c16`, attempt 1.
 
 Sources: baseline: **0.12.6** (npm); candidate: **preview 2869d12** (preview). Measured 2026-11-17 (UTC); Apple M1 (Virtual) × 3; logical CPUs: 3; available parallelism: 3; darwin arm64, Node v26.13.0.
 
@@ -16,31 +16,31 @@ Generated from raw samples. Change = (candidate / baseline − 1) × 100%; negat
 
 | Case | baseline: 0.12.6 | candidate: preview 2869d12 |
 | --- | --- | --- |
-| Node startup and utilities | **🏆 0.52s** | 0.63s (+21.39%) |
-| Node module graph | **🏆 2.73s** | 2.78s (+1.85%) |
-| Node dependencies and service logic | 2.12s | **🏆 2.07s** (-2.43%) |
-| React + jsdom | 9.77s | **🏆 9.76s** (-0.13%) |
-| React + happy-dom | 5.31s | **🏆 4.80s** (-9.57%) |
-| React + browser mode | **🏆 5.97s** | 6.78s (+13.56%) |
-| Vue + jsdom | 5.77s | **🏆 5.75s** (-0.25%) |
-| Vue + happy-dom | **🏆 2.88s** | 3.13s (+8.54%) |
-| Vue + browser mode | **🏆 3.25s** | 3.59s (+10.71%) |
-| barrel graph · medium | **🏆 1.37s** | 1.38s (+0.44%) |
+| Node startup and utilities | **🏆 0.90s** | 0.90s (+0.73%) |
+| Node module graph | **🏆 4.23s** | 4.34s (+2.54%) |
+| Node dependencies and service logic | **🏆 3.08s** | 3.08s (+0.05%) |
+| React + jsdom | **🏆 14.02s** | 14.26s (+1.75%) |
+| React + happy-dom | **🏆 8.16s** | 8.37s (+2.50%) |
+| React + browser mode | 7.77s | **🏆 7.50s** (-3.43%) |
+| Vue + jsdom | 6.03s | **🏆 5.74s** (-4.88%) |
+| Vue + happy-dom | 3.08s | **🏆 2.97s** (-3.64%) |
+| Vue + browser mode | 3.11s | **🏆 3.06s** (-1.54%) |
+| barrel graph · medium | **🏆 1.26s** | 1.31s (+3.92%) |
 
 ### Memory comparison (MiB, peak process-tree footprint)
 
 | Case | baseline: 0.12.6 | candidate: preview 2869d12 |
 | --- | --- | --- |
-| Node startup and utilities | 124.93 | **🏆 122.77** (-1.73%) |
-| Node module graph | 154.70 | **🏆 150.49** (-2.72%) |
-| Node dependencies and service logic | **🏆 163.53** | 164.37 (+0.52%) |
-| React + jsdom | 606.88 | **🏆 463.11** (-23.69%) |
-| React + happy-dom | 364.49 | **🏆 297.56** (-18.36%) |
-| React + browser mode | **🏆 362.03** | 365.43 (+0.94%) |
-| Vue + jsdom | 598.69 | **🏆 456.49** (-23.75%) |
-| Vue + happy-dom | 347.74 | **🏆 293.65** (-15.55%) |
-| Vue + browser mode | **🏆 345.86** | 346.22 (+0.10%) |
-| barrel graph · medium | 137.55 | **🏆 135.61** (-1.41%) |
+| Node startup and utilities | 121.92 | **🏆 121.16** (-0.62%) |
+| Node module graph | 154.80 | **🏆 150.96** (-2.48%) |
+| Node dependencies and service logic | 165.31 | **🏆 164.03** (-0.78%) |
+| React + jsdom | 607.41 | **🏆 456.31** (-24.88%) |
+| React + happy-dom | 367.31 | **🏆 297.59** (-18.98%) |
+| React + browser mode | 370.66 | **🏆 367.88** (-0.75%) |
+| Vue + jsdom | 592.66 | **🏆 459.45** (-22.48%) |
+| Vue + happy-dom | 346.12 | **🏆 297.55** (-14.03%) |
+| Vue + browser mode | **🏆 343.01** | 346.90 (+1.13%) |
+| barrel graph · medium | 140.03 | **🏆 137.27** (-1.97%) |
 
 ## Variability
 
@@ -48,26 +48,26 @@ MAD is unscaled. CV uses sample standard deviation (n − 1). Evaluate CV togeth
 
 | Case | Column | Status | n | Median | Min–max | MAD | SD | CV | Files | Tests |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| Node startup and utilities | baseline: 0.12.6 | passed | 6 | 0.52s | 0.46s–0.77s | 0.04s | 0.11s | 20.14% | 5 | 18 |
-| Node startup and utilities | candidate: preview 2869d12 | passed | 6 | 0.63s | 0.49s–1.04s | 0.14s | 0.21s | 30.88% | 5 | 18 |
-| Node module graph | baseline: 0.12.6 | passed | 6 | 2.73s | 2.45s–3.23s | 0.20s | 0.28s | 10.28% | 40 | 122 |
-| Node module graph | candidate: preview 2869d12 | passed | 6 | 2.78s | 2.43s–3.33s | 0.19s | 0.32s | 11.39% | 40 | 122 |
-| Node dependencies and service logic | baseline: 0.12.6 | passed | 6 | 2.12s | 1.95s–2.17s | 0.05s | 0.09s | 4.31% | 16 | 45 |
-| Node dependencies and service logic | candidate: preview 2869d12 | passed | 6 | 2.07s | 1.94s–2.27s | 0.13s | 0.14s | 6.70% | 16 | 45 |
-| React + jsdom | baseline: 0.12.6 | passed | 6 | 9.77s | 8.31s–12.83s | 1.45s | 2.00s | 19.60% | 30 | 54 |
-| React + jsdom | candidate: preview 2869d12 | passed | 6 | 9.76s | 8.50s–12.43s | 0.86s | 1.40s | 13.95% | 30 | 54 |
-| React + happy-dom | baseline: 0.12.6 | passed | 6 | 5.31s | 4.43s–7.37s | 0.58s | 1.24s | 21.46% | 30 | 54 |
-| React + happy-dom | candidate: preview 2869d12 | passed | 6 | 4.80s | 4.49s–5.21s | 0.31s | 0.30s | 6.23% | 30 | 54 |
-| React + browser mode | baseline: 0.12.6 | passed | 6 | 5.97s | 4.68s–7.14s | 0.60s | 0.88s | 14.72% | 30 | 54 |
-| React + browser mode | candidate: preview 2869d12 | passed | 6 | 6.78s | 5.57s–8.65s | 0.91s | 1.16s | 16.60% | 30 | 54 |
-| Vue + jsdom | baseline: 0.12.6 | passed | 6 | 5.77s | 5.22s–8.25s | 0.46s | 1.24s | 19.67% | 20 | 20 |
-| Vue + jsdom | candidate: preview 2869d12 | passed | 6 | 5.75s | 5.43s–8.95s | 0.22s | 1.35s | 21.08% | 20 | 20 |
-| Vue + happy-dom | baseline: 0.12.6 | passed | 6 | 2.88s | 2.61s–3.51s | 0.18s | 0.32s | 10.79% | 20 | 20 |
-| Vue + happy-dom | candidate: preview 2869d12 | passed | 6 | 3.13s | 2.55s–3.67s | 0.38s | 0.44s | 14.00% | 20 | 20 |
-| Vue + browser mode | baseline: 0.12.6 | passed | 6 | 3.25s | 2.83s–4.15s | 0.37s | 0.51s | 15.32% | 20 | 20 |
-| Vue + browser mode | candidate: preview 2869d12 | passed | 6 | 3.59s | 2.57s–3.95s | 0.29s | 0.57s | 16.93% | 20 | 20 |
-| barrel graph · medium | baseline: 0.12.6 | passed | 6 | 1.37s | 1.19s–1.49s | 0.11s | 0.13s | 9.35% | 20 | 40 |
-| barrel graph · medium | candidate: preview 2869d12 | passed | 6 | 1.38s | 1.28s–1.73s | 0.08s | 0.16s | 11.55% | 20 | 40 |
+| Node startup and utilities | baseline: 0.12.6 | passed | 6 | 0.90s | 0.78s–1.22s | 0.10s | 0.17s | 17.79% | 5 | 18 |
+| Node startup and utilities | candidate: preview 2869d12 | passed | 6 | 0.90s | 0.83s–0.99s | 0.01s | 0.05s | 5.47% | 5 | 18 |
+| Node module graph | baseline: 0.12.6 | passed | 6 | 4.23s | 3.38s–5.45s | 0.21s | 0.69s | 16.16% | 40 | 122 |
+| Node module graph | candidate: preview 2869d12 | passed | 6 | 4.34s | 4.13s–4.71s | 0.16s | 0.22s | 4.96% | 40 | 122 |
+| Node dependencies and service logic | baseline: 0.12.6 | passed | 6 | 3.08s | 2.94s–3.45s | 0.11s | 0.20s | 6.35% | 16 | 45 |
+| Node dependencies and service logic | candidate: preview 2869d12 | passed | 6 | 3.08s | 2.55s–3.89s | 0.38s | 0.52s | 16.82% | 16 | 45 |
+| React + jsdom | baseline: 0.12.6 | passed | 6 | 14.02s | 11.42s–16.20s | 1.03s | 1.66s | 11.96% | 30 | 54 |
+| React + jsdom | candidate: preview 2869d12 | passed | 6 | 14.26s | 11.46s–16.23s | 0.97s | 1.64s | 11.71% | 30 | 54 |
+| React + happy-dom | baseline: 0.12.6 | passed | 6 | 8.16s | 7.44s–8.33s | 0.10s | 0.39s | 4.85% | 30 | 54 |
+| React + happy-dom | candidate: preview 2869d12 | passed | 6 | 8.37s | 6.79s–9.90s | 1.48s | 1.51s | 18.01% | 30 | 54 |
+| React + browser mode | baseline: 0.12.6 | passed | 6 | 7.77s | 5.36s–10.62s | 1.28s | 1.86s | 23.56% | 30 | 54 |
+| React + browser mode | candidate: preview 2869d12 | passed | 6 | 7.50s | 6.23s–11.20s | 1.12s | 2.11s | 25.64% | 30 | 54 |
+| Vue + jsdom | baseline: 0.12.6 | passed | 6 | 6.03s | 5.60s–6.70s | 0.05s | 0.36s | 5.87% | 20 | 20 |
+| Vue + jsdom | candidate: preview 2869d12 | passed | 6 | 5.74s | 5.19s–6.31s | 0.19s | 0.38s | 6.55% | 20 | 20 |
+| Vue + happy-dom | baseline: 0.12.6 | passed | 6 | 3.08s | 2.82s–3.57s | 0.22s | 0.28s | 9.00% | 20 | 20 |
+| Vue + happy-dom | candidate: preview 2869d12 | passed | 6 | 2.97s | 2.60s–3.06s | 0.07s | 0.17s | 5.83% | 20 | 20 |
+| Vue + browser mode | baseline: 0.12.6 | passed | 6 | 3.11s | 2.96s–3.96s | 0.12s | 0.42s | 12.60% | 20 | 20 |
+| Vue + browser mode | candidate: preview 2869d12 | passed | 6 | 3.06s | 2.80s–3.70s | 0.22s | 0.38s | 11.83% | 20 | 20 |
+| barrel graph · medium | baseline: 0.12.6 | passed | 6 | 1.26s | 1.17s–1.52s | 0.08s | 0.14s | 10.87% | 20 | 40 |
+| barrel graph · medium | candidate: preview 2869d12 | passed | 6 | 1.31s | 1.12s–1.67s | 0.06s | 0.19s | 14.10% | 20 | 40 |
 
 ## Memory
 
@@ -75,31 +75,31 @@ Peak process-tree physical footprint in MiB (macOS `phys_footprint`, summed ever
 
 | Case | Column | Status | n | Median MiB | Min–max MiB | CV |
 | --- | --- | --- | --- | --- | --- | --- |
-| Node startup and utilities | baseline: 0.12.6 | passed | 6 | 124.93 | 120.78–125.94 | 1.87% |
-| Node startup and utilities | candidate: preview 2869d12 | passed | 6 | 122.77 | 117.56–124.00 | 2.43% |
-| Node module graph | baseline: 0.12.6 | passed | 6 | 154.70 | 152.18–155.41 | 0.98% |
-| Node module graph | candidate: preview 2869d12 | passed | 6 | 150.49 | 147.02–152.29 | 1.27% |
-| Node dependencies and service logic | baseline: 0.12.6 | passed | 6 | 163.53 | 159.61–170.17 | 2.45% |
-| Node dependencies and service logic | candidate: preview 2869d12 | passed | 6 | 164.37 | 156.68–168.39 | 2.61% |
-| React + jsdom | baseline: 0.12.6 | passed | 6 | 606.88 | 599.29–618.01 | 1.32% |
-| React + jsdom | candidate: preview 2869d12 | passed | 6 | 463.11 | 439.02–469.38 | 2.44% |
-| React + happy-dom | baseline: 0.12.6 | passed | 6 | 364.49 | 357.01–369.67 | 1.53% |
-| React + happy-dom | candidate: preview 2869d12 | passed | 6 | 297.56 | 293.82–303.98 | 1.21% |
-| React + browser mode | baseline: 0.12.6 | passed | 6 | 362.03 | 348.88–374.96 | 2.60% |
-| React + browser mode | candidate: preview 2869d12 | passed | 6 | 365.43 | 352.35–368.24 | 1.67% |
-| Vue + jsdom | baseline: 0.12.6 | passed | 6 | 598.69 | 591.11–617.72 | 1.58% |
-| Vue + jsdom | candidate: preview 2869d12 | passed | 6 | 456.49 | 446.31–466.96 | 1.50% |
-| Vue + happy-dom | baseline: 0.12.6 | passed | 6 | 347.74 | 326.39–364.09 | 3.71% |
-| Vue + happy-dom | candidate: preview 2869d12 | passed | 6 | 293.65 | 281.98–298.34 | 2.00% |
-| Vue + browser mode | baseline: 0.12.6 | passed | 6 | 345.86 | 339.74–351.16 | 1.09% |
-| Vue + browser mode | candidate: preview 2869d12 | passed | 6 | 346.22 | 335.32–350.35 | 1.59% |
-| barrel graph · medium | baseline: 0.12.6 | passed | 6 | 137.55 | 134.04–141.46 | 2.02% |
-| barrel graph · medium | candidate: preview 2869d12 | passed | 6 | 135.61 | 135.24–137.47 | 0.71% |
+| Node startup and utilities | baseline: 0.12.6 | passed | 6 | 121.92 | 118.25–124.36 | 2.19% |
+| Node startup and utilities | candidate: preview 2869d12 | passed | 6 | 121.16 | 119.31–125.60 | 2.03% |
+| Node module graph | baseline: 0.12.6 | passed | 6 | 154.80 | 153.19–157.43 | 1.16% |
+| Node module graph | candidate: preview 2869d12 | passed | 6 | 150.96 | 150.46–151.72 | 0.28% |
+| Node dependencies and service logic | baseline: 0.12.6 | passed | 6 | 165.31 | 159.20–173.69 | 2.85% |
+| Node dependencies and service logic | candidate: preview 2869d12 | passed | 6 | 164.03 | 157.08–168.16 | 2.66% |
+| React + jsdom | baseline: 0.12.6 | passed | 6 | 607.41 | 586.51–623.06 | 1.96% |
+| React + jsdom | candidate: preview 2869d12 | passed | 6 | 456.31 | 449.26–461.54 | 1.05% |
+| React + happy-dom | baseline: 0.12.6 | passed | 6 | 367.31 | 359.04–377.01 | 1.61% |
+| React + happy-dom | candidate: preview 2869d12 | passed | 6 | 297.59 | 284.37–304.57 | 2.29% |
+| React + browser mode | baseline: 0.12.6 | passed | 6 | 370.66 | 351.64–381.57 | 2.84% |
+| React + browser mode | candidate: preview 2869d12 | passed | 6 | 367.88 | 355.93–376.80 | 2.03% |
+| Vue + jsdom | baseline: 0.12.6 | passed | 6 | 592.66 | 589.28–599.42 | 0.65% |
+| Vue + jsdom | candidate: preview 2869d12 | passed | 6 | 459.45 | 455.53–463.12 | 0.68% |
+| Vue + happy-dom | baseline: 0.12.6 | passed | 6 | 346.12 | 312.07–361.47 | 5.38% |
+| Vue + happy-dom | candidate: preview 2869d12 | passed | 6 | 297.55 | 287.58–299.14 | 1.60% |
+| Vue + browser mode | baseline: 0.12.6 | passed | 6 | 343.01 | 338.97–347.99 | 0.91% |
+| Vue + browser mode | candidate: preview 2869d12 | passed | 6 | 346.90 | 340.26–349.72 | 1.17% |
+| barrel graph · medium | baseline: 0.12.6 | passed | 6 | 140.03 | 137.74–140.40 | 0.72% |
+| barrel graph · medium | candidate: preview 2869d12 | passed | 6 | 137.27 | 134.13–138.83 | 1.29% |
 
 ## Inputs and provenance
 
-- `reports/data/ci-versions-2026-11-17T06-28-33-087Z-b0a8577c-baseline-main.json`: 2026-11-17T06:28:33.123Z; Node v26.13.0; Apple M1 (Virtual) × 3; logical CPUs: 3; available parallelism: 3; darwin arm64; lockfile SHA-256: 7123888d5cfe1ee770452ece3fca53bf0702544ea23a11b4dce7557cace858c1. Source: npm / 0.12.6; fingerprint: 7d901a930ef93f885c74f9d3e8ab22dbdaef06698b4f32a0611c98105e956bde.
-- `reports/data/ci-versions-2026-11-17T06-28-33-538Z-8c5bb046-candidate-main.json`: 2026-11-17T06:28:33.552Z; Node v26.13.0; Apple M1 (Virtual) × 3; logical CPUs: 3; available parallelism: 3; darwin arm64; lockfile SHA-256: 436e18bf9cc56def07f5d0d348e132d1d092f44771ab185453ce6c96612db8b2. Source: preview / preview 2869d12; fingerprint: 9aa50715d3eda69399e6a9934691f55a10796fa3269263786ea805d653c5f8ba.
+- `reports/data/ci-versions-2026-11-17T08-12-45-872Z-25eabb13-baseline-main.json`: 2026-11-17T08:12:45.947Z; Node v26.13.0; Apple M1 (Virtual) × 3; logical CPUs: 3; available parallelism: 3; darwin arm64; lockfile SHA-256: 7123888d5cfe1ee770452ece3fca53bf0702544ea23a11b4dce7557cace858c1. Source: npm / 0.12.6; fingerprint: 7d901a930ef93f885c74f9d3e8ab22dbdaef06698b4f32a0611c98105e956bde.
+- `reports/data/ci-versions-2026-11-17T08-12-46-521Z-041af128-candidate-main.json`: 2026-11-17T08:12:46.554Z; Node v26.13.0; Apple M1 (Virtual) × 3; logical CPUs: 3; available parallelism: 3; darwin arm64; lockfile SHA-256: 436e18bf9cc56def07f5d0d348e132d1d092f44771ab185453ce6c96612db8b2. Source: preview / preview 2869d12; fingerprint: 9aa50715d3eda69399e6a9934691f55a10796fa3269263786ea805d653c5f8ba.
 
 Published inputs retain every sample, warmup, test count, timestamp and compatibility fingerprint. Full logs, commands and source snapshots are stored separately; meta.publication.sourceSha256 identifies the original result JSON.
 Versions are measured in paired case/round order, alternating the first side each round and fixture. No benchmark processes overlap. Workload dependencies, fixtures, configurations, harness and host compatibility are checked before calculating changes.
