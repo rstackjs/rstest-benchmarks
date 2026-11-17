@@ -6,16 +6,20 @@ Sources: baseline: **0.11.0** (npm); candidate: **0.12.6** (npm). Measured 2026-
 
 Sources run sequentially in rotating case/round order. For cases supported by all sources, each source occupies every order position equally often. Node compile cache is disabled. Rstest build and sequencing caches are cleared before each fixture's warmups and retained during measurement. Workload dependency graphs match. Background load and OS page cache are not controlled.
 
-Generated from raw samples. Change = (candidate / baseline − 1) × 100%; negative means faster. The first value column is the baseline; each Δ column shows the change relative to it. Values display two decimal places; changes use unrounded medians. All repetitions are retained; combined batches use the median of pooled samples, not the median of batch medians.
+Generated from raw samples. Change = (candidate / baseline − 1) × 100%; negative means faster. The first value column is the baseline. Values display two decimal places; changes use unrounded medians. All repetitions are retained; combined batches use the median of pooled samples, not the median of batch medians.
 
-| Case | baseline: 0.11.0 | candidate: 0.12.6 | Δ |
-| --- | --- | --- | --- |
-| files scaling · small | 0.31s | 0.32s | +3.20% |
-| files scaling · medium | 0.71s | 0.80s | +12.65% |
-| files scaling · large | 1.45s | 1.55s | +7.19% |
-| graph scaling · small | 0.66s | 0.67s | +2.64% |
-| graph scaling · medium | 0.71s | 0.77s | +9.35% |
-| graph scaling · large | 0.81s | 0.85s | +5.28% |
+🏆 marks the lowest comparable median in each row. Percentages show change from the baseline.
+
+### Elapsed time (s)
+
+| Case | baseline: 0.11.0 | candidate: 0.12.6 |
+| --- | --- | --- |
+| files scaling · small | **🏆 0.31s** | 0.32s (+3.20%) |
+| files scaling · medium | **🏆 0.71s** | 0.80s (+12.65%) |
+| files scaling · large | **🏆 1.45s** | 1.55s (+7.19%) |
+| graph scaling · small | **🏆 0.66s** | 0.67s (+2.64%) |
+| graph scaling · medium | **🏆 0.71s** | 0.77s (+9.35%) |
+| graph scaling · large | **🏆 0.81s** | 0.85s (+5.28%) |
 
 ## Variability
 

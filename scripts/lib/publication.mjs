@@ -107,6 +107,7 @@ export function publishComparison(root, directory, record) {
   }
   const readmePath = manifest.readmePath ?? 'README.md'
   let readme = readFileSync(join(root, readmePath), 'utf8')
+  const charts = new Map()
   for (const report of updated) {
     const { spec } = report
     if (!spec.marker) continue
@@ -129,7 +130,7 @@ export function publishComparison(root, directory, record) {
       throw new Error(`Missing README markers: ${spec.marker}`)
     readme =
       readme.slice(0, from + start.length) +
-      readmeBlock(spec, report, undefined, readmePath) +
+      readmeBlock(spec, report, undefined, readmePath, charts) +
       readme.slice(to)
   }
   pending.set(readmePath, readme)
@@ -153,6 +154,10 @@ export function publishComparison(root, directory, record) {
   const retired = [...oldInputs].filter(
     (file) => !newInputs.has(file) && /^reports\/data\/[^/]+\.json$/.test(file),
   )
+  for (const [file, svg] of charts) {
+    if (svg !== null) pending.set(file, svg)
+    else if (existsSync(resolve(root, file))) retired.push(file)
+  }
   const backup = join(directory, 'publication-backup')
   const originals = new Map()
   const targets = [...pending.keys(), ...retired]

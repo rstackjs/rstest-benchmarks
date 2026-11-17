@@ -1,4 +1,4 @@
-import { readFileSync, writeFileSync, mkdirSync } from 'node:fs'
+import { readFileSync, writeFileSync, mkdirSync, existsSync, rmSync } from 'node:fs'
 import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { parseArgs } from 'node:util'
@@ -52,7 +52,9 @@ const generated = config.reports.map((spec) => ({
 }))
 const readmePath = config.readmePath ?? 'README.md'
 let readme = readFileSync(resolve(root, readmePath), 'utf8')
-for (const { spec, markdown, summary, memorySummary, provenanceNote } of generated) {
+const assets = new Map()
+for (const report of generated) {
+  const { spec, markdown } = report
   const output = resolve(root, spec.output)
   if (values.check) {
     if (readFileSync(output, 'utf8') !== markdown)
@@ -71,11 +73,24 @@ for (const { spec, markdown, summary, memorySummary, provenanceNote } of generat
       to = readme.indexOf(end, from)
     const body = readmeBlock(
       spec,
-      { summary, memorySummary, provenanceNote },
+      report,
       (file) => JSON.parse(readFileSync(resolve(root, file), 'utf8')),
       readmePath,
+      assets,
     )
     readme = readme.slice(0, from) + body + readme.slice(to)
+  }
+}
+for (const [file, svg] of assets) {
+  const path = resolve(root, file)
+  if (values.check) {
+    const saved = existsSync(path) ? readFileSync(path, 'utf8') : null
+    if (saved !== svg) throw new Error(`Stale chart: ${file}`)
+  } else if (svg === null) {
+    rmSync(path, { force: true })
+  } else {
+    mkdirSync(dirname(path), { recursive: true })
+    writeFileSync(path, svg)
   }
 }
 if (values.check && readme !== readFileSync(resolve(root, readmePath), 'utf8'))

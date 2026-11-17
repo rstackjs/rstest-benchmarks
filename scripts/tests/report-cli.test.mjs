@@ -13,7 +13,7 @@ const cli = (args) =>
     encoding: 'utf8',
   })
 
-test('CI summary shares README tables and retains CPU metadata without variability tables', async () => {
+test('CI summary highlights the same medians as the README and retains CPU metadata', async () => {
   const { comparisonReport, readmeBlock } = await import('../lib/report.mjs')
   const spec = {
     title: 'Rstest version benchmark',
@@ -36,9 +36,12 @@ test('CI summary shares README tables and retains CPU metadata without variabili
   const readme = readmeBlock(spec, report, load)
   for (const table of [report.summary, report.memorySummary]) {
     assert(table.length > 0)
-    assert(report.jobSummary.includes(table))
     assert(readme.includes(table))
   }
+  assert.doesNotMatch(report.jobSummary, /<picture>/)
+  assert.match(report.jobSummary, /\*\*🏆 0\.01s\*\* \(-50\.00%\)/)
+  assert.match(report.jobSummary, /\*\*🏆 100\.00\*\* \(\+0\.00%\)/)
+  assert.match(readme, /prefers-color-scheme: dark/)
   assert.match(report.jobSummary, /logical CPUs: 4; available parallelism: 2/)
   assert.match(report.jobSummary, /1 warmup\(s\), 3 timed runs/)
   assert.match(report.jobSummary, /### Memory comparison/)
@@ -104,6 +107,13 @@ test('real report CLI updates a nested README and detects stale output without r
     assert.match(rendered, /\]\(\.\.\/report\.md\)/)
     assert.match(rendered, /-50\.00%/)
     assert.equal(cli(['--config', config, '--check']).status, 0)
+    const svgPath = join(dir, 'charts/report-elapsed-dark.svg')
+    const svg = readFileSync(svgPath, 'utf8')
+    assert.match(svg, /🏆/)
+    assert.match(svg, /-50\.00%/)
+    writeFileSync(svgPath, 'stale')
+    assert.match(cli(['--config', config, '--check']).stderr, /Stale chart/)
+    writeFileSync(svgPath, svg)
     writeFileSync(readmePath, rendered.replace('-50.00%', 'stale'))
     const staleReadme = cli(['--config', config, '--check'])
     assert.notEqual(staleReadme.status, 0)
@@ -217,6 +227,7 @@ test('memory comparisons suppress percentages for incomplete or incompatible inp
       }],
     }))
     assert.doesNotMatch(report.memorySummary, /%/, scenario)
+    assert(report.memory[0].cells.every(cell => !cell.best && cell.state !== 'ok'), scenario)
     if (scenario === 'incomplete') assert.match(report.memorySummary, /INCOMPLETE/)
     if (scenario === 'failed') assert.match(report.memorySummary, /FAILED/)
   }
