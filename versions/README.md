@@ -8,9 +8,9 @@ For Jest / Vitest / Rstest comparisons, see the [main README](../README.md).
 
 <!-- benchmark:versions:start -->
 
-Source: [GitHub Actions](https://github.com/rstackjs/rstest-benchmarks/actions/runs/44043587285), commit `969876e9fc43ca83e8a41e8e1873b6687fa45c16`, attempt 1.
+Source: [GitHub Actions](https://github.com/rstackjs/rstest-benchmarks/actions/runs/44705238824), commit `ac4d313ba287853df47348ad44b1f1f2f6b11a5b`, attempt 1.
 
-Sources: baseline: **0.12.6** (npm); candidate: **preview 2869d12** (preview). Measured 2026-11-17 (UTC); Apple M1 (Virtual) × 3; logical CPUs: 3; available parallelism: 3; darwin arm64, Node v26.13.0.
+Sources: baseline: **0.12.6** (npm); candidate: **1.0.0-beta.0** (npm). Measured 2026-11-20 (UTC); Apple M1 (Virtual) × 3; logical CPUs: 3; available parallelism: 3; darwin arm64, Node v26.13.0.
 
 1 warmup(s) and **6 timed runs per supported case**; medians are reported. 10 selected cases. Every candidate percentage is relative to the baseline; negative means less elapsed time.
 
@@ -28,18 +28,18 @@ Bold marks the lowest comparable median. Candidate Δ shows the change from base
 <details>
 <summary>Table data and comparison notes</summary>
 
-| Case | baseline: 0.12.6 | candidate: preview 2869d12 | Δ |
+| Case | baseline: 0.12.6 | candidate: 1.0.0-beta.0 | Δ |
 | --- | --- | --- | --- |
-| Node startup and utilities | 0.90s | 0.90s | +0.73% |
-| Node module graph | 4.23s | 4.34s | +2.54% |
-| Node dependencies and service logic | 3.08s | 3.08s | +0.05% |
-| React + jsdom | 14.02s | 14.26s | +1.75% |
-| React + happy-dom | 8.16s | 8.37s | +2.50% |
-| React + browser mode | 7.77s | 7.50s | -3.43% |
-| Vue + jsdom | 6.03s | 5.74s | -4.88% |
-| Vue + happy-dom | 3.08s | 2.97s | -3.64% |
-| Vue + browser mode | 3.11s | 3.06s | -1.54% |
-| barrel graph · medium | 1.26s | 1.31s | +3.92% |
+| Node startup and utilities | 0.73s | 0.66s | -9.63% |
+| Node module graph | 2.63s | 2.32s | -11.59% |
+| Node dependencies and service logic | 1.85s | 1.67s | -9.79% |
+| React + jsdom | 9.53s | 10.06s | +5.53% |
+| React + happy-dom | 5.33s | 4.66s | -12.60% |
+| React + browser mode | 5.33s | 5.12s | -3.89% |
+| Vue + jsdom | 6.88s | 6.76s | -1.73% |
+| Vue + happy-dom | 3.73s | 3.44s | -7.76% |
+| Vue + browser mode | 3.71s | 3.59s | -3.32% |
+| barrel graph · medium | 1.60s | 1.47s | -8.45% |
 
 </details>
 
@@ -53,18 +53,18 @@ Bold marks the lowest comparable median. Candidate Δ shows the change from base
 <details>
 <summary>Table data and comparison notes</summary>
 
-| Case | baseline: 0.12.6 | candidate: preview 2869d12 | Δ |
+| Case | baseline: 0.12.6 | candidate: 1.0.0-beta.0 | Δ |
 | --- | --- | --- | --- |
-| Node startup and utilities | 121.92 | 121.16 | -0.62% |
-| Node module graph | 154.80 | 150.96 | -2.48% |
-| Node dependencies and service logic | 165.31 | 164.03 | -0.78% |
-| React + jsdom | 607.41 | 456.31 | -24.88% |
-| React + happy-dom | 367.31 | 297.59 | -18.98% |
-| React + browser mode | 370.66 | 367.88 | -0.75% |
-| Vue + jsdom | 592.66 | 459.45 | -22.48% |
-| Vue + happy-dom | 346.12 | 297.55 | -14.03% |
-| Vue + browser mode | 343.01 | 346.90 | +1.13% |
-| barrel graph · medium | 140.03 | 137.27 | -1.97% |
+| Node startup and utilities | 117.84 | 119.55 | +1.45% |
+| Node module graph | 153.94 | 153.40 | -0.35% |
+| Node dependencies and service logic | 167.37 | 162.41 | -2.97% |
+| React + jsdom | 606.41 | 415.84 | -31.43% |
+| React + happy-dom | 368.80 | 298.77 | -18.99% |
+| React + browser mode | 365.66 | 402.40 | +10.05% |
+| Vue + jsdom | 597.86 | 423.86 | -29.10% |
+| Vue + happy-dom | 348.01 | 284.52 | -18.25% |
+| Vue + browser mode | 343.91 | 385.89 | +12.21% |
+| barrel graph · medium | 137.63 | 137.64 | +0.00% |
 
 </details>
 
