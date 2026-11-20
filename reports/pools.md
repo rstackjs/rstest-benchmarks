@@ -1,6 +1,8 @@
-# pools: 0.11.0 vs 0.12.6
+# pools: 0.12.6 vs 1.0.0-beta.0
 
-Sources: baseline: **0.11.0** (npm); candidate: **0.12.6** (npm). Measured 2026-11-06 (UTC); Apple M4 Max × 14, darwin arm64, Node v24.11.1.
+Source: [GitHub Actions](https://github.com/rstackjs/rstest-benchmarks/actions/runs/44710050665), commit `0eae38429b438c4afae9e02b21a70cdbe0a7beef`, attempt 1.
+
+Sources: baseline: **0.12.6** (npm); candidate: **1.0.0-beta.0** (npm). Measured 2026-11-20 (UTC); Apple M1 (Virtual) × 3; logical CPUs: 3; available parallelism: 3; darwin arm64, Node v26.13.0.
 
 1 warmup(s) and **6 timed runs per supported case**; medians are reported. 12 selected cases. Every candidate percentage is relative to the baseline; negative means less elapsed time.
 
@@ -12,20 +14,37 @@ Generated from raw samples. Change = (candidate / baseline − 1) × 100%; negat
 
 ### Elapsed time (s)
 
-| Case | baseline: 0.11.0 | candidate: 0.12.6 | Notes |
-| --- | --- | --- | --- |
-| small module graph / forks | **🏆 0.33s** | 0.35s (+8.28%) | — |
-| small module graph / threads | **🏆 0.27s** | 0.29s (+6.87%) | — |
-| small module graph / vmForks | SKIPPED | 0.38s | skipped / passed |
-| small module graph / vmThreads | SKIPPED | 0.32s | skipped / passed |
-| medium module graph / forks | **🏆 0.69s** | 0.72s (+4.77%) | — |
-| medium module graph / threads | **🏆 0.53s** | 0.56s (+6.12%) | — |
-| medium module graph / vmForks | SKIPPED | 0.50s | skipped / passed |
-| medium module graph / vmThreads | SKIPPED | 0.43s | skipped / passed |
-| large module graph / forks | **🏆 1.57s** | 1.70s (+8.39%) | — |
-| large module graph / threads | **🏆 1.14s** | 1.24s (+8.54%) | — |
-| large module graph / vmForks | SKIPPED | 0.73s | skipped / passed |
-| large module graph / vmThreads | SKIPPED | 0.64s | skipped / passed |
+| Case | baseline: 0.12.6 | candidate: 1.0.0-beta.0 |
+| --- | --- | --- |
+| small module graph / forks | 0.76s | **🏆 0.67s** (-12.35%) |
+| small module graph / threads | 0.67s | **🏆 0.58s** (-13.47%) |
+| small module graph / vmForks | **🏆 0.45s** | 0.48s (+5.63%) |
+| small module graph / vmThreads | 0.53s | **🏆 0.47s** (-10.23%) |
+| medium module graph / forks | 1.90s | **🏆 1.70s** (-10.66%) |
+| medium module graph / threads | 1.35s | **🏆 1.19s** (-11.85%) |
+| medium module graph / vmForks | 0.71s | **🏆 0.64s** (-10.08%) |
+| medium module graph / vmThreads | **🏆 0.58s** | 0.58s (+0.03%) |
+| large module graph / forks | 5.07s | **🏆 4.55s** (-10.26%) |
+| large module graph / threads | 3.63s | **🏆 3.05s** (-15.87%) |
+| large module graph / vmForks | **🏆 1.17s** | 1.27s (+8.66%) |
+| large module graph / vmThreads | **🏆 1.13s** | 1.24s (+10.00%) |
+
+### Memory comparison (MiB, peak process-tree footprint)
+
+| Case | baseline: 0.12.6 | candidate: 1.0.0-beta.0 |
+| --- | --- | --- |
+| small module graph / forks | **🏆 130.84** | 132.32 (+1.13%) |
+| small module graph / threads | 117.51 | **🏆 115.16** (-2.00%) |
+| small module graph / vmForks | **🏆 149.34** | 159.65 (+6.90%) |
+| small module graph / vmThreads | 135.86 | **🏆 134.50** (-1.00%) |
+| medium module graph / forks | 155.71 | **🏆 154.22** (-0.96%) |
+| medium module graph / threads | **🏆 138.55** | 138.71 (+0.11%) |
+| medium module graph / vmForks | 217.97 | **🏆 213.64** (-1.98%) |
+| medium module graph / vmThreads | 192.30 | **🏆 188.10** (-2.19%) |
+| large module graph / forks | 254.82 | **🏆 247.86** (-2.73%) |
+| large module graph / threads | 232.79 | **🏆 218.76** (-6.03%) |
+| large module graph / vmForks | **🏆 394.97** | 412.61 (+4.47%) |
+| large module graph / vmThreads | **🏆 368.40** | 377.44 (+2.45%) |
 
 ## Variability
 
@@ -33,35 +52,66 @@ MAD is unscaled. CV uses sample standard deviation (n − 1). Evaluate CV togeth
 
 | Case | Column | Status | n | Median | Min–max | MAD | SD | CV | Files | Tests |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| small module graph / forks | baseline: 0.11.0 | passed | 6 | 0.33s | 0.31s–0.39s | 0.02s | 0.03s | 8.97% | 10 | 29 |
-| small module graph / forks | candidate: 0.12.6 | passed | 6 | 0.35s | 0.32s–0.49s | 0.02s | 0.06s | 16.86% | 10 | 29 |
-| small module graph / threads | baseline: 0.11.0 | passed | 6 | 0.27s | 0.27s–0.29s | 0.00s | 0.01s | 3.06% | 10 | 29 |
-| small module graph / threads | candidate: 0.12.6 | passed | 6 | 0.29s | 0.28s–0.31s | 0.01s | 0.01s | 4.13% | 10 | 29 |
-| small module graph / vmForks | baseline: 0.11.0 | skipped | 0 | — | —–— | — | — | — | 10 | unknown |
-| small module graph / vmForks | candidate: 0.12.6 | passed | 6 | 0.38s | 0.36s–0.39s | 0.02s | 0.02s | 4.31% | 10 | 29 |
-| small module graph / vmThreads | baseline: 0.11.0 | skipped | 0 | — | —–— | — | — | — | 10 | unknown |
-| small module graph / vmThreads | candidate: 0.12.6 | passed | 6 | 0.32s | 0.31s–0.35s | 0.00s | 0.01s | 4.31% | 10 | 29 |
-| medium module graph / forks | baseline: 0.11.0 | passed | 6 | 0.69s | 0.66s–0.73s | 0.01s | 0.02s | 3.29% | 40 | 122 |
-| medium module graph / forks | candidate: 0.12.6 | passed | 6 | 0.72s | 0.66s–0.80s | 0.05s | 0.05s | 7.27% | 40 | 122 |
-| medium module graph / threads | baseline: 0.11.0 | passed | 6 | 0.53s | 0.50s–0.65s | 0.02s | 0.05s | 9.99% | 40 | 122 |
-| medium module graph / threads | candidate: 0.12.6 | passed | 6 | 0.56s | 0.52s–0.80s | 0.02s | 0.10s | 17.00% | 40 | 122 |
-| medium module graph / vmForks | baseline: 0.11.0 | skipped | 0 | — | —–— | — | — | — | 40 | unknown |
-| medium module graph / vmForks | candidate: 0.12.6 | passed | 6 | 0.50s | 0.48s–0.53s | 0.01s | 0.02s | 3.79% | 40 | 122 |
-| medium module graph / vmThreads | baseline: 0.11.0 | skipped | 0 | — | —–— | — | — | — | 40 | unknown |
-| medium module graph / vmThreads | candidate: 0.12.6 | passed | 6 | 0.43s | 0.42s–0.50s | 0.01s | 0.03s | 6.81% | 40 | 122 |
-| large module graph / forks | baseline: 0.11.0 | passed | 6 | 1.57s | 1.40s–1.73s | 0.08s | 0.12s | 7.39% | 120 | 366 |
-| large module graph / forks | candidate: 0.12.6 | passed | 6 | 1.70s | 1.48s–2.33s | 0.13s | 0.30s | 16.41% | 120 | 366 |
-| large module graph / threads | baseline: 0.11.0 | passed | 6 | 1.14s | 1.08s–1.21s | 0.01s | 0.04s | 3.60% | 120 | 366 |
-| large module graph / threads | candidate: 0.12.6 | passed | 6 | 1.24s | 1.11s–1.41s | 0.11s | 0.12s | 9.35% | 120 | 366 |
-| large module graph / vmForks | baseline: 0.11.0 | skipped | 0 | — | —–— | — | — | — | 120 | unknown |
-| large module graph / vmForks | candidate: 0.12.6 | passed | 6 | 0.73s | 0.72s–0.84s | 0.01s | 0.05s | 6.51% | 120 | 366 |
-| large module graph / vmThreads | baseline: 0.11.0 | skipped | 0 | — | —–— | — | — | — | 120 | unknown |
-| large module graph / vmThreads | candidate: 0.12.6 | passed | 6 | 0.64s | 0.63s–0.97s | 0.01s | 0.13s | 18.94% | 120 | 366 |
+| small module graph / forks | baseline: 0.12.6 | passed | 6 | 0.76s | 0.62s–0.90s | 0.08s | 0.11s | 13.74% | 10 | 29 |
+| small module graph / forks | candidate: 1.0.0-beta.0 | passed | 6 | 0.67s | 0.59s–0.83s | 0.06s | 0.10s | 14.87% | 10 | 29 |
+| small module graph / threads | baseline: 0.12.6 | passed | 6 | 0.67s | 0.48s–0.80s | 0.11s | 0.14s | 21.21% | 10 | 29 |
+| small module graph / threads | candidate: 1.0.0-beta.0 | passed | 6 | 0.58s | 0.44s–0.69s | 0.10s | 0.11s | 20.07% | 10 | 29 |
+| small module graph / vmForks | baseline: 0.12.6 | passed | 6 | 0.45s | 0.38s–0.59s | 0.07s | 0.09s | 19.60% | 10 | 29 |
+| small module graph / vmForks | candidate: 1.0.0-beta.0 | passed | 6 | 0.48s | 0.39s–0.63s | 0.07s | 0.10s | 19.99% | 10 | 29 |
+| small module graph / vmThreads | baseline: 0.12.6 | passed | 6 | 0.53s | 0.37s–0.70s | 0.07s | 0.11s | 21.19% | 10 | 29 |
+| small module graph / vmThreads | candidate: 1.0.0-beta.0 | passed | 6 | 0.47s | 0.36s–0.55s | 0.07s | 0.08s | 18.12% | 10 | 29 |
+| medium module graph / forks | baseline: 0.12.6 | passed | 6 | 1.90s | 1.81s–2.38s | 0.07s | 0.21s | 10.86% | 40 | 122 |
+| medium module graph / forks | candidate: 1.0.0-beta.0 | passed | 6 | 1.70s | 1.58s–1.95s | 0.12s | 0.16s | 9.13% | 40 | 122 |
+| medium module graph / threads | baseline: 0.12.6 | passed | 6 | 1.35s | 1.29s–1.50s | 0.05s | 0.08s | 5.90% | 40 | 122 |
+| medium module graph / threads | candidate: 1.0.0-beta.0 | passed | 6 | 1.19s | 1.13s–1.31s | 0.05s | 0.07s | 6.15% | 40 | 122 |
+| medium module graph / vmForks | baseline: 0.12.6 | passed | 6 | 0.71s | 0.57s–0.86s | 0.07s | 0.10s | 14.77% | 40 | 122 |
+| medium module graph / vmForks | candidate: 1.0.0-beta.0 | passed | 6 | 0.64s | 0.58s–0.85s | 0.05s | 0.11s | 16.22% | 40 | 122 |
+| medium module graph / vmThreads | baseline: 0.12.6 | passed | 6 | 0.58s | 0.53s–0.78s | 0.04s | 0.09s | 15.36% | 40 | 122 |
+| medium module graph / vmThreads | candidate: 1.0.0-beta.0 | passed | 6 | 0.58s | 0.54s–0.69s | 0.04s | 0.07s | 11.07% | 40 | 122 |
+| large module graph / forks | baseline: 0.12.6 | passed | 6 | 5.07s | 4.98s–5.19s | 0.02s | 0.07s | 1.34% | 120 | 366 |
+| large module graph / forks | candidate: 1.0.0-beta.0 | passed | 6 | 4.55s | 4.41s–4.75s | 0.07s | 0.12s | 2.63% | 120 | 366 |
+| large module graph / threads | baseline: 0.12.6 | passed | 6 | 3.63s | 3.48s–3.92s | 0.08s | 0.15s | 4.24% | 120 | 366 |
+| large module graph / threads | candidate: 1.0.0-beta.0 | passed | 6 | 3.05s | 2.90s–3.73s | 0.15s | 0.32s | 10.05% | 120 | 366 |
+| large module graph / vmForks | baseline: 0.12.6 | passed | 6 | 1.17s | 1.13s–1.22s | 0.03s | 0.04s | 3.34% | 120 | 366 |
+| large module graph / vmForks | candidate: 1.0.0-beta.0 | passed | 6 | 1.27s | 1.22s–1.31s | 0.03s | 0.04s | 2.86% | 120 | 366 |
+| large module graph / vmThreads | baseline: 0.12.6 | passed | 6 | 1.13s | 1.08s–1.19s | 0.01s | 0.04s | 3.40% | 120 | 366 |
+| large module graph / vmThreads | candidate: 1.0.0-beta.0 | passed | 6 | 1.24s | 1.18s–1.28s | 0.02s | 0.03s | 2.73% | 120 | 366 |
+
+## Memory
+
+Peak process-tree physical footprint in MiB (macOS `phys_footprint`, summed every ~50 ms).
+
+| Case | Column | Status | n | Median MiB | Min–max MiB | CV |
+| --- | --- | --- | --- | --- | --- | --- |
+| small module graph / forks | baseline: 0.12.6 | passed | 6 | 130.84 | 127.89–134.79 | 1.99% |
+| small module graph / forks | candidate: 1.0.0-beta.0 | passed | 6 | 132.32 | 128.71–135.50 | 1.76% |
+| small module graph / threads | baseline: 0.12.6 | passed | 6 | 117.51 | 112.28–120.05 | 2.47% |
+| small module graph / threads | candidate: 1.0.0-beta.0 | passed | 6 | 115.16 | 112.33–119.95 | 2.25% |
+| small module graph / vmForks | baseline: 0.12.6 | passed | 6 | 149.34 | 145.55–160.64 | 4.43% |
+| small module graph / vmForks | candidate: 1.0.0-beta.0 | passed | 6 | 159.65 | 154.21–162.87 | 2.05% |
+| small module graph / vmThreads | baseline: 0.12.6 | passed | 6 | 135.86 | 126.16–138.04 | 3.64% |
+| small module graph / vmThreads | candidate: 1.0.0-beta.0 | passed | 6 | 134.50 | 124.96–137.71 | 3.72% |
+| medium module graph / forks | baseline: 0.12.6 | passed | 6 | 155.71 | 154.13–162.02 | 1.93% |
+| medium module graph / forks | candidate: 1.0.0-beta.0 | passed | 6 | 154.22 | 150.10–155.38 | 1.22% |
+| medium module graph / threads | baseline: 0.12.6 | passed | 6 | 138.55 | 136.07–141.48 | 1.60% |
+| medium module graph / threads | candidate: 1.0.0-beta.0 | passed | 6 | 138.71 | 134.04–140.56 | 1.88% |
+| medium module graph / vmForks | baseline: 0.12.6 | passed | 6 | 217.97 | 212.25–220.03 | 1.31% |
+| medium module graph / vmForks | candidate: 1.0.0-beta.0 | passed | 6 | 213.64 | 209.13–218.01 | 1.68% |
+| medium module graph / vmThreads | baseline: 0.12.6 | passed | 6 | 192.30 | 189.58–196.40 | 1.19% |
+| medium module graph / vmThreads | candidate: 1.0.0-beta.0 | passed | 6 | 188.10 | 183.19–191.80 | 1.66% |
+| large module graph / forks | baseline: 0.12.6 | passed | 6 | 254.82 | 248.72–261.43 | 1.91% |
+| large module graph / forks | candidate: 1.0.0-beta.0 | passed | 6 | 247.86 | 236.28–251.10 | 2.37% |
+| large module graph / threads | baseline: 0.12.6 | passed | 6 | 232.79 | 229.57–238.38 | 1.32% |
+| large module graph / threads | candidate: 1.0.0-beta.0 | passed | 6 | 218.76 | 212.85–226.23 | 2.26% |
+| large module graph / vmForks | baseline: 0.12.6 | passed | 6 | 394.97 | 390.10–399.95 | 0.99% |
+| large module graph / vmForks | candidate: 1.0.0-beta.0 | passed | 6 | 412.61 | 398.70–415.43 | 1.68% |
+| large module graph / vmThreads | baseline: 0.12.6 | passed | 6 | 368.40 | 360.09–415.92 | 6.03% |
+| large module graph / vmThreads | candidate: 1.0.0-beta.0 | passed | 6 | 377.44 | 372.34–403.57 | 3.28% |
 
 ## Inputs and provenance
 
-- `reports/data/releases-0110-0126-2026-11-06T03-36-40-100Z-8f8715f5-baseline-pools.json`: 2026-11-06T03:36:40.118Z; Node v24.11.1; Apple M4 Max × 14; logical CPUs: not recorded; available parallelism: 14; darwin arm64; lockfile SHA-256: 7f35af5876a5c68b2da3985e75cf92db3f4ae3891a513ba7c354e587e09b8421. Source: npm / 0.11.0; fingerprint: 27da13cc2b4ab0a6ce1f46eab28f7cf323a8fce1a7074ae84c2b26d151792f8c.
-- `reports/data/releases-0110-0126-2026-11-06T03-36-42-128Z-6045e160-candidate-pools.json`: 2026-11-06T03:36:42.146Z; Node v24.11.1; Apple M4 Max × 14; logical CPUs: not recorded; available parallelism: 14; darwin arm64; lockfile SHA-256: 7123888d5cfe1ee770452ece3fca53bf0702544ea23a11b4dce7557cace858c1. Source: npm / 0.12.6; fingerprint: 7d901a930ef93f885c74f9d3e8ab22dbdaef06698b4f32a0611c98105e956bde.
+- `reports/data/ci-versions-2026-11-20T09-33-02-331Z-4d112db7-baseline-pools.json`: 2026-11-20T09:33:02.351Z; Node v26.13.0; Apple M1 (Virtual) × 3; logical CPUs: 3; available parallelism: 3; darwin arm64; lockfile SHA-256: 7123888d5cfe1ee770452ece3fca53bf0702544ea23a11b4dce7557cace858c1. Source: npm / 0.12.6; fingerprint: 7d901a930ef93f885c74f9d3e8ab22dbdaef06698b4f32a0611c98105e956bde.
+- `reports/data/ci-versions-2026-11-20T09-33-02-723Z-e3921e12-candidate-pools.json`: 2026-11-20T09:33:02.744Z; Node v26.13.0; Apple M1 (Virtual) × 3; logical CPUs: 3; available parallelism: 3; darwin arm64; lockfile SHA-256: 3189e3bdf680f02ef94d8e8b29067aec01e6af202664c2dd6bec30d13e046561. Source: npm / 1.0.0-beta.0; fingerprint: 22c18089a7d8dc72e12a16256816f9dace6407187ca2d943a0df1e79ab08b28a.
 
 Published inputs retain every sample, warmup, test count, timestamp and compatibility fingerprint. Full logs, commands and source snapshots are stored separately; meta.publication.sourceSha256 identifies the original result JSON.
 Versions are measured in paired case/round order, alternating the first side each round and fixture. No benchmark processes overlap. Workload dependencies, fixtures, configurations, harness and host compatibility are checked before calculating changes.
