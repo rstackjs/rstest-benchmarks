@@ -78,9 +78,9 @@ The [report index](../reports/README.md) links all five comparisons. [Recorded s
 
 <!-- benchmark:coverage:start -->
 
-Source: [GitHub Actions](https://github.com/rstackjs/rstest-benchmarks/actions/runs/44043582845), commit `969876e9fc43ca83e8a41e8e1873b6687fa45c16`, attempt 1.
+Source: [GitHub Actions](https://github.com/rstackjs/rstest-benchmarks/actions/runs/44705244270), commit `ac4d313ba287853df47348ad44b1f1f2f6b11a5b`, attempt 1.
 
-Sources: baseline: **0.12.6** (npm); candidate: **preview 2869d12** (preview). Measured 2026-11-17 (UTC); Apple M1 (Virtual) × 3; logical CPUs: 3; available parallelism: 3; darwin arm64, Node v26.13.0.
+Sources: baseline: **0.12.6** (npm); candidate: **1.0.0-beta.0** (npm). Measured 2026-11-20 (UTC); Apple M1 (Virtual) × 3; logical CPUs: 3; available parallelism: 3; darwin arm64, Node v26.13.0.
 
 1 warmup(s) and **6 timed runs per supported case**; medians are reported. 15 selected cases. Every candidate percentage is relative to the baseline; negative means less elapsed time.
 
@@ -98,23 +98,23 @@ Bold marks the lowest comparable median. Candidate Δ shows the change from base
 <details>
 <summary>Table data and comparison notes</summary>
 
-| Case | baseline: 0.12.6 | candidate: preview 2869d12 | Δ |
+| Case | baseline: 0.12.6 | candidate: 1.0.0-beta.0 | Δ |
 | --- | --- | --- | --- |
-| barrel graph · medium / none | 1.63s | 1.57s | -4.19% |
-| barrel graph · medium / v8 | 2.31s | 2.38s | +3.15% |
-| barrel graph · medium / istanbul | 1.71s | 1.99s | +16.30% |
-| barrel graph · large / none | 1.58s | 1.61s | +2.01% |
-| barrel graph · large / v8 | 2.12s | 2.21s | +4.41% |
-| barrel graph · large / istanbul | 1.82s | 1.82s | -0.03% |
-| Node dependencies and service logic / none | 2.27s | 2.15s | -5.09% |
-| Node dependencies and service logic / v8 | 3.00s | 3.25s | +8.18% |
-| Node dependencies and service logic / istanbul | 2.49s | 2.32s | -6.57% |
-| Node module graph / none | 3.37s | 3.29s | -2.61% |
-| Node module graph / v8 | 5.07s | 5.50s | +8.44% |
-| Node module graph / istanbul | 4.49s | 4.37s | -2.52% |
-| React + jsdom / none | 11.04s | 10.27s | -6.99% |
-| React + jsdom / v8 | 12.16s | 12.53s | +3.02% |
-| React + jsdom / istanbul | 11.43s | 10.49s | -8.28% |
+| barrel graph · medium / none | 1.04s | 0.92s | -12.02% |
+| barrel graph · medium / v8 | 1.44s | 1.29s | -10.10% |
+| barrel graph · medium / istanbul | 1.14s | 1.02s | -10.08% |
+| barrel graph · large / none | 1.05s | 0.89s | -15.31% |
+| barrel graph · large / v8 | 1.45s | 1.31s | -9.46% |
+| barrel graph · large / istanbul | 1.14s | 1.03s | -9.55% |
+| Node dependencies and service logic / none | 2.28s | 2.27s | -0.25% |
+| Node dependencies and service logic / v8 | 3.39s | 3.12s | -7.79% |
+| Node dependencies and service logic / istanbul | 2.68s | 2.40s | -10.57% |
+| Node module graph / none | 2.93s | 2.63s | -10.36% |
+| Node module graph / v8 | 4.73s | 3.97s | -16.12% |
+| Node module graph / istanbul | 3.88s | 3.40s | -12.52% |
+| React + jsdom / none | 11.58s | 10.47s | -9.59% |
+| React + jsdom / v8 | 14.12s | 12.26s | -13.15% |
+| React + jsdom / istanbul | 11.97s | 11.01s | -8.02% |
 
 </details>
 
@@ -128,23 +128,23 @@ Bold marks the lowest comparable median. Candidate Δ shows the change from base
 <details>
 <summary>Table data and comparison notes</summary>
 
-| Case | baseline: 0.12.6 | candidate: preview 2869d12 | Δ |
+| Case | baseline: 0.12.6 | candidate: 1.0.0-beta.0 | Δ |
 | --- | --- | --- | --- |
-| barrel graph · medium / none | 139.41 | 137.90 | -1.09% |
-| barrel graph · medium / v8 | 148.21 | 148.06 | -0.10% |
-| barrel graph · medium / istanbul | 169.24 | 166.05 | -1.88% |
-| barrel graph · large / none | 143.58 | 143.99 | +0.28% |
-| barrel graph · large / v8 | 156.76 | 156.56 | -0.12% |
-| barrel graph · large / istanbul | 177.11 | 176.75 | -0.21% |
-| Node dependencies and service logic / none | 165.25 | 160.40 | -2.93% |
-| Node dependencies and service logic / v8 | 181.95 | 180.79 | -0.64% |
-| Node dependencies and service logic / istanbul | 193.01 | 198.56 | +2.88% |
-| Node module graph / none | 155.34 | 151.80 | -2.28% |
-| Node module graph / v8 | 210.46 | 220.79 | +4.91% |
-| Node module graph / istanbul | 243.91 | 222.40 | -8.82% |
-| React + jsdom / none | 604.70 | 454.94 | -24.77% |
-| React + jsdom / v8 | 603.65 | 467.48 | -22.56% |
-| React + jsdom / istanbul | 621.40 | 483.60 | -22.18% |
+| barrel graph · medium / none | 138.28 | 136.69 | -1.15% |
+| barrel graph · medium / v8 | 147.39 | 146.35 | -0.71% |
+| barrel graph · medium / istanbul | 169.18 | 166.79 | -1.41% |
+| barrel graph · large / none | 145.53 | 144.82 | -0.49% |
+| barrel graph · large / v8 | 156.76 | 155.91 | -0.54% |
+| barrel graph · large / istanbul | 177.32 | 179.14 | +1.03% |
+| Node dependencies and service logic / none | 162.51 | 168.19 | +3.50% |
+| Node dependencies and service logic / v8 | 178.00 | 175.82 | -1.23% |
+| Node dependencies and service logic / istanbul | 191.72 | 197.90 | +3.22% |
+| Node module graph / none | 154.67 | 153.90 | -0.50% |
+| Node module graph / v8 | 216.58 | 215.14 | -0.67% |
+| Node module graph / istanbul | 240.72 | 223.84 | -7.01% |
+| React + jsdom / none | 606.32 | 421.81 | -30.43% |
+| React + jsdom / v8 | 604.84 | 424.55 | -29.81% |
+| React + jsdom / istanbul | 626.06 | 444.62 | -28.98% |
 
 </details>
 
