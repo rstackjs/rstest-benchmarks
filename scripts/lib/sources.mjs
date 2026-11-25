@@ -188,12 +188,21 @@ export function workloadDependencies(workspace, apps) {
         if (visited.has(path)) return id
         visited.add(path)
         const edges = {}
+        const isPeerOnly = (name) =>
+          Boolean(pkg.peerDependencies?.[name]) &&
+          !pkg.dependencies?.[name] &&
+          !pkg.optionalDependencies?.[name]
         for (const name of Object.keys({
           ...pkg.dependencies,
           ...pkg.optionalDependencies,
           ...pkg.peerDependencies,
         }).sort()) {
-          if (name.startsWith('@rstest/')) continue
+          // Skip Rstest packages and Rstest-supplied bundler peers (e.g. rspack-vue-loader -> @rspack/core).
+          if (
+            name.startsWith('@rstest/') ||
+            (isPeerOnly(name) && name.startsWith('@rspack/'))
+          )
+            continue
           const target = resolvePackage(dirname(path), name)
           if (
             !target &&

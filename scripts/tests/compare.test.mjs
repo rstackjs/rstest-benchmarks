@@ -297,11 +297,26 @@ test('workload audit rejects transitive drift, permits framework-owned changes a
         dependencies: { router: '^1' },
       })
       write(side, 'router', { name: 'router', version: '1.0.0' })
+      write(side, 'vue-loader', {
+        name: 'vue-loader',
+        version: '17.7.1',
+        peerDependencies: { '@rspack/core': '>=1.0.0' },
+      })
+      write(side, '@rspack/core', {
+        name: '@rspack/core',
+        version: side === 'A' ? '2.3.0' : '2.3.4',
+      })
       write(side, '@rstest/core', {
         name: '@rstest/core',
         version: side,
         dependencies: { rspack: side },
       })
+    }
+    for (const side of ['A', 'B']) {
+      const appManifestPath = join(dir, side, 'apps/example/package.json')
+      const appManifest = JSON.parse(readFileSync(appManifestPath, 'utf8'))
+      appManifest.dependencies['vue-loader'] = '17.7.1'
+      writeFileSync(appManifestPath, JSON.stringify(appManifest))
     }
     const audit = (side) => workloadDependencies(join(dir, side), ['example'])
     const baseline = audit('A')
