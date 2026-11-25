@@ -3,8 +3,11 @@ export const SCALES = ['small', 'medium', 'large']
 export const SCALED_SUITES = ['pools', 'barrel', 'scaling']
 
 const node = [
+  { app: 'minimal-node', name: 'Node · 2 files' },
+  { app: 'minimal-react', name: 'React · 2 files', env: 'jsdom' },
   { app: 'micro-utils', name: 'Node startup and utilities' },
-  { app: 'node-library', name: 'Node module graph', scale: 'medium' },
+  { app: 'many-files', name: 'Many files' },
+  { app: 'module-graph', name: 'Module graph' },
   { app: 'node-backend', name: 'Node dependencies and service logic' },
 ]
 const components = ['react', 'vue'].flatMap((framework) =>
@@ -26,7 +29,7 @@ export function casesFor(suite, options = {}) {
   let base
   switch (suite) {
     case 'main':
-      base = [...node, ...components, barrel('medium')]
+      base = [...node, ...components, barrel('large')]
       break
     case 'coverage':
       // Deliberate workloads, independent of main's display names and membership.

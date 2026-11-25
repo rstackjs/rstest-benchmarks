@@ -100,3 +100,84 @@ test('comparison merging refuses mismatched identity, duplicates and failed inpu
   assert.throws(() => mergeComparisons(root, [], join(root, 'results', 'out')), /No comparisons/)
   assert.throws(() => readFileSync(join(root, 'results', 'out', 'comparison.json')), /ENOENT/)
 })
+
+test('multi-suite version matrix comparisons merge separate suites into one comparison', (t) => {
+  const root = scratch(t)
+  const makeUnit = (unitName, suite, rows) => {
+    const name = `benchmark-version-case-${unitName}`
+    const dirName = `ci-versions-${unitName}`
+    const dir = join(root, 'inputs', name, dirName)
+    const runs = ['baseline', 'candidate'].map((side) => {
+      const rel = `workspaces/${side}/results/${unitName}-${side}/result.json`
+      const doc = {
+        schemaVersion: 2,
+        runId: `${unitName}-${side}`,
+        suite,
+        status: 'completed',
+        meta: {
+          ...meta(rows[0].app, side),
+          source: {
+            kind: side === 'baseline' ? 'npm' : 'preview',
+            ...(side === 'baseline'
+              ? { version: '1.0.0-beta.0' }
+              : { commit: '380624b', requested: 'https://pkg.pr.new/@rstest/core@380624b' }),
+            label: side === 'baseline' ? '1.0.0-beta.0' : 'preview 380624b',
+            workloadDependencies: Object.fromEntries(rows.map((r) => [r.app, `deps-${r.app}`])),
+          },
+          options: { runs: 2, warmup: 1, memory: true, cases: rows.map((r) => r.id) },
+        },
+        generations: [{ app: rows[0].app }],
+        results: rows.map((r) => ({ ...r, samples: [sample('warmup', 30), sample('timed', side === 'baseline' ? 20 : 10), sample('timed', side === 'baseline' ? 21 : 11)] })),
+      }
+      mkdirSync(join(dir, rel, '..'), { recursive: true })
+      writeFileSync(join(dir, rel), JSON.stringify(doc))
+      return { side, suite, status: 'completed', file: `results/${dirName}/${rel}` }
+    })
+    writeFileSync(join(dir, 'comparison.json'), JSON.stringify({
+      host: { node: 'v24.11.1', cpu: 'test CPU', logicalCpuCount: 3, platform: 'darwin arm64', availableParallelism: 3 },
+      status: 'completed',
+      options: { baseline: '1.0.0-beta.0', candidate: ['https://pkg.pr.new/@rstest/core@380624b'], suites: suite, runs: '2', warmup: '1', memory: true, label: 'ci-versions', cases: rows.map((r) => r.id).join(',') },
+      sources: {
+        baseline: { kind: 'npm', version: '1.0.0-beta.0', label: '1.0.0-beta.0', installed: {} },
+        candidate: { kind: 'preview', commit: '380624b', requested: 'https://pkg.pr.new/@rstest/core@380624b', label: 'preview 380624b', installed: {} },
+      },
+      runs, reports: [], schedule: [{ kind: 'prepare', group: unitName }],
+      ci: { url: 'https://github.com/example/b/actions/runs/2', sha: 'abc', attempt: 1, job: unitName, runner: `runner-${unitName}`, image: 'img' },
+      startedAt: '2026-11-25T00:00:00.000Z', endedAt: '2026-11-25T00:09:00.000Z',
+    }))
+    return { name, file: join(dir, 'comparison.json') }
+  }
+  const inputs = [
+    makeUnit('scaling-files', 'scaling', [{
+      ...row('node-library', 'none', 20),
+      id: 'scaling:node-library:files:small:node:forks:none:default',
+      dimension: 'files', scale: 'small', name: 'files scaling · small',
+    }]),
+    makeUnit('main-many-files', 'main', [{
+      ...row('many-files', 'none', 20),
+      id: 'main:many-files:default:default:node:forks:none:default',
+      name: 'Many files',
+    }]),
+    makeUnit('main-node', 'main', [{
+      ...row('minimal-node', 'none', 20),
+      id: 'main:minimal-node:default:default:node:forks:none:default',
+      name: 'Node · 2 files',
+    }]),
+  ]
+  const out = join(root, 'results', 'merged-multi')
+  const comparison = mergeComparisons(root, inputs, out)
+  assert.equal(comparison.options.suites, 'main,scaling')
+  assert.deepEqual(comparison.runs.map((r) => r.file), [
+    'results/merged-multi/baseline/main.json',
+    'results/merged-multi/candidate/main.json',
+    'results/merged-multi/baseline/scaling.json',
+    'results/merged-multi/candidate/scaling.json',
+  ])
+  // Main results are restored to canonical casesFor('main') order even when globbed out of order.
+  const mainBaseline = JSON.parse(readFileSync(join(out, 'baseline', 'main.json'), 'utf8'))
+  assert.deepEqual(mainBaseline.results.map((r) => r.app), ['minimal-node', 'many-files'])
+  assert.match(readFileSync(join(out, 'reports', 'main.md'), 'utf8'), /Node · 2 files/)
+  assert.match(readFileSync(join(out, 'reports', 'scaling.md'), 'utf8'), /files scaling · small/)
+  assert.match(readFileSync(join(out, 'summary.md'), 'utf8'), /Rstest version benchmark/)
+  assert.match(readFileSync(join(out, 'summary.md'), 'utf8'), /Rstest scaling benchmark/)
+})

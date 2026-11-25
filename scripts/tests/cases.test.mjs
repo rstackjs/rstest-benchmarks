@@ -13,7 +13,26 @@ import { parseOptions } from '../runner.mjs'
 const root = fileURLToPath(new URL('../..', import.meta.url))
 
 test('workload suites have unique cases and complete paired controls', () => {
-  assert.equal(casesFor('main').length, 10)
+  const main = casesFor('main')
+  assert.equal(main.length, 13)
+  assert.deepEqual(
+    main.map((r) => `${r.app}:${r.scale ?? 'default'}:${r.env}`),
+    [
+      'minimal-node:default:node',
+      'minimal-react:default:jsdom',
+      'micro-utils:default:node',
+      'many-files:default:node',
+      'module-graph:default:node',
+      'node-backend:default:node',
+      'react-spa:default:jsdom',
+      'react-spa:default:happy-dom',
+      'react-spa:default:chromium',
+      'vue-spa:default:jsdom',
+      'vue-spa:default:happy-dom',
+      'vue-spa:default:chromium',
+      'barrel-clean:large:node',
+    ],
+  )
   for (const suite of ['main', 'coverage', 'pools', 'barrel', 'scaling']) {
     const rows = casesFor(suite)
     assert.equal(new Set(rows.map((r) => r.id)).size, rows.length)
@@ -24,7 +43,7 @@ test('workload suites have unique cases and complete paired controls', () => {
       ['jsdom', 'happy-dom', 'chromium'],
     )
   assert.equal(
-    casesFor('main').filter((r) => r.app === 'barrel-clean').length,
+    main.filter((r) => r.app === 'barrel-clean' && r.scale === 'large').length,
     1,
   )
   for (const scale of SCALES) {
@@ -185,4 +204,34 @@ test('scaling dimensions never merge; barrel config comparison is explicit', () 
     () => barrel,
   )
   assert.match(report.summary, /\+50\.00%/)
+})
+
+test('aligned core apps generate byte-for-byte identical fixtures to frameworks', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'rstest-aligned-apps-'))
+  try {
+    mkdirSync(join(dir, 'tools/generator'), { recursive: true })
+    copyFileSync(join(root, 'tools/generator/helpers.mjs'), join(dir, 'tools/generator/helpers.mjs'))
+    for (const appName of ['minimal-node', 'minimal-react', 'many-files', 'module-graph']) {
+      const appDir = join(dir, 'apps', appName)
+      mkdirSync(appDir, { recursive: true })
+      copyFileSync(join(root, 'apps', appName, 'generate.mjs'), join(appDir, 'generate.mjs'))
+      const run = spawnSync(process.execPath, ['generate.mjs'], { cwd: appDir, encoding: 'utf8' })
+      assert.equal(run.status, 0, run.stderr)
+      const src = inventory(appDir, filesUnder(join(appDir, 'src')))
+      const tests = inventory(appDir, filesUnder(join(appDir, 'tests')))
+      if (appName === 'minimal-node' || appName === 'minimal-react') {
+        const refDir = join(root, 'frameworks/fixtures', appName)
+        assert.equal(src.sha256, inventory(refDir, filesUnder(join(refDir, 'src'))).sha256)
+        assert.equal(tests.sha256, inventory(refDir, filesUnder(join(refDir, 'tests'))).sha256)
+      } else if (appName === 'many-files') {
+        assert.equal(src.files.length, 127)
+        assert.equal(tests.files.length, 400)
+      } else if (appName === 'module-graph') {
+        assert.equal(src.files.length, 1000)
+        assert.equal(tests.files.length, 40)
+      }
+    }
+  } finally {
+    rmSync(dir, { recursive: true, force: true })
+  }
 })

@@ -9,20 +9,20 @@ The comparisons have separate workflows, inputs and concurrency groups:
 | Workflow | Trigger | Default workload |
 | --- | --- | --- |
 | [Frameworks benchmark](../.github/workflows/benchmark-frameworks.yml) | Pushes to `main`, merge queue, or manual dispatch | Jest + SWC, Vitest, Vitest vmForks, Rstest and Rstest vmForks; all eight main cases and browser mode; 5 timed runs per runner/case/cache condition, cold and warm caches |
-| [Rstest version benchmark](../.github/workflows/benchmark-versions.yml) | Manual dispatch | Rstest 0.11.0 vs 0.12.6; main (the README comparison); 1 warmup and 6 timed runs per supported case |
+| [Rstest version benchmark](../.github/workflows/benchmark-versions.yml) | Manual dispatch | Rstest 0.12.6 vs 1.0.0-beta.0; `main,scaling,pools` (main aligned with the frameworks workloads plus Vue/happy-dom); 1 warmup, 6 timed runs and process-tree memory per supported case |
 | [Rstest coverage benchmark](../.github/workflows/benchmark-version-coverage.yml) | Manual dispatch | Rstest 0.11.0 vs 0.12.6; coverage only, with none/V8/Istanbul controls and process-tree memory; 1 warmup and 6 timed runs per case |
 
-The framework and coverage workflows are matrix workflows: a `Plan matrix` job turns the `cases` and `exclude_cases` inputs into one job per case, every `Benchmark (<case>)` job runs on its own `macos-15` runner, and a final `Merge results` job combines the per-case results (see [Matrix jobs and merging](#matrix-jobs-and-merging)). The Rstest version performance workflow stays a single job.
+All three benchmark workflows are matrix workflows: a `Plan matrix` job turns the `suites`, `cases` and `exclude_cases` inputs into parallel units, every `Benchmark (<unit>)` job runs on its own `macos-15` runner, and a final `Merge results` job combines the per-unit results (see [Matrix jobs and merging](#matrix-jobs-and-merging)).
 
 The push trigger skips changes limited to Markdown and published reports. All workflows run on `macos-15` only; memory is measured with the macOS physical-footprint sampler (see [Memory methodology](../README.md#methodology)). Choose the workflow under **Actions**, then **Run workflow**:
 
 | Input | Framework workflow | Both Rstest version workflows |
 | --- | --- | --- |
 | `runs` | Defaults to `5`; `10` is optional for forward/reverse and browser order balancing | Defaults to `6`; use a multiple of the number of versions |
-| `suites` | Fixed main/browser | Performance defaults to `main`; optionally select `scaling,barrel,pools`. Coverage stays separate |
+| `suites` | Fixed main/browser | Performance defaults to `main,scaling,pools`; optionally include `barrel`. Coverage stays separate |
 | `cases` | Optional comma-separated case IDs; empty selects all eight | App names or full case IDs; empty selects all cases in the workflow |
 | `exclude_cases` | Comma-separated case IDs to skip | App names or full case IDs to skip |
-| `memory` | Always on | Version performance has an opt-in peak process-tree footprint pass. Coverage always measures footprint. |
+| `memory` | Always on | Version performance enables the peak process-tree footprint pass by default (`true`). Coverage always measures footprint. |
 | `rstest_version` | Exact npm version or commit-addressed pkg.pr.new core URL; empty uses the lockfile | — |
 | `baseline` | — | Exact npm version or commit-addressed pkg.pr.new Rstest link, default `0.11.0` |
 | `candidate` | — | Npm versions or pkg.pr.new Rstest links, comma-separated, default `0.12.6` |
@@ -74,9 +74,9 @@ Hosted runners (Apple M1, 3 CPUs, 7 GiB) can be lost during very long jobs, and 
 | --- | --- | --- | --- |
 | Frameworks benchmark | One case: `minimal-node`, `minimal-react`, `startup`, `many-files`, `module-graph`, `backend`, `barrel`, `react` (main suite), plus `react-browser` (browser suite, only job that installs Chromium) | 9 | 60 min: the slowest case (`barrel`) is estimated at about 35 minutes with 5 runs and five runners |
 | Rstest coverage benchmark | One app: `node-library`, `node-backend`, `react-spa`, `barrel-clean` (each with its none/V8/Istanbul controls and both versions on the same host) | 4 | 45 min: the whole suite took 34 minutes in one job |
-| Rstest version benchmark | Not split: successful default runs took 2 to 27 minutes | 1 | 90 min |
+| Rstest version benchmark | Split by suite and heavy/browser workloads (`main-node`, `main-many-files`, `main-module-graph`, `main-react`, `main-vue`, `scaling-files`, `scaling-graph`, `pools-small-medium`, `pools-large`) | 9 | 45 min |
 
-`node scripts/ci-matrix.mjs frameworks|coverage --cases ... --exclude-cases ...` builds the matrix with the same selection rules as the local CLIs (`--cases react` gives `react` and `react-browser`; excluding `react` removes both; `browser/react/none` targets only browser mode). It writes the `matrix` output that the jobs consume through `fromJSON`. Unknown IDs or an empty selection fail in the planning job.
+`node scripts/ci-matrix.mjs frameworks|versions|coverage [--suites ...] --cases ... --exclude-cases ...` builds the matrix with the same selection rules as the local CLIs (`--cases react` gives `react` and `react-browser`; excluding `react` removes both; `browser/react/none` targets only browser mode). It writes the `matrix` output that the jobs consume through `fromJSON`. Unknown IDs or an empty selection fail in the planning job.
 
 Every matrix job uploads its full diagnostic artifact, `benchmark-frameworks-case-<case>-<run ID>-<attempt>` or `benchmark-version-coverage-case-<app>-<run ID>-<attempt>`.
 

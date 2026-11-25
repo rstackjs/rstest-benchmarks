@@ -40,6 +40,14 @@ test('comparison runs need exactly one unexpired merged artifact for the latest 
   assert.throws(() => selectPublishArtifacts(workflow, [artifact('benchmark-version-coverage-case-a-macOS-77-1')], run()), /no benchmark-version-coverage-merged-/)
   assert.throws(() => selectPublishArtifacts(workflow, [artifact(name(2), { expired: true })], run()), /expired/)
   assert.throws(() => selectPublishArtifacts(workflow, [artifact(name(2)), artifact(`benchmark-version-coverage-merged-Linux-77-2`)], run()), /Ambiguous/)
+  const versions = classifyRun(run({ path: '.github/workflows/benchmark-versions.yml' }))
+  assert.equal(
+    selectPublishArtifacts(versions, [
+      artifact('benchmark-version-case-main-node-77-2'),
+      artifact('benchmark-versions-merged-macOS-77-2'),
+    ], run())[0].name,
+    'benchmark-versions-merged-macOS-77-2',
+  )
 })
 
 function zipOf(t, files) {

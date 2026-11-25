@@ -20,6 +20,12 @@ importers:
         specifier: 0.12.6
         version: 0.12.6(@rstest/core@0.12.6(happy-dom@20.10.6)(jsdom@29.1.1))
 
+  apps/many-files:
+    devDependencies:
+      '@rstest/core':
+        specifier: 0.12.6
+        version: 0.12.6(happy-dom@20.10.6)(jsdom@29.1.1)
+
   apps/micro-utils:
     devDependencies:
       '@rstest/core':
@@ -31,6 +37,52 @@ importers:
       '@rstest/coverage-v8':
         specifier: 0.12.6
         version: 0.12.6(@rstest/core@0.12.6(happy-dom@20.10.6)(jsdom@29.1.1))
+
+  apps/minimal-node:
+    devDependencies:
+      '@rstest/core':
+        specifier: 0.12.6
+        version: 0.12.6(happy-dom@20.10.6)(jsdom@29.1.1)
+
+  apps/minimal-react:
+    dependencies:
+      react:
+        specifier: 19.2.7
+        version: 19.2.7
+      react-dom:
+        specifier: 19.2.7
+        version: 19.2.7(react@19.2.7)
+    devDependencies:
+      '@rsbuild/core':
+        specifier: 2.2.0
+        version: 2.2.0
+      '@rsbuild/plugin-react':
+        specifier: 2.1.0
+        version: 2.1.0(@rsbuild/core@2.2.0)(@rspack/core@2.3.0(@swc/helpers@0.5.23))
+      '@rstest/core':
+        specifier: 0.12.6
+        version: 0.12.6(happy-dom@20.10.6)(jsdom@29.1.1)
+      '@testing-library/dom':
+        specifier: 10.4.1
+        version: 10.4.1
+      '@testing-library/react':
+        specifier: 16.3.2
+        version: 16.3.2(@testing-library/dom@10.4.1)(@types/react@19.2.17)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
+      '@types/node':
+        specifier: 24.10.1
+        version: 24.10.1
+      '@types/react':
+        specifier: 19.2.17
+        version: 19.2.17
+      jsdom:
+        specifier: 29.1.1
+        version: 29.1.1
+
+  apps/module-graph:
+    devDependencies:
+      '@rstest/core':
+        specifier: 0.12.6
+        version: 0.12.6(happy-dom@20.10.6)(jsdom@29.1.1)
 
   apps/node-backend:
     dependencies:

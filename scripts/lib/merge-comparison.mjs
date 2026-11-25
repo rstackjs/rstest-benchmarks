@@ -1,10 +1,12 @@
-// Merges the per-app comparison directories of the version coverage CI matrix
+// Merges per-unit comparison directories from version or coverage CI matrix jobs
 // into one comparison that `pnpm report:versions` publishes like a single run.
 import assert from 'node:assert/strict'
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { basename, dirname, join, relative, resolve } from 'node:path'
+import { casesFor } from './cases.mjs'
 import { comparisonReport } from './report.mjs'
 
+const SUITE_ORDER = ['main', 'scaling', 'barrel', 'pools', 'coverage']
 const metaKeys = ['node', 'cpu', 'logicalCpuCount', 'platform', 'osRelease', 'availableParallelism', 'packageManager', 'lockfileSha256', 'measurement']
 const hostKeys = ['node', 'cpu', 'logicalCpuCount', 'platform', 'availableParallelism']
 const without = (object, ...keys) => Object.fromEntries(Object.entries(object).filter(([key]) => !keys.includes(key)))
@@ -14,6 +16,19 @@ const readJson = (file) => JSON.parse(readFileSync(file, 'utf8'))
 const runFile = (comparisonFile, file) => {
   const marker = `${basename(dirname(comparisonFile))}/`
   return join(dirname(comparisonFile), file.slice(file.indexOf(marker) + marker.length))
+}
+
+function canonicalOrder(suite, rows) {
+  let order
+  try {
+    order = new Map(casesFor(suite).map((item, index) => [item.id, index]))
+  } catch {
+    return rows
+  }
+  return rows
+    .map((row, index) => ({ row, index, rank: order.get(row.id) ?? Number.MAX_SAFE_INTEGER }))
+    .sort((a, b) => a.rank - b.rank || a.index - b.index)
+    .map(({ row }) => row)
 }
 
 // Merges the result documents of one side/suite across inputs.
@@ -41,11 +56,12 @@ function mergeDocuments(documents, names, runId) {
       ids.set(row.id, name)
     }
   })
+  const results = canonicalOrder(first.suite, documents.flatMap((doc) => doc.results))
   return {
     ...first,
     runId,
     generations: documents.flatMap((doc) => doc.generations ?? []),
-    results: documents.flatMap((doc) => doc.results),
+    results,
     meta: {
       ...first.meta,
       startedAt: documents.map((doc) => doc.meta.startedAt).sort()[0],
@@ -63,14 +79,21 @@ export function mergeComparisons(root, inputs, outDir, now = new Date()) {
   const [first] = records
   const names = records.map(({ name }) => name)
   assert.equal(new Set(names).size, names.length, 'Duplicate input name')
+  const sourceKey = (source) => ({
+    kind: source.kind,
+    version: source.version,
+    commit: source.commit,
+    requested: source.requested,
+    label: source.label,
+  })
   for (const { name, record } of records) {
     assert.equal(record.status, 'completed', `${name}: comparison is ${record.status}, not completed`)
-    assert.deepEqual(without(record.options, 'cases', 'exclude-cases'), without(first.record.options, 'cases', 'exclude-cases'), `${name}: options differ from ${names[0]}`)
+    assert.deepEqual(without(record.options, 'suites', 'cases', 'exclude-cases'), without(first.record.options, 'suites', 'cases', 'exclude-cases'), `${name}: options differ from ${names[0]}`)
     assert.deepEqual(Object.keys(record.sources), Object.keys(first.record.sources), `${name}: sources differ from ${names[0]}`)
     for (const [side, source] of Object.entries(record.sources))
       assert.deepEqual(
-        { kind: source.kind, version: source.version, label: source.label },
-        { kind: first.record.sources[side].kind, version: first.record.sources[side].version, label: first.record.sources[side].label },
+        sourceKey(source),
+        sourceKey(first.record.sources[side]),
         `${name}: ${side} source differs from ${names[0]}`,
       )
     for (const key of hostKeys) assert.deepEqual(record.host[key], first.record.host[key], `${name}: host.${key} differs from ${names[0]}`)
@@ -81,19 +104,28 @@ export function mergeComparisons(root, inputs, outDir, now = new Date()) {
   }
   const label = first.record.options.label
   const stamp = now.toISOString().replace(/[:.]/g, '-')
+  const discoveredSuites = [...new Set(records.flatMap(({ record }) => record.runs.map((run) => run.suite)))]
+  const suites = [
+    ...SUITE_ORDER.filter((suite) => discoveredSuites.includes(suite)),
+    ...discoveredSuites.filter((suite) => !SUITE_ORDER.includes(suite)),
+  ]
   const runs = []
   const reports = []
   const documents = []
-  for (const suite of [...new Set(first.record.runs.map((run) => run.suite))]) {
+  for (const suite of suites) {
+    const suiteRecords = records.filter(({ record }) => record.runs.some((run) => run.suite === suite))
+    const suiteNames = suiteRecords.map(({ name }) => name)
     const columns = []
     for (const side of Object.keys(first.record.sources)) {
-      const files = records.map(({ name, file, record }) => {
+      const files = suiteRecords.map(({ name, file, record }) => {
         const run = record.runs.find((run) => run.side === side && run.suite === suite)
         assert(run && run.status === 'completed', `${name}: no completed ${side}/${suite} run`)
         return runFile(file, run.file)
       })
-      const document = mergeDocuments(files.map(readJson), names, `${label}-merged-${stamp}`)
-      const file = join(outDir, side, 'result.json')
+      const document = mergeDocuments(files.map(readJson), suiteNames, `${label}-merged-${stamp}`)
+      const file = suites.length === 1
+        ? join(outDir, side, 'result.json')
+        : join(outDir, side, `${suite}.json`)
       documents.push({ file, document })
       runs.push({ side, suite, status: 'completed', file: relative(root, file) })
       columns.push({ label: `${side}: ${first.record.sources[side].label}`, files: [relative(root, file)] })
@@ -106,7 +138,11 @@ export function mergeComparisons(root, inputs, outDir, now = new Date()) {
   }
   const comparison = {
     ...first.record,
-    options: { ...first.record.options, cases: records.map(({ record }) => record.options.cases).filter(Boolean).join(',') },
+    options: {
+      ...first.record.options,
+      suites: suites.join(','),
+      cases: records.map(({ record }) => record.options.cases).filter(Boolean).join(','),
+    },
     runs,
     reports,
     schedule: records.flatMap(({ name, record }) => (record.schedule ?? []).map((step) => ({ ...step, mergeSource: name }))),
@@ -114,6 +150,7 @@ export function mergeComparisons(root, inputs, outDir, now = new Date()) {
     endedAt: records.map(({ record }) => record.endedAt).sort().at(-1),
     mergedFrom: records.map(({ name, record }) => ({
       name,
+      suites: [...new Set(record.runs.map((run) => run.suite))],
       cases: record.options.cases ?? null,
       ci: record.ci && { job: record.ci.job, runner: record.ci.runner, image: record.ci.image },
       startedAt: record.startedAt,

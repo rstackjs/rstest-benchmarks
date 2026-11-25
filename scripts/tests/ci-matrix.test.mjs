@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import { coverageUnits, frameworkUnits, matrixFor } from '../lib/ci-matrix.mjs'
+import { coverageUnits, frameworkUnits, matrixFor, versionUnits } from '../lib/ci-matrix.mjs'
 
 const allCases = 'minimal-node,minimal-react,startup,many-files,module-graph,backend,barrel,react'
 const names = (units) => units.map((unit) => unit.name)
@@ -33,4 +33,35 @@ test('coverage matrix has one unit per app with its provider controls', () => {
   assert.deepEqual(names(coverageUnits({ excludeCases: 'react-spa' })), ['node-library', 'node-backend', 'barrel-clean'])
   const noIstanbul = coverageUnits({ cases: 'node-backend', excludeCases: 'coverage:node-backend:default:default:node:forks:istanbul:default' })
   assert.equal(noIstanbul[0].cases.split(',').length, 2)
+})
+
+test('version matrix splits default main,scaling,pools suites into balanced parallel units', () => {
+  const units = versionUnits({})
+  assert.deepEqual(names(units), [
+    'main-node',
+    'main-react',
+    'main-many-files',
+    'main-module-graph',
+    'main-vue',
+    'scaling-files',
+    'scaling-graph',
+    'pools-small-medium',
+    'pools-large',
+  ])
+  const allIds = units.flatMap((unit) => unit.cases.split(','))
+  assert.equal(allIds.length, 31)
+  assert.equal(new Set(allIds).size, 31)
+  assert.deepEqual(matrixFor('versions', { suites: 'main', cases: 'many-files' }), {
+    include: [{ name: 'main-many-files', suite: 'main', cases: 'main:many-files:default:default:node:forks:none:default' }],
+  })
+  assert.deepEqual(names(versionUnits({ suites: 'main,barrel', excludeCases: 'vue-spa' })), [
+    'main-node',
+    'main-react',
+    'main-many-files',
+    'main-module-graph',
+    'barrel',
+  ])
+  assert.throws(() => versionUnits({ suites: 'main,main' }), /unique values/)
+  assert.throws(() => versionUnits({ suites: 'coverage' }), /unique values/)
+  assert.throws(() => versionUnits({ cases: 'nope' }), /Unknown case/)
 })

@@ -26,8 +26,8 @@ test('optional memory adds one pass per supported timed case, including coverage
 
 test('version total excludes unsupported VM pools and Vue browser', () => {
   const items = [...casesFor('main'), ...casesFor('pools', { scales: ['small'] })]
-  assert.deepEqual(versionRunCounts(items, { runs: 6, warmup: 1 }, () => '0.11.0'), { timed: 66, memory: 0, warmup: 11 })
-  assert.deepEqual(versionRunCounts(items, { runs: 6, warmup: 0 }, () => '0.12.6'), { timed: 84, memory: 0, warmup: 0 })
+  assert.deepEqual(versionRunCounts(items, { runs: 6, warmup: 1 }, () => '0.11.0'), { timed: 84, memory: 0, warmup: 14 })
+  assert.deepEqual(versionRunCounts(items, { runs: 6, warmup: 0 }, () => '0.12.6'), { timed: 102, memory: 0, warmup: 0 })
 })
 
 test('shared progress retains one counter across sides and suites, with matching start/end numbers', () => {
