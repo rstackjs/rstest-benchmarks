@@ -7,8 +7,8 @@ import { casesFor } from './cases.mjs'
 import { comparisonReport } from './report.mjs'
 
 const SUITE_ORDER = ['main', 'scaling', 'barrel', 'pools', 'coverage']
-const metaKeys = ['node', 'cpu', 'logicalCpuCount', 'platform', 'osRelease', 'availableParallelism', 'packageManager', 'lockfileSha256', 'measurement']
-const hostKeys = ['node', 'cpu', 'logicalCpuCount', 'platform', 'availableParallelism']
+const metaKeys = ['node', 'cpu', 'logicalCpuCount', 'platform', 'osRelease', 'availableParallelism', 'packageManager', 'measurement']
+const hostKeys = ['node', 'cpu', 'logicalCpuCount', 'platform', 'availableParallelism', 'lockfileSha256']
 const without = (object, ...keys) => Object.fromEntries(Object.entries(object).filter(([key]) => !keys.includes(key)))
 const readJson = (file) => JSON.parse(readFileSync(file, 'utf8'))
 // Run files are repository-relative paths inside the comparison directory of the
@@ -36,6 +36,7 @@ function mergeDocuments(documents, names, runId) {
   const [first] = documents
   const ids = new Map()
   const workloadDependencies = {}
+  const rstestVersions = {}
   documents.forEach((doc, index) => {
     const name = names[index]
     assert.equal(doc.status, 'completed', `${name}: ${doc.suite} document is ${doc.status}, not completed`)
@@ -54,9 +55,15 @@ function mergeDocuments(documents, names, runId) {
     for (const row of doc.results) {
       assert(!ids.has(row.id), `Duplicate case ${row.id} in ${name} and ${ids.get(row.id)}`)
       ids.set(row.id, name)
+      for (const [pkg, info] of Object.entries(row.dependencies ?? {})) {
+        if (!pkg.startsWith('@rstest/') || !info?.version) continue
+        if (pkg in rstestVersions) assert.equal(rstestVersions[pkg], info.version, `${name}: installed ${pkg} version differs`)
+        rstestVersions[pkg] = info.version
+      }
     }
   })
   const results = canonicalOrder(first.suite, documents.flatMap((doc) => doc.results))
+  const lockfiles = [...new Set(documents.map((doc) => doc.meta.lockfileSha256).filter(Boolean))].sort()
   return {
     ...first,
     runId,
@@ -64,6 +71,7 @@ function mergeDocuments(documents, names, runId) {
     results,
     meta: {
       ...first.meta,
+      ...(lockfiles.length ? { lockfileSha256: lockfiles.length === 1 ? lockfiles[0] : lockfiles.join(', ') } : {}),
       startedAt: documents.map((doc) => doc.meta.startedAt).sort()[0],
       endedAt: documents.map((doc) => doc.meta.endedAt).sort().at(-1),
       options: { ...first.meta.options, cases: documents.flatMap((doc) => doc.meta.options.cases ?? []) },
